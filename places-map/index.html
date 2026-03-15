@@ -123,6 +123,7 @@
     .flag-dot.よく行く { background: var(--green); }
     .flag-dot.また行きたい { background: var(--blue); }
     .flag-dot.行きたい { background: var(--amber); }
+    .flag-dot.普通 { background: #f97316; }
     .flag-dot.行かない { background: var(--gray); }
 
     .place-meta {
@@ -221,6 +222,7 @@
     <button class="filter-btn" data-filter="よく行く">よく行く</button>
     <button class="filter-btn" data-filter="また行きたい">また行きたい</button>
     <button class="filter-btn" data-filter="行きたい">行きたい</button>
+    <button class="filter-btn" data-filter="普通">普通</button>
     <button class="filter-btn" data-filter="行かない">行かない</button>
   </div>
   <div id="place-list"></div>
@@ -405,6 +407,17 @@ const places = [
     lng: 139.69860,
   },
   {
+    name: "餃子酒場 肉汁とっつぁん 渋谷本店",
+    area: "渋谷",
+    address: "渋谷区神南1-22-10 皆川ビル3F",
+    genre: "餃子・居酒屋",
+    memo: "可もなく不可もなく",
+    flag: "普通",
+    url: "https://tabelog.com/tokyo/A1303/A130301/13288682/",
+    lat: 35.661446459696315,
+    lng: 139.70104925808752,
+  },
+  {
     name: "日本酒原価酒蔵 渋谷本店",
     area: "道玄坂",
     address: "渋谷区道玄坂2-6-14 ホマレヤビル B1F",
@@ -418,7 +431,7 @@ const places = [
 ];
 // ────────────────────────────────────────────────
 
-const flagColor = { "よく行く": "#10b981", "また行きたい": "#3b82f6", "行きたい": "#f59e0b", "行かない": "#64748b" };
+const flagColor = { "よく行く": "#10b981", "また行きたい": "#3b82f6", "行きたい": "#f59e0b", "普通": "#f97316", "行かない": "#64748b" };
 
 // マップ初期化
 const map = L.map('map', { zoomControl: false }).setView([35.6425, 139.6975], 15);
