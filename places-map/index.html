@@ -16,7 +16,9 @@
       --muted: #64748b;
       --accent: #7c3aed;
       --green: #10b981;
+      --blue: #3b82f6;
       --amber: #f59e0b;
+      --gray: #64748b;
     }
 
     body {
@@ -119,7 +121,9 @@
     }
 
     .flag-dot.よく行く { background: var(--green); }
+    .flag-dot.また行きたい { background: var(--blue); }
     .flag-dot.行きたい { background: var(--amber); }
+    .flag-dot.行かない { background: var(--gray); }
 
     .place-meta {
       font-size: 0.75rem;
@@ -215,7 +219,9 @@
   <div id="filters">
     <button class="filter-btn active" data-filter="all">すべて</button>
     <button class="filter-btn" data-filter="よく行く">よく行く</button>
+    <button class="filter-btn" data-filter="また行きたい">また行きたい</button>
     <button class="filter-btn" data-filter="行きたい">行きたい</button>
+    <button class="filter-btn" data-filter="行かない">行かない</button>
   </div>
   <div id="place-list"></div>
 </div>
@@ -223,8 +229,10 @@
 <div id="map"></div>
 
 <div id="legend">
-  <div><span class="flag-dot よく行く" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;"></span>よく行く</div>
+  <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;"></span>よく行く</div>
+  <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;"></span>また行きたい</div>
   <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;"></span>行きたい</div>
+  <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#64748b;"></span>行かない</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -270,7 +278,7 @@ const places = [
     address: "品川区上大崎2-27-1 サンフェリスタ目黒B1F",
     genre: "居酒屋",
     memo: "手羽先が安くて美味しく焼酎も豊富",
-    flag: "行きたい",
+    flag: "また行きたい",
     url: "https://tabelog.com/tokyo/A1316/A131601/13054847/",
     lat: 35.63420433792411,
     lng: 139.71489078278378,
@@ -281,7 +289,7 @@ const places = [
     address: "目黒区目黒2-8-10",
     genre: "広島風お好み焼き",
     memo: "美味しかった、カウンターに外国人も。いいお店",
-    flag: "行きたい",
+    flag: "また行きたい",
     url: "https://tabelog.com/tokyo/A1316/A131601/13290505/",
     lat: 35.63360843872829,
     lng: 139.71000538394296,
@@ -292,7 +300,7 @@ const places = [
     address: "渋谷区恵比寿南1-17-2 Rホール2F",
     genre: "天ぷら串",
     memo: "よかった",
-    flag: "行きたい",
+    flag: "また行きたい",
     url: "https://tabelog.com/tokyo/A1303/A130302/13228465/",
     lat: 35.64459231564372,
     lng: 139.7104570305463,
@@ -303,7 +311,7 @@ const places = [
     address: "渋谷区恵比寿南1-17-6 コートモデリアサウス恵比寿102",
     genre: "バー",
     memo: "マスターがかっこよく落ち着いた場所。高め",
-    flag: "行きたい",
+    flag: "また行きたい",
     url: "https://tabelog.com/tokyo/A1303/A130302/13050051/",
     lat: 35.64434662872167,
     lng: 139.71060614405098,
@@ -311,7 +319,7 @@ const places = [
 ];
 // ────────────────────────────────────────────────
 
-const flagColor = { "よく行く": "#10b981", "行きたい": "#f59e0b" };
+const flagColor = { "よく行く": "#10b981", "また行きたい": "#3b82f6", "行きたい": "#f59e0b", "行かない": "#64748b" };
 
 // マップ初期化
 const map = L.map('map', { zoomControl: false }).setView([35.6425, 139.6975], 15);
