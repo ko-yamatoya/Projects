@@ -236,7 +236,6 @@ const places = [
     area: "中目黒",
     address: "目黒区上目黒3-1-14 メイツ中目黒1F",
     genre: "居酒屋",
-    with: "1人 / 友人",
     memo: "1人飲みに適している",
     flag: "よく行く",
     url: "https://tabelog.com/tokyo/A1317/A131701/13274251/",
@@ -248,7 +247,6 @@ const places = [
     area: "中目黒",
     address: "目黒区上目黒2-25-13 エムス東2F",
     genre: "カジュアルバー",
-    with: "1人 / 友人",
     memo: "ゆっくり人と話しに行く",
     flag: "よく行く",
     url: "https://maps.app.goo.gl/pek8HBomNy2B3YDk6",
@@ -260,7 +258,6 @@ const places = [
     area: "道玄坂",
     address: "渋谷区道玄坂2-19-13",
     genre: "喫茶店",
-    with: "1人 / 友人",
     memo: "落ち着いたカフェ、好きな場所。1926年創業",
     flag: "よく行く",
     url: "https://tabelog.com/tokyo/A1303/A130301/13001723/",
@@ -272,8 +269,7 @@ const places = [
     area: "目黒",
     address: "目黒区目黒2-8-10",
     genre: "広島風お好み焼き",
-    with: "岩元家族",
-    memo: "2026/02/28 岩元家族に連れてってもらった。美味しかった、カウンターに外国人も。いいお店",
+    memo: "美味しかった、カウンターに外国人も。いいお店",
     flag: "行きたい",
     url: "https://tabelog.com/tokyo/A1316/A131601/13290505/",
     lat: 35.63360843872829,
@@ -284,8 +280,7 @@ const places = [
     area: "恵比寿",
     address: "渋谷区恵比寿南1-17-2 Rホール2F",
     genre: "天ぷら串",
-    with: "こうじにいちゃん / じん",
-    memo: "2026/01/24 The Singletonと同日。こうじにいちゃんに連れて行ってもらった。よかった",
+    memo: "よかった",
     flag: "行きたい",
     url: "https://tabelog.com/tokyo/A1303/A130302/13228465/",
     lat: 35.64459231564372,
@@ -296,8 +291,7 @@ const places = [
     area: "恵比寿",
     address: "渋谷区恵比寿南1-17-6 コートモデリアサウス恵比寿102",
     genre: "バー",
-    with: "こうじにいちゃん / じん",
-    memo: "マスターがかっこよく落ち着いた場所。高め。2026/01/24にこうじにいちゃんに連れて行ってもらった",
+    memo: "マスターがかっこよく落ち着いた場所。高め",
     flag: "行きたい",
     url: "https://tabelog.com/tokyo/A1303/A130302/13050051/",
     lat: 35.64434662872167,
@@ -374,7 +368,7 @@ function render(filter) {
         <span class="flag-dot ${p.flag}"></span>
         <span class="place-name">${p.name}</span>
       </div>
-      <div class="place-meta">${p.area} · ${p.genre} · ${p.with}</div>
+      <div class="place-meta">${p.area} · ${p.genre}</div>
       <div class="place-memo">${p.memo}</div>
     `;
     item.addEventListener('click', () => {
