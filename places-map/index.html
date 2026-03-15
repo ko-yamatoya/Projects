@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Places Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --panel: #111118;
+      --border: rgba(255,255,255,0.08);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --accent: #7c3aed;
+      --green: #10b981;
+      --amber: #f59e0b;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── サイドパネル ── */
+    #panel {
+      width: 300px;
+      min-width: 300px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #panel-header {
+      padding: 1.2rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #panel-header h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text);
+    }
+
+    #panel-header p {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    /* フィルター */
+    #filters {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn.active {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(124,58,237,0.15);
+    }
+
+    /* リスト */
+    #place-list {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .place-item {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .place-item:hover { background: rgba(255,255,255,0.03); }
+    .place-item.active { background: rgba(124,58,237,0.1); }
+
+    .place-item-top {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .place-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .flag-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .flag-dot.よく行く { background: var(--green); }
+    .flag-dot.行きたい { background: var(--amber); }
+
+    .place-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .place-memo {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    /* マップ */
+    #map {
+      flex: 1;
+    }
+
+    /* Leafletポップアップ */
+    .leaflet-popup-content-wrapper {
+      background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.75rem;
+      color: var(--text);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    .leaflet-popup-tip { background: #1a1a2e; }
+
+    .popup-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .popup-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .popup-memo {
+      font-size: 0.75rem;
+      color: #a0aec0;
+      margin-bottom: 0.6rem;
+    }
+
+    .popup-link {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      background: rgba(124,58,237,0.2);
+      border: 1px solid var(--accent);
+      border-radius: 0.4rem;
+      color: #c4b5fd;
+      font-size: 0.75rem;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .popup-link:hover { background: rgba(124,58,237,0.35); }
+
+    /* 凡例 */
+    #legend {
+      position: absolute;
+      bottom: 1.5rem;
+      right: 1rem;
+      z-index: 1000;
+      background: rgba(17,17,24,0.9);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      backdrop-filter: blur(8px);
+    }
+
+    #legend div { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; }
+    #legend div:last-child { margin-bottom: 0; }
+
+    @media (max-width: 600px) {
+      body { flex-direction: column; }
+      #panel { width: 100%; min-width: unset; height: 40vh; border-right: none; border-bottom: 1px solid var(--border); }
+      #map { height: 60vh; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="panel">
+  <div id="panel-header">
+    <h1>Places Map</h1>
+    <p id="count"></p>
+  </div>
+  <div id="filters">
+    <button class="filter-btn active" data-filter="all">すべて</button>
+    <button class="filter-btn" data-filter="よく行く">よく行く</button>
+    <button class="filter-btn" data-filter="行きたい">行きたい</button>
+  </div>
+  <div id="place-list"></div>
+</div>
+
+<div id="map"></div>
+
+<div id="legend">
+  <div><span class="flag-dot よく行く" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;"></span>よく行く</div>
+  <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;"></span>行きたい</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── データ ──────────────────────────────────────
+const places = [
+  {
+    name: "風見堂",
+    area: "中目黒",
+    address: "目黒区上目黒3-1-14 メイツ中目黒1F",
+    genre: "居酒屋",
+    with: "1人 / 友人",
+    memo: "1人飲みに適している",
+    flag: "よく行く",
+    url: "https://tabelog.com/tokyo/A1317/A131701/13274251/",
+    lat: 35.64545243791136,
+    lng: 139.69732858290968,
+  },
+  {
+    name: "ルートバー",
+    area: "中目黒",
+    address: "目黒区上目黒2-25-13 エムス東2F",
+    genre: "カジュアルバー",
+    with: "1人 / 友人",
+    memo: "ゆっくり人と話しに行く",
+    flag: "よく行く",
+    url: "https://maps.app.goo.gl/pek8HBomNy2B3YDk6",
+    lat: 35.64129682871916,
+    lng: 139.69667035402995,
+  },
+];
+// ────────────────────────────────────────────────
+
+const flagColor = { "よく行く": "#10b981", "行きたい": "#f59e0b" };
+
+// マップ初期化
+const map = L.map('map', { zoomControl: false }).setView([35.6425, 139.6975], 15);
+L.control.zoom({ position: 'topright' }).addTo(map);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  maxZoom: 19,
+}).addTo(map);
+
+// マーカー生成
+function makeIcon(flag) {
+  const color = flagColor[flag] || '#7c3aed';
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:14px;height:14px;border-radius:50%;
+      background:${color};
+      border:2px solid rgba(255,255,255,0.8);
+      box-shadow:0 0 8px ${color};
+    "></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+}
+
+let currentFilter = 'all';
+let markers = [];
+let activeIndex = null;
+
+function render(filter) {
+  // マーカークリア
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  const list = document.getElementById('place-list');
+  list.innerHTML = '';
+
+  const filtered = filter === 'all' ? places : places.filter(p => p.flag === filter);
+
+  document.getElementById('count').textContent = `${filtered.length} 件`;
+
+  filtered.forEach((p, i) => {
+    // マーカー
+    const marker = L.marker([p.lat, p.lng], { icon: makeIcon(p.flag) })
+      .addTo(map)
+      .bindPopup(`
+        <div class="popup-name">${p.name}</div>
+        <div class="popup-meta">${p.area} · ${p.genre}</div>
+        <div class="popup-memo">${p.memo}</div>
+        ${p.url ? `<a class="popup-link" href="${p.url}" target="_blank">詳細を見る →</a>` : ''}
+      `, { maxWidth: 220 });
+
+    marker.on('click', () => {
+      setActive(i);
+    });
+    markers.push(marker);
+
+    // リストアイテム
+    const item = document.createElement('div');
+    item.className = 'place-item';
+    item.dataset.index = i;
+    item.innerHTML = `
+      <div class="place-item-top">
+        <span class="flag-dot ${p.flag}"></span>
+        <span class="place-name">${p.name}</span>
+      </div>
+      <div class="place-meta">${p.area} · ${p.genre} · ${p.with}</div>
+      <div class="place-memo">${p.memo}</div>
+    `;
+    item.addEventListener('click', () => {
+      setActive(i);
+      map.flyTo([p.lat, p.lng], 17, { duration: 0.8 });
+      markers[i].openPopup();
+    });
+    list.appendChild(item);
+  });
+}
+
+function setActive(i) {
+  document.querySelectorAll('.place-item').forEach((el, idx) => {
+    el.classList.toggle('active', idx === i);
+  });
+  activeIndex = i;
+}
+
+// フィルターボタン
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render(currentFilter);
+  });
+});
+
+render('all');
+</script>
+</body>
+</html>
