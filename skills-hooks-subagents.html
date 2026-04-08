@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills / Hooks / Subagents - 体系まとめ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface-2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e8e8f0;
+    --text-muted: #8888a0;
+    --accent-skill: #4ecdc4;
+    --accent-skill-bg: rgba(78, 205, 196, 0.08);
+    --accent-hook: #ff6b6b;
+    --accent-hook-bg: rgba(255, 107, 107, 0.08);
+    --accent-sub: #a78bfa;
+    --accent-sub-bg: rgba(167, 139, 250, 0.08);
+    --accent-ctx: #fbbf24;
+    --accent-ctx-bg: rgba(251, 191, 36, 0.08);
+  }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.8;
+  font-weight: 300;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 60px 24px 80px;
+}
+
+/* ── Header ── */
+.header {
+  text-align: center;
+  margin-bottom: 64px;
+  position: relative;
+}
+
+.header::after {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-skill), var(--accent-hook), var(--accent-sub));
+  margin: 28px auto 0;
+  border-radius: 1px;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header p {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* ── Intro ── */
+.intro {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 28px;
+  margin-bottom: 48px;
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 2;
+}
+
+.intro strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ── Section ── */
+.section {
+  margin-bottom: 52px;
+}
+
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+
+.section-label .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.section-label.skill { color: var(--accent-skill); }
+.section-label.skill .dot { background: var(--accent-skill); }
+.section-label.hook { color: var(--accent-hook); }
+.section-label.hook .dot { background: var(--accent-hook); }
+.section-label.sub { color: var(--accent-sub); }
+.section-label.sub .dot { background: var(--accent-sub); }
+.section-label.ctx { color: var(--accent-ctx); }
+.section-label.ctx .dot { background: var(--accent-ctx); }
+
+.section h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  letter-spacing: -0.3px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card h3 .icon {
+  font-size: 18px;
+}
+
+.card p, .card li {
+  font-size: 14.5px;
+  color: var(--text-muted);
+  line-height: 1.9;
+}
+
+.card p + p {
+  margin-top: 12px;
+}
+
+.card strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.card.skill-card { border-left: 3px solid var(--accent-skill); background: var(--accent-skill-bg); }
+.card.hook-card { border-left: 3px solid var(--accent-hook); background: var(--accent-hook-bg); }
+.card.sub-card { border-left: 3px solid var(--accent-sub); background: var(--accent-sub-bg); }
+.card.ctx-card { border-left: 3px solid var(--accent-ctx); background: var(--accent-ctx-bg); }
+
+/* ── Comparison Table ── */
+.table-wrap {
+  overflow-x: auto;
+  margin: 24px 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+thead {
+  background: var(--surface-2);
+}
+
+th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  vertical-align: top;
+  line-height: 1.7;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+td:first-child {
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.tag.skill { background: var(--accent-skill-bg); color: var(--accent-skill); border: 1px solid rgba(78,205,196,0.3); }
+.tag.hook { background: var(--accent-hook-bg); color: var(--accent-hook); border: 1px solid rgba(255,107,107,0.3); }
+.tag.sub { background: var(--accent-sub-bg); color: var(--accent-sub); border: 1px solid rgba(167,139,250,0.3); }
+
+/* ── Flow Diagram ── */
+.flow {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 24px;
+  margin: 24px 0;
+  text-align: center;
+}
+
+.flow-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.flow-row:last-child {
+  margin-bottom: 0;
+}
+
+.flow-box {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.flow-box.main {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.flow-box.skill-f {
+  background: var(--accent-skill-bg);
+  border-color: rgba(78,205,196,0.3);
+  color: var(--accent-skill);
+}
+
+.flow-box.hook-f {
+  background: var(--accent-hook-bg);
+  border-color: rgba(255,107,107,0.3);
+  color: var(--accent-hook);
+}
+
+.flow-box.sub-f {
+  background: var(--accent-sub-bg);
+  border-color: rgba(167,139,250,0.3);
+  color: var(--accent-sub);
+}
+
+.flow-arrow {
+  color: var(--text-muted);
+  font-size: 18px;
+}
+
+.flow-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.flow-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Metaphor Block ── */
+.metaphor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.metaphor-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.metaphor-item .emoji {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.metaphor-item .label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.metaphor-item .desc {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+/* ── Key Insight ── */
+.insight {
+  background: linear-gradient(135deg, rgba(251,191,36,0.06) 0%, rgba(167,139,250,0.06) 100%);
+  border: 1px solid rgba(251,191,36,0.2);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin: 32px 0;
+  font-size: 14.5px;
+  line-height: 2;
+  color: var(--text-muted);
+}
+
+.insight strong {
+  color: var(--accent-ctx);
+  font-weight: 600;
+}
+
+/* ── Bullet List ── */
+.card ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 12px;
+}
+
+.card ul li {
+  padding-left: 20px;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.card ul li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* ── Code inline ── */
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  background: var(--surface-2);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  margin-top: 64px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+</style>
+
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Skills / Hooks / Subagents</h1>
+    <p>エージェント開発における3つの拡張機構と、コンテキスト管理の重要性</p>
+  </div>
+
+  <!-- Intro -->
+  <div class="intro">
+    LLMエージェントは<strong>毎回ステートレスに起動</strong>する。記憶も判断力も、すべてはその瞬間のコンテキストウィンドウに渡された情報から生まれる。このウィンドウは有限であり、何を入れて何を入れないかが、エージェントの品質とコストを決定する。<br><br>
+    Skills・Hooks・Subagentsは、この有限なコンテキストを<strong>効率的に運用するための3つの拡張機構</strong>である。それぞれ発火の仕組み、実行主体、コンテキストへの影響が異なる。
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SKILLS -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section">
+    <div class="section-label skill"><span class="dot"></span>SKILLS</div>
+    <h2>知識の外部化 — 必要なときだけ読み込む</h2>
+
+    <div class="card skill-card">
+      <h3><span class="icon">📖</span> 何であるか</h3>
+      <p>Skillsは<strong>外部に置かれたマニュアル（SKILL.mdファイル）</strong>を、エージェントが必要と判断したときに読み込む仕組み。読み込まれた知識はエージェント自身のコンテキストに追加され、そのガイドに従って作業を実行する。</p>
+      <p>実行主体は<strong>メインエージェント自身</strong>。知識は増えるが、プロセスは増えない。</p>
+    </div>
+
+    <div class="card skill-card">
+      <h3><span class="icon">⚡</span> 発火の仕組み</h3>
+      <p><strong>非決定論的・セマンティックマッチング。</strong></p>
+      <p>ユーザーの入力に対して、各Skillの<code>description</code>フィールドとの意味的な類似度をLLMが判断し、関連するSkillを選択して読み込む。同じ入力でも文脈次第で違うSkillが選ばれることがある。</p>
+      <ul>
+        <li>「プレゼン作って」→ pptxスキルが発火</li>
+        <li>「PDF読んで」→ pdf-readingスキルが発火</li>
+        <li>エージェントが自律的に「これ読むべき」と判断して発火</li>
+      </ul>
+    </div>
+
+    <div class="card skill-card">
+      <h3><span class="icon">📐</span> コンテキストへの影響</h3>
+      <p>SKILL.mdの内容がメインのコンテキストウィンドウに追加される。つまり<strong>読み込んだ分だけトークンを消費</strong>する。ただし、システムプロンプトに全知識を詰め込むのと違い、必要なときだけ読むのでトークン効率が良い。</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- HOOKS -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section">
+    <div class="section-label hook"><span class="dot"></span>HOOKS</div>
+    <h2>確定的なチェックポイント — 条件を満たせば必ず発火する</h2>
+
+    <div class="card hook-card">
+      <h3><span class="icon">🔗</span> 何であるか</h3>
+      <p>Hooksは<strong>プログラムの特定フェーズで必ず実行される処理</strong>。Reactの<code>useEffect</code>がレンダー後に必ず走るように、エージェントのHooksも特定のイベント（ファイル保存時、コマンド実行前後など）にバインドされ、条件を満たせば100%発火する。</p>
+      <p>AIの判断を介さない。<strong>ルールベースの自動実行</strong>。</p>
+    </div>
+
+    <div class="card hook-card">
+      <h3><span class="icon">⚡</span> 発火の仕組み</h3>
+      <p><strong>決定論的・イベント駆動。</strong></p>
+      <p>あらかじめ定義されたトリガー条件（タイミング・イベント）に合致したら、LLMの判断を経ずに自動で実行される。</p>
+      <ul>
+        <li>ファイル保存時 → リンターを自動実行</li>
+        <li>コミット前 → テストを自動実行</li>
+        <li>毎回のレンダー後 → 副作用処理を実行（React useEffect）</li>
+      </ul>
+    </div>
+
+    <div class="card hook-card">
+      <h3><span class="icon">📐</span> コンテキストへの影響</h3>
+      <p>Hookの実行結果はメインのコンテキストに反映される。ただし、Hook自体は通常軽量な処理（バリデーション、フォーマットチェックなど）なので、<strong>コンテキストへの負荷は最小限</strong>。</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SUBAGENTS -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section">
+    <div class="section-label sub"><span class="dot"></span>SUBAGENTS</div>
+    <h2>仕事の委譲 — 別プロセスに丸投げして結果だけ受け取る</h2>
+
+    <div class="card sub-card">
+      <h3><span class="icon">🧬</span> 何であるか</h3>
+      <p>Subagentは<strong>独立したコンテキストウィンドウを持つ別のエージェントプロセス</strong>。メインエージェントが「これは任せた方がいい」と判断したときに生成され、タスクを独立して実行し、結果だけ親に返す。</p>
+      <p>実行主体が<strong>別に生まれる</strong>。LangGraphでいうサブグラフの呼び出しに相当。</p>
+    </div>
+
+    <div class="card sub-card">
+      <h3><span class="icon">⚡</span> 発火の仕組み</h3>
+      <p><strong>非決定論的・エージェント判断。</strong></p>
+      <p>メインエージェントが「このタスクは自分でやるより別のプロセスに委譲すべき」と推論して発火する。Skillsと同じくAIの自律的判断だが、テキストを読むのではなく、プロセスを生成する点が異なる。</p>
+      <ul>
+        <li>「5ファイル並列リファクタ」→ 5つのサブエージェントにdispatch</li>
+        <li>「ドキュメント調査して」→ 調査サブエージェントに委譲</li>
+        <li>メインの作業と無関係なサイドタスク → サブに切り出す</li>
+      </ul>
+    </div>
+
+    <div class="card sub-card">
+      <h3><span class="icon">📐</span> コンテキストへの影響</h3>
+      <p><strong>メインのコンテキストを汚さない</strong>。これが最大のメリット。サブエージェントの思考過程・ツール実行ログはすべてサブ側のコンテキストで完結し、メインには最終結果のみが返る。メインのコンテキストはクリーンに保たれる。</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- COMPARISON -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section">
+    <h2>3つの機構の比較</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>観点</th>
+            <th><span class="tag skill">Skills</span></th>
+            <th><span class="tag hook">Hooks</span></th>
+            <th><span class="tag sub">Subagents</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>本質</td>
+            <td>知識の注入</td>
+            <td>自動チェックポイント</td>
+            <td>タスクの委譲</td>
+          </tr>
+          <tr>
+            <td>発火</td>
+            <td>AIのセマンティック判断</td>
+            <td>条件一致で必ず発火</td>
+            <td>AIの自律的判断</td>
+          </tr>
+          <tr>
+            <td>決定論性</td>
+            <td>非決定論的</td>
+            <td>決定論的</td>
+            <td>非決定論的</td>
+          </tr>
+          <tr>
+            <td>実行主体</td>
+            <td>メインエージェント自身</td>
+            <td>プログラム（自動実行）</td>
+            <td>別プロセス</td>
+          </tr>
+          <tr>
+            <td>コンテキスト</td>
+            <td>メインに追加される</td>
+            <td>メインに軽微な追加</td>
+            <td>メインを汚さない</td>
+          </tr>
+          <tr>
+            <td>トークンコスト</td>
+            <td>読み込み分だけ増加</td>
+            <td>最小限</td>
+            <td>サブ側で独立消費</td>
+          </tr>
+          <tr>
+            <td>LangGraph対応</td>
+            <td>ノード内RAG</td>
+            <td>Conditional Edge</td>
+            <td>サブグラフ呼び出し</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- FLOW DIAGRAM -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section">
+    <h2>発火タイミングの流れ</h2>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-group">
+          <div class="flow-box main">ユーザー入力</div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-group">
+          <div class="flow-box main">システムプロンプト<br>+ 会話履歴の組み立て</div>
+          <div class="flow-label">毎回送信される</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <span class="flow-arrow">↓</span>
+      </div>
+      <div class="flow-row">
+        <div class="flow-group">
+          <div class="flow-box hook-f">Hooks（Pre）</div>
+          <div class="flow-label">条件一致で自動発火</div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-group">
+          <div class="flow-box main">LLM推論</div>
+          <div class="flow-label">エージェントの判断</div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-group">
+          <div class="flow-box hook-f">Hooks（Post）</div>
+          <div class="flow-label">条件一致で自動発火</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <span class="flow-arrow" style="margin-left: 0;">↙</span>
+        <span style="width: 60px"></span>
+        <span class="flow-arrow">↘</span>
+      </div>
+      <div class="flow-row">
+        <div class="flow-group">
+          <div class="flow-box skill-f">Skill読み込み</div>
+          <div class="flow-label">「この知識が必要」と判断</div>
+        </div>
+        <span style="width: 30px"></span>
+        <div class="flow-group">
+          <div class="flow-box sub-f">Subagent生成</div>
+          <div class="flow-label">「これは任せよう」と判断</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <span class="flow-arrow">↘</span>
+        <span style="width: 60px"></span>
+        <span class="flow-arrow">↙</span>
+      </div>
+      <div class="flow-row">
+        <div class="flow-group">
+          <div class="flow-box main">レスポンス生成</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- CONTEXT MANAGEMENT -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section">
+    <div class="section-label ctx"><span class="dot"></span>CONTEXT MANAGEMENT</div>
+    <h2>なぜコンテキスト管理がすべてを決めるのか</h2>
+
+    <div class="card ctx-card">
+      <h3><span class="icon">🧠</span> LLMの根本的制約</h3>
+      <p>LLMは<strong>毎回ステートレス</strong>で起動する。記憶があるように見えるのは、毎回のリクエストに会話履歴・システムプロンプト・メモリをまとめて渡しているから。LLM自体は何も覚えていない。</p>
+      <p>コンテキストウィンドウは有限（Claude: 200kトークン）で、超過分は切り落とされるか要約される。エラーは出ず、<strong>静かに劣化する</strong>。これが最も危険なポイント。</p>
+    </div>
+
+    <div class="card ctx-card">
+      <h3><span class="icon">💰</span> コスト構造の理解</h3>
+      <p><strong>システムプロンプトは常駐コスト</strong>。100往復の会話なら、同じシステムプロンプトが100回課金される。ここに全知識を詰め込むのは、コスト的にも品質的にも悪手。</p>
+      <p>だからこそ、常駐させるもの（システムプロンプト）は最小限にし、状況に応じて読み込むもの（Skills）、別プロセスに逃がすもの（Subagents）を使い分ける設計が重要になる。</p>
+    </div>
+
+    <div class="card ctx-card">
+      <h3><span class="icon">🎯</span> 3機構による最適化戦略</h3>
+      <p><strong>システムプロンプト / CLAUDE.md</strong> — 人格・判断基準・基本ルールだけ。「憲法」。常に読み込まれるので簡潔に。</p>
+      <p><strong>Skills</strong> — 専門知識・手順書。必要なときだけ読み込む「業務マニュアル棚」。常駐コストゼロ。</p>
+      <p><strong>Hooks</strong> — 品質保証の自動チェック。コンテキストへの負荷最小で確実に実行される「業務フローのチェックポイント」。</p>
+      <p><strong>Subagents</strong> — 独立タスクの委譲先。メインのコンテキストを汚さず、並列実行も可能な「別部署への業務委託」。</p>
+    </div>
+
+    <div class="insight">
+      <strong>核心：</strong>コンテキストウィンドウは「作業机の広さ」。机に乗り切らない資料は、棚に置いて必要なときだけ出す（Skills）、別の机で作業してもらう（Subagents）、決まったタイミングで自動チェックを走らせる（Hooks）。この設計が、エージェントの品質・コスト・スケーラビリティのすべてを決める。
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- METAPHOR -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section">
+    <h2>アナロジーで捉える</h2>
+    <div class="metaphor">
+      <div class="metaphor-item">
+        <div class="emoji">📋</div>
+        <div class="label" style="color: var(--accent-skill);">Skills</div>
+        <div class="desc">業務マニュアル棚<br>必要な時だけ棚から出して参照する。普段は机に置かない。</div>
+      </div>
+      <div class="metaphor-item">
+        <div class="emoji">⏰</div>
+        <div class="label" style="color: var(--accent-hook);">Hooks</div>
+        <div class="desc">業務フローのチェックポイント<br>「出荷前に必ず検品」のような確定的ルール。</div>
+      </div>
+      <div class="metaphor-item">
+        <div class="emoji">🏢</div>
+        <div class="label" style="color: var(--accent-sub);">Subagents</div>
+        <div class="desc">別部署への業務委託<br>依頼して結果だけ受け取る。途中経過は自分の机に来ない。</div>
+      </div>
+      <div class="metaphor-item">
+        <div class="emoji">📜</div>
+        <div class="label" style="color: var(--accent-ctx);">System Prompt</div>
+        <div class="desc">憲法・社是<br>常に全員が参照する最上位の判断基準。簡潔であるべき。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- PRACTICAL -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section">
+    <h2>実務への適用</h2>
+
+    <div class="card">
+      <h3><span class="icon">🔧</span> 設計判断フロー</h3>
+      <p>「この知識/処理をどこに置くか」を決めるとき、以下の順で考える：</p>
+      <ul>
+        <li><strong>毎回必要か？</strong> → Yes → システムプロンプト（ただし最小限に）</li>
+        <li><strong>特定条件で必ず実行すべきか？</strong> → Yes → Hooks</li>
+        <li><strong>特定タスクのときだけ必要な知識か？</strong> → Yes → Skills</li>
+        <li><strong>途中経過がメインに不要か？</strong> → Yes → Subagents</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">⚠️</span> よくあるアンチパターン</h3>
+      <ul>
+        <li>CLAUDE.mdに全手順書を書く → Skillsに外出しすべき</li>
+        <li>メインセッションで寄り道タスクをやる → Subagentに委譲すべき</li>
+        <li>品質チェックをLLMの判断に任せる → Hooksで確定的に実行すべき</li>
+        <li>全Skillを毎回読み込む → 必要なものだけ選択的に読むべき</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    Skills / Hooks / Subagents — Context Management Guide<br>
+    Compiled from conversation, April 2026
+  </div>
+
+</div>
+</body>
+</html>
