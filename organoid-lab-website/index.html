@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organoid Disease Modeling Lab — iPS細胞由来腸管オルガノイド研究室</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --accent: #e94560;
+            --accent2: #0f3460;
+            --glow: #16213e;
+            --text: #eee;
+            --subtle: #aaa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ── Hero ── */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            padding: 2rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.8rem);
+            font-weight: 900;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 30%, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.4rem);
+            font-weight: 300;
+            color: var(--subtle);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+
+        .hero .cta {
+            display: inline-block;
+            padding: 0.9rem 2.4rem;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 999px;
+            transition: all 0.3s;
+        }
+
+        .hero .cta:hover {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 30px rgba(233,69,96,0.4);
+        }
+
+        /* ── Navigation ── */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(12px);
+            background: rgba(26,26,46,0.7);
+            transition: background 0.3s;
+        }
+
+        nav .logo {
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 0.05em;
+        }
+
+        nav .logo span { color: var(--accent); }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--subtle);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        nav a:hover { color: #fff; }
+
+        /* ── Sections ── */
+        section {
+            padding: 6rem 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+
+        p.lead {
+            font-size: 1.1rem;
+            color: var(--subtle);
+            line-height: 1.8;
+            max-width: 750px;
+        }
+
+        /* ── Research Pipeline ── */
+        .pipeline {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .pipeline-step {
+            background: linear-gradient(145deg, rgba(15,52,96,0.4), rgba(22,33,62,0.6));
+            border: 1px solid rgba(233,69,96,0.15);
+            border-radius: 16px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pipeline-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+
+        .pipeline-step:hover::before { transform: scaleX(1); }
+
+        .pipeline-step:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(233,69,96,0.15);
+        }
+
+        .pipeline-step .icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .pipeline-step h3 {
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pipeline-step p {
+            font-size: 0.85rem;
+            color: var(--subtle);
+            line-height: 1.6;
+        }
+
+        /* ── Publications ── */
+        .pub-list {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .pub-item {
+            padding: 1.5rem 2rem;
+            background: rgba(15,52,96,0.25);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 12px 12px 0;
+            transition: background 0.3s;
+        }
+
+        .pub-item:hover { background: rgba(15,52,96,0.45); }
+
+        .pub-item h4 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .pub-item .meta {
+            font-size: 0.8rem;
+            color: var(--subtle);
+        }
+
+        /* ── Team ── */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .member {
+            text-align: center;
+        }
+
+        .member .avatar {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            background: linear-gradient(135deg, var(--accent2), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .member h4 { font-size: 1rem; }
+        .member p { font-size: 0.8rem; color: var(--subtle); }
+
+        /* ── News ── */
+        .news-list {
+            margin-top: 2rem;
+        }
+
+        .news-item {
+            padding: 1.2rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            gap: 1.5rem;
+            align-items: baseline;
+        }
+
+        .news-item .date {
+            font-size: 0.8rem;
+            color: var(--accent);
+            white-space: nowrap;
+            min-width: 100px;
+        }
+
+        .news-item .body {
+            font-size: 0.95rem;
+            color: var(--subtle);
+        }
+
+        /* ── Contact ── */
+        .contact-box {
+            margin-top: 2rem;
+            padding: 2.5rem;
+            background: linear-gradient(145deg, rgba(15,52,96,0.3), rgba(22,33,62,0.5));
+            border-radius: 16px;
+            border: 1px solid rgba(233,69,96,0.1);
+        }
+
+        .contact-box p {
+            color: var(--subtle);
+            line-height: 1.8;
+        }
+
+        .contact-box a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.3);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* ── Scroll animations ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            nav ul { display: none; }
+            section { padding: 4rem 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+    <div class="logo"><span>ODM</span> Lab</div>
+    <ul>
+        <li><a href="#research">Research</a></li>
+        <li><a href="#publications">Publications</a></li>
+        <li><a href="#team">Team</a></li>
+        <li><a href="#news">News</a></li>
+        <li><a href="#contact">Contact</a></li>
+    </ul>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+    <canvas id="bg"></canvas>
+    <div class="hero-content">
+        <h1>iPS細胞由来 腸管オルガノイドで<br>潰瘍性大腸炎の未来を拓く</h1>
+        <p class="subtitle">
+            Organoid Disease Modeling Laboratory —<br>
+            ヒトiPS細胞から腸管オルガノイドを構築し、<br>
+            潰瘍性大腸炎の病態モデルを世界に先駆けて確立する。
+        </p>
+        <a href="#research" class="cta">Research Overview</a>
+    </div>
+</div>
+
+<!-- Research -->
+<section id="research">
+    <div class="reveal">
+        <p class="section-label">Research</p>
+        <h2>研究パイプライン</h2>
+        <p class="lead">
+            患者由来iPS細胞から腸管オルガノイドを分化誘導し、
+            炎症性サイトカイン刺激やゲノム編集（CRISPR-Cas9）によって
+            潰瘍性大腸炎の病態を試験管内で忠実に再現。
+            創薬スクリーニングと個別化医療の基盤を構築します。
+        </p>
+    </div>
+    <div class="pipeline reveal">
+        <div class="pipeline-step">
+            <div class="icon">🧬</div>
+            <h3>iPS細胞樹立</h3>
+            <p>UC患者末梢血からエピソーマルベクター法でiPS細胞を樹立。品質管理・核型解析を実施</p>
+        </div>
+        <div class="pipeline-step">
+            <div class="icon">🔬</div>
+            <h3>腸管分化誘導</h3>
+            <p>Definitive Endoderm → Hindgut → 腸管オルガノイドへの段階的分化プロトコル</p>
+        </div>
+        <div class="pipeline-step">
+            <div class="icon">✂️</div>
+            <h3>ゲノム編集</h3>
+            <p>CRISPR-Cas9によるUC関連リスク遺伝子（IL-23R, HNF4α等）のノックアウト・ノックイン</p>
+        </div>
+        <div class="pipeline-step">
+            <div class="icon">🔥</div>
+            <h3>炎症モデル構築</h3>
+            <p>TNF-α/IL-17/IFN-γカクテル刺激によるバリア破壊・炎症応答の定量評価</p>
+        </div>
+        <div class="pipeline-step">
+            <div class="icon">💊</div>
+            <h3>創薬スクリーニング</h3>
+            <p>ハイスループットアッセイによる既存薬リポジショニング＆新規化合物探索</p>
+        </div>
+    </div>
+</section>
+
+<!-- Publications -->
+<section id="publications">
+    <div class="reveal">
+        <p class="section-label">Publications</p>
+        <h2>主要業績</h2>
+        <div class="pub-list">
+            <div class="pub-item">
+                <h4>Patient-derived iPS intestinal organoids recapitulate ulcerative colitis epithelial barrier dysfunction</h4>
+                <p class="meta">Yamamoto K*, Tanaka S, et al. — <em>Nature Gastroenterology</em>, 2026</p>
+            </div>
+            <div class="pub-item">
+                <h4>CRISPR-engineered HNF4α-deficient organoids reveal novel inflammatory cascades in UC pathogenesis</h4>
+                <p class="meta">Suzuki M, Yamamoto K, et al. — <em>Cell Stem Cell</em>, 2025</p>
+            </div>
+            <div class="pub-item">
+                <h4>High-throughput drug screening using UC-modeled intestinal organoids identifies JAK-STAT pathway modulators</h4>
+                <p class="meta">Tanaka S, Itoh R, et al. — <em>Gastroenterology</em>, 2025</p>
+            </div>
+            <div class="pub-item">
+                <h4>Establishment of a robust differentiation protocol for human iPS-derived colonic organoids</h4>
+                <p class="meta">Yamamoto K, et al. — <em>Stem Cell Reports</em>, 2024</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team -->
+<section id="team">
+    <div class="reveal">
+        <p class="section-label">Team</p>
+        <h2>研究チーム</h2>
+        <div class="team-grid">
+            <div class="member">
+                <div class="avatar">YK</div>
+                <h4>山本 啓介</h4>
+                <p>教授 / PI<br>消化器再生医学</p>
+            </div>
+            <div class="member">
+                <div class="avatar">TS</div>
+                <h4>田中 咲良</h4>
+                <p>准教授<br>幹細胞生物学</p>
+            </div>
+            <div class="member">
+                <div class="avatar">SM</div>
+                <h4>鈴木 雅人</h4>
+                <p>助教<br>ゲノム編集工学</p>
+            </div>
+            <div class="member">
+                <div class="avatar">IR</div>
+                <h4>伊藤 涼</h4>
+                <p>博士課程 D3<br>オルガノイド薬理学</p>
+            </div>
+            <div class="member">
+                <div class="avatar">NK</div>
+                <h4>中村 花</h4>
+                <p>博士課程 D1<br>免疫・炎症生物学</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- News -->
+<section id="news">
+    <div class="reveal">
+        <p class="section-label">News</p>
+        <h2>お知らせ</h2>
+        <div class="news-list">
+            <div class="news-item">
+                <span class="date">2026.03.28</span>
+                <span class="body">山本教授がJSGE 2026にて招待講演を行いました「iPS-organoids as UC drug discovery platforms」</span>
+            </div>
+            <div class="news-item">
+                <span class="date">2026.03.01</span>
+                <span class="body">Nature Gastroenterology に当研究室の論文が掲載されました</span>
+            </div>
+            <div class="news-item">
+                <span class="date">2026.02.15</span>
+                <span class="body">AMED「次世代オルガノイド創薬」プロジェクトに採択されました（3年間・総額1.2億円）</span>
+            </div>
+            <div class="news-item">
+                <span class="date">2026.01.10</span>
+                <span class="body">博士課程・ポスドク研究員を募集中です。<a href="#contact">詳細はこちら</a></span>
+            </div>
+            <div class="news-item">
+                <span class="date">2025.12.20</span>
+                <span class="body">伊藤涼さんが日本再生医療学会 若手優秀発表賞を受賞しました</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact -->
+<section id="contact">
+    <div class="reveal">
+        <p class="section-label">Contact</p>
+        <h2>アクセス・連絡先</h2>
+        <div class="contact-box">
+            <p>
+                <strong>Organoid Disease Modeling Laboratory</strong><br>
+                〒113-8655 東京都文京区本郷7-3-1<br>
+                東京大学大学院医学系研究科 消化器再生医学講座<br><br>
+                Email: <a href="mailto:organoid-lab@example.ac.jp">organoid-lab@example.ac.jp</a><br>
+                Tel: 03-5841-XXXX
+            </p>
+        </div>
+    </div>
+</section>
+
+<footer>
+    &copy; 2026 Organoid Disease Modeling Laboratory. All rights reserved.
+</footer>
+
+<!-- Scripts -->
+<script>
+// ── Organic Cell Background Animation ──
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+let w, h, particles;
+
+function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+class Particle {
+    constructor() { this.reset(); }
+    reset() {
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        this.r = Math.random() * 3 + 1;
+        this.dx = (Math.random() - 0.5) * 0.5;
+        this.dy = (Math.random() - 0.5) * 0.5;
+        this.opacity = Math.random() * 0.5 + 0.1;
+    }
+    update() {
+        this.x += this.dx;
+        this.y += this.dy;
+        if (this.x < 0 || this.x > w) this.dx *= -1;
+        if (this.y < 0 || this.y > h) this.dy *= -1;
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(233, 69, 96, ${this.opacity})`;
+        ctx.fill();
+    }
+}
+
+particles = Array.from({ length: 120 }, () => new Particle());
+
+function animate() {
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => { p.update(); p.draw(); });
+
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+                ctx.beginPath();
+                ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(particles[j].x, particles[j].y);
+                ctx.strokeStyle = `rgba(15, 52, 96, ${0.3 * (1 - dist / 120)})`;
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            }
+        }
+    }
+    requestAnimationFrame(animate);
+}
+animate();
+
+// ── Scroll Reveal ──
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+        if (e.isIntersecting) e.target.classList.add('visible');
+    });
+}, { threshold: 0.15 });
+reveals.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
