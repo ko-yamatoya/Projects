@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>プライバシーポリシー — 朝イチAI</title>
+<meta name="description" content="朝イチAI 配信システムのプライバシーポリシー。YouTube Data API の利用範囲と、データの取り扱いについて説明します。">
+<style>
+  :root{ --bg:#0f1220; --card:#171b2e; --fg:#eef1f7; --sub:#a7b0c6;
+    --accent:#ff9a46; --accent2:#5b8cff; --line:#2a3050; }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#fbf7f2; --card:#ffffff; --fg:#1a1e2c; --sub:#54607a;
+      --accent:#e06a1f; --accent2:#3157c4; --line:#e7e2d8; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);line-height:1.8;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",system-ui,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:0 22px}
+  header{border-bottom:1px solid var(--line);padding:36px 0 24px}
+  header h1{margin:0;font-size:clamp(24px,5vw,32px)}
+  header .up{font-size:13px;color:var(--sub);margin-bottom:6px}
+  header a{color:var(--accent2);text-decoration:none}
+  main{padding:34px 0 60px}
+  h2{font-size:19px;margin:34px 0 10px}
+  h2 .bar{display:inline-block;width:22px;height:3px;background:var(--accent);
+    vertical-align:middle;margin-right:9px;border-radius:2px}
+  p,li{color:var(--fg)}
+  .sub{color:var(--sub)}
+  ul{padding-left:1.2em}
+  li{margin:.4em 0}
+  a{color:var(--accent2)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px 22px;margin:14px 0}
+  footer{border-top:1px solid var(--line);padding:22px 0 60px;color:var(--sub);font-size:13px}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <div class="up"><a href="./index.html">← 朝イチAI</a></div>
+  <h1>プライバシーポリシー</h1>
+  <p class="sub" style="margin:.4em 0 0">最終更新日: 2026年7月14日</p>
+</header>
+
+<main class="wrap">
+  <p>本ポリシーは、朝イチAI（以下「本サービス」）のコンテンツ配信を自動化する
+  運用システム（以下「本システム」）における、情報の取り扱いについて定めるものです。
+  本システムは運営者個人が開発・運用しています。</p>
+
+  <h2><span class="bar"></span>1. 本システムの概要</h2>
+  <p>本システムは、運営者が制作したAIニュースの解説動画を、
+  <strong>運営者自身が保有・管理する YouTube チャンネルにのみ</strong>
+  自動でアップロードするために、YouTube Data API v3 を利用します。</p>
+
+  <h2><span class="bar"></span>2. 利用する Google / YouTube の権限</h2>
+  <div class="card">
+    <ul>
+      <li><code>https://www.googleapis.com/auth/youtube.upload</code>
+        <br><span class="sub">運営者自身のチャンネルへ動画をアップロードする目的のみに使用します。
+        動画の閲覧・分析データの取得、他ユーザーのデータへのアクセスには使用しません。</span></li>
+    </ul>
+  </div>
+  <p>本システムが利用する認証情報（OAuth トークン）は、運営者が管理する
+  ローカル環境にのみ保存され、第三者に共有・送信されることはありません。</p>
+
+  <h2><span class="bar"></span>3. 取得しない情報</h2>
+  <p>本システムは<strong>視聴者・第三者の個人情報を一切取得・収集・保存しません</strong>。
+  本システムが操作する対象は運営者自身のチャンネルに限られ、外部ユーザーとの
+  データのやり取りは発生しません。Cookie やトラッキングによる利用者情報の
+  収集も行いません。</p>
+
+  <h2><span class="bar"></span>4. 情報の第三者提供</h2>
+  <p>本システムは、いかなる情報も第三者に販売・提供・共有しません。</p>
+
+  <h2><span class="bar"></span>5. Google API 利用に関する遵守事項</h2>
+  <p>本システムによる Google／YouTube API から取得した情報の利用および転送は、
+  <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">
+  Google API Services User Data Policy</a>（限定的使用の要件を含む）を遵守します。</p>
+
+  <h2><span class="bar"></span>6. 改定</h2>
+  <p>本ポリシーは、必要に応じて改定されることがあります。改定時は本ページに
+  最新の内容と更新日を掲載します。</p>
+
+  <h2><span class="bar"></span>7. お問い合わせ</h2>
+  <p>本ポリシーおよび本システムに関するお問い合わせは、以下までご連絡ください。<br>
+  <a href="mailto:cfopshub@gmail.com">cfopshub@gmail.com</a></p>
+</main>
+
+<footer class="wrap">
+  <p>朝イチAI ／ 運営: IT企業勤務のエンジニア（個人）</p>
+</footer>
+</body>
+</html>
