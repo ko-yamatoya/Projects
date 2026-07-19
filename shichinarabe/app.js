@@ -439,18 +439,23 @@
 
   function renderSettingsModal() {
     var s = state.settings;
-    var wref = s.winnersPrizes.map(function (v, i) { return '<span class="ref-chip">' + (i + 1) + '位 ' + fmtMoney(v) + '</span>'; }).join('');
-    var lref = s.losersPrizes.map(function (v, i) { return '<span class="ref-chip">' + (i + 1) + '位 ' + fmtMoney(v) + '</span>'; }).join('');
+    var wp = s.winnersPrizes.map(function (v, i) {
+      return '<label>' + (i + 1) + '位<input type="number" step="50" data-set="w" data-i="' + i + '" value="' + v + '"></label>';
+    }).join('');
+    var lp = s.losersPrizes.map(function (v, i) {
+      return '<label>' + (i + 1) + '位<input type="number" step="50" data-set="l" data-i="' + i + '" value="' + v + '"></label>';
+    }).join('');
     openModal(
-      '<div class="modal-head"><h3>設定</h3><button class="del-btn" data-action="close-modal">✕</button></div>' +
+      '<div class="modal-head"><h3>設定（単価はすべて変更可）</h3><button class="del-btn" data-action="close-modal">✕</button></div>' +
       '<div class="modal-body">' +
-      '<h4>Winners 賞金（固定・トップ基準）</h4><div class="ref-row">' + wref + '</div>' +
-      '<h4>Losers 賞金（固定・ボトム基準）</h4><div class="ref-row">' + lref + '</div>' +
-      '<p class="hint">人数が減っても「トップ+500」「ボトム−500」は保たれます。</p>' +
-      '<h4>ドボン（可変）</h4><div class="num-grid">' +
+      '<h4>Winners 賞金（トップ基準）</h4><div class="num-grid cols3">' + wp + '</div>' +
+      '<h4>Losers 賞金（ボトム基準）</h4><div class="num-grid cols3">' + lp + '</div>' +
+      '<p class="hint">人数が減っても「1位側の額」と「最下位側の額」を両端に合わせて割り当てます。</p>' +
+      '<h4>ドボン</h4><div class="num-grid">' +
       '<label>基本額<input type="number" step="50" data-set="base" value="' + s.dobonBase + '"></label>' +
       '<label>ジョーカー1枚あたり<input type="number" step="50" data-set="pj" value="' + s.dobonPerJoker + '"></label>' +
       '</div><p class="hint">ドボンした人は「基本額＋ジョーカー枚数×加算」を払い、その試合の1位が総取り。</p>' +
+      '<button class="secondary" data-action="reset-settings" style="margin-top:14px;width:100%">既定値に戻す</button>' +
       '</div>' +
       '<div class="modal-foot"><button class="primary" data-action="save-settings">保存</button></div>'
     );
@@ -463,6 +468,8 @@
       var t = inp.getAttribute('data-set');
       if (t === 'base') state.settings.dobonBase = val;
       else if (t === 'pj') state.settings.dobonPerJoker = val;
+      else if (t === 'w') state.settings.winnersPrizes[+inp.getAttribute('data-i')] = val;
+      else if (t === 'l') state.settings.losersPrizes[+inp.getAttribute('data-i')] = val;
     });
     closeModal(); render();
   }
@@ -604,6 +611,9 @@
         sanitizeMatches(round); render(); break;
       case 'open-settings': renderSettingsModal(); break;
       case 'save-settings': saveSettings(); break;
+      case 'reset-settings':
+        state.settings = CALC.defaultSettings();
+        render(); renderSettingsModal(); break;
       case 'open-roster': renderRosterModal(); break;
       case 'save-roster': saveRoster(); break;
       case 'open-data': renderDataModal(); break;
