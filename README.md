@@ -9,5 +9,6 @@
 | places-map | https://ko-yamatoya.github.io/Projects/places-map/ |
 | demo | https://ko-yamatoya.github.io/Projects/demo/ |
 | organoid-lab-website（研究室サイトのデモ） | https://ko-yamatoya.github.io/Projects/organoid-lab-website/ |
+| shichinarabe（七並べ対決 記録アプリ） | https://ko-yamatoya.github.io/Projects/shichinarabe/ |
 
 運用ルールは [CLAUDE.md](CLAUDE.md) を参照（1デモ=1サブフォルダ、独立リポジトリは作らない）。
