@@ -1,0 +1,72 @@
+/*
+ * 経県値データ — このサイトの表示用データ。
+ * 正本は Life リポジトリの travel/solo/keikenchi.md。
+ * あちらを更新したら、ここも同じ内容に手で同期して build せずとも反映される
+ * （index.html は data.js を読み込むだけ。地図の再生成は不要）。
+ *
+ * score: 5 居住 / 4 宿泊 / 3 訪問 / 2 接地 / 1 通過 / 0 未踏
+ * 未踏(0)県のみ tier(A/B/C)・access・wish を持つ（行き先提案に使う）。
+ */
+window.KEIKENCHI = {
+  updated: "2026-07-16",
+  total: 107,
+  max: 235,
+  mikkou: 19,
+  levels: [
+    { score: 5, icon: "🏠", label: "居住" },
+    { score: 4, icon: "🛏️", label: "宿泊" },
+    { score: 3, icon: "🚶", label: "訪問" },
+    { score: 2, icon: "👣", label: "接地" },
+    { score: 1, icon: "🚄", label: "通過" },
+    { score: 0, icon: "❌", label: "未踏" },
+  ],
+  prefectures: {
+    "1":  { name: "北海道", score: 0, tier: "C", access: "飛行機／北海道新幹線（函館）", wish: true },
+    "2":  { name: "青森",   score: 0, tier: "B", access: "東北新幹線 約3.5h" },
+    "3":  { name: "岩手",   score: 0, tier: "B", access: "東北新幹線（盛岡）約2h" },
+    "4":  { name: "宮城",   score: 0, tier: "A", access: "東北新幹線（仙台）約1.5h" },
+    "5":  { name: "秋田",   score: 0, tier: "B", access: "秋田新幹線 約4h" },
+    "6":  { name: "山形",   score: 0, tier: "A", access: "山形新幹線 約2.5h" },
+    "7":  { name: "福島",   score: 4 },
+    "8":  { name: "茨城",   score: 4 },
+    "9":  { name: "栃木",   score: 4 },
+    "10": { name: "群馬",   score: 4 },
+    "11": { name: "埼玉",   score: 3 },
+    "12": { name: "千葉",   score: 4 },
+    "13": { name: "東京",   score: 5 },
+    "14": { name: "神奈川", score: 3 },
+    "15": { name: "新潟",   score: 0, tier: "A", access: "上越新幹線 約2h" },
+    "16": { name: "富山",   score: 0, tier: "B", access: "北陸新幹線 約2h" },
+    "17": { name: "石川",   score: 0, tier: "B", access: "北陸新幹線（金沢）約2.5h", wish: true },
+    "18": { name: "福井",   score: 0, tier: "B", access: "北陸新幹線（敦賀）約3h" },
+    "19": { name: "山梨",   score: 4 },
+    "20": { name: "長野",   score: 4 },
+    "21": { name: "岐阜",   score: 0, tier: "A", access: "東海道新幹線＋乗換 約2h" },
+    "22": { name: "静岡",   score: 4 },
+    "23": { name: "愛知",   score: 4 },
+    "24": { name: "三重",   score: 0, tier: "B", access: "名古屋乗換 約2.5h" },
+    "25": { name: "滋賀",   score: 0, tier: "B", access: "東海道新幹線（米原）約2.5h" },
+    "26": { name: "京都",   score: 4 },
+    "27": { name: "大阪",   score: 4 },
+    "28": { name: "兵庫",   score: 1 },
+    "29": { name: "奈良",   score: 0, tier: "B", access: "京都乗換 約3h" },
+    "30": { name: "和歌山", score: 0, tier: "B", access: "新大阪乗換 約4h" },
+    "31": { name: "鳥取",   score: 0, tier: "C", access: "飛行機 or 夜行バス 約5h" },
+    "32": { name: "島根",   score: 4 },
+    "33": { name: "岡山",   score: 2 },
+    "34": { name: "広島",   score: 4 },
+    "35": { name: "山口",   score: 4 },
+    "36": { name: "徳島",   score: 0, tier: "C", access: "飛行機 or 夜行バス" },
+    "37": { name: "香川",   score: 3 },
+    "38": { name: "愛媛",   score: 4 },
+    "39": { name: "高知",   score: 0, tier: "C", access: "飛行機 or 夜行バス" },
+    "40": { name: "福岡",   score: 5 },
+    "41": { name: "佐賀",   score: 4 },
+    "42": { name: "長崎",   score: 4 },
+    "43": { name: "熊本",   score: 4 },
+    "44": { name: "大分",   score: 4 },
+    "45": { name: "宮崎",   score: 4 },
+    "46": { name: "鹿児島", score: 5 },
+    "47": { name: "沖縄",   score: 0, tier: "C", access: "飛行機" },
+  },
+};

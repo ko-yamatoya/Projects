@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>経県ゲーム｜一人旅の記録と、次どこ行く？</title>
+<meta name="description" content="行った県を経県値で塗り分けた日本地図。未踏をゲームのように潰していく一人旅の記録。">
+<style>
+  :root{
+    --bg:#f6f3ec; --surface:#ffffff; --ink:#23282d; --muted:#6f7680;
+    --line:#e7e1d6; --accent:#c9662f; --gold:#c98a1f; --shadow:0 1px 2px rgba(30,25,15,.05),0 8px 30px rgba(30,25,15,.07);
+    --s0:#e6e0d4; --s1:#cadfe1; --s2:#a2ccd1; --s3:#6bafb9; --s4:#3a8d9c; --s5:#1c6472;
+    --stroke:#ffffff;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0f1519; --surface:#161d23; --ink:#e9eef2; --muted:#98a4af;
+      --line:#26303a; --accent:#ec8a41; --gold:#e0b356; --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 34px rgba(0,0,0,.45);
+      --s0:#293038; --s1:#31565f; --s2:#2f7c8b; --s3:#369eb0; --s4:#54bccd; --s5:#8bdbe7;
+      --stroke:#0f161b;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    line-height:1.7; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px; margin:0 auto; padding:0 20px}
+  a{color:var(--accent)}
+
+  /* header */
+  header{padding:52px 0 8px; text-align:center}
+  .eyebrow{font-size:13px; letter-spacing:.22em; color:var(--muted); font-weight:700; margin:0}
+  h1{font-size:clamp(28px,6vw,42px); margin:.15em 0 .1em; letter-spacing:.01em}
+  .lead{color:var(--muted); margin:.2em 0 0; font-size:15px}
+
+  /* score */
+  .score{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:26px 0 6px}
+  .score .big{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:16px 22px; box-shadow:var(--shadow); min-width:132px; text-align:center;
+  }
+  .score .num{font-size:34px; font-weight:800; line-height:1; letter-spacing:-.01em}
+  .score .num small{font-size:15px; color:var(--muted); font-weight:600}
+  .score .cap{font-size:12px; color:var(--muted); letter-spacing:.08em; margin-top:6px}
+  .bar{height:9px; border-radius:99px; background:var(--line); overflow:hidden; max-width:520px; margin:18px auto 0}
+  .bar>i{display:block; height:100%; background:linear-gradient(90deg,var(--s3),var(--s5)); border-radius:99px}
+
+  section{margin:40px 0}
+  .section-title{font-size:13px; letter-spacing:.16em; color:var(--muted); font-weight:700; text-align:center; margin:0 0 4px}
+
+  /* map */
+  .mapcard{background:var(--surface); border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow); padding:14px 14px 20px}
+  .map{position:relative}
+  .map svg{width:100%; height:auto; display:block}
+  .map .prefecture{cursor:pointer; transition:fill .15s, opacity .2s, filter .15s}
+  .map .prefecture path,.map .prefecture polygon{stroke:var(--stroke); stroke-width:.9}
+  .map .boundary-line{stroke:var(--line)}
+  .map .boundary-line line{stroke:var(--line)}
+  .map .prefecture.s0{fill:var(--s0)} .map .prefecture.s1{fill:var(--s1)}
+  .map .prefecture.s2{fill:var(--s2)} .map .prefecture.s3{fill:var(--s3)}
+  .map .prefecture.s4{fill:var(--s4)} .map .prefecture.s5{fill:var(--s5)}
+  .map .prefecture:hover,.map .prefecture:focus{filter:brightness(1.08); outline:none}
+  .map .prefecture.active{filter:brightness(1.05) drop-shadow(0 0 6px var(--gold))}
+  .map .prefecture.active path,.map .prefecture.active polygon{stroke:var(--gold); stroke-width:1.6}
+  /* 未踏スポットライト */
+  body.focus-mikkou .map .prefecture:not(.s0){opacity:.28}
+  body.focus-mikkou .map .prefecture.s0{filter:drop-shadow(0 0 5px var(--accent))}
+  body.focus-mikkou .map .prefecture.s0 path,body.focus-mikkou .map .prefecture.s0 polygon{stroke:var(--accent); stroke-width:1.4}
+
+  .controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0 4px}
+  button.btn{
+    font:inherit; font-weight:700; font-size:14px; cursor:pointer; border-radius:12px;
+    padding:11px 18px; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+    box-shadow:var(--shadow); transition:transform .08s;
+  }
+  button.btn:active{transform:translateY(1px)}
+  button.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  button.btn[aria-pressed="true"]{border-color:var(--accent); color:var(--accent)}
+
+  /* info panel */
+  .info{
+    margin:16px auto 0; max-width:560px; background:var(--surface); border:1px solid var(--line);
+    border-radius:16px; padding:16px 18px; box-shadow:var(--shadow); min-height:70px;
+  }
+  .info .pname{font-size:22px; font-weight:800; margin:0}
+  .info .pstatus{font-size:14px; color:var(--muted); margin:2px 0 0}
+  .info .paccess{font-size:14px; margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line)}
+  .info .tierbadge{display:inline-block; font-size:12px; font-weight:700; padding:2px 9px; border-radius:99px; background:var(--accent); color:#fff; margin-right:8px}
+  .info.dim{color:var(--muted)}
+
+  /* legend */
+  .legend{display:flex; gap:8px 16px; justify-content:center; flex-wrap:wrap; margin:18px 0 0}
+  .legend .li{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--muted)}
+  .legend .sw{width:16px; height:16px; border-radius:5px; border:1px solid rgba(0,0,0,.08)}
+  .legend .n{font-weight:700; color:var(--ink)}
+
+  /* plans */
+  .plans{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px}
+  .plan{
+    position:relative; background:var(--surface); border:1px solid var(--line); border-radius:18px;
+    box-shadow:var(--shadow); overflow:hidden; --ca:var(--accent);
+  }
+  .plan .top{padding:16px 18px 12px; background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ca) 14%, var(--surface)), var(--surface));
+    border-bottom:1px solid var(--line)}
+  .plan .emoji{font-size:26px}
+  .plan .ptitle{font-size:18px; font-weight:800; margin:6px 0 4px}
+  .plan .meta{font-size:12px; color:var(--muted)}
+  .plan .badge{display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:var(--ca); color:#fff; margin-right:6px}
+  .plan .body{padding:14px 18px 16px}
+  .plan .memory{background:color-mix(in srgb, var(--ca) 9%, transparent); border-left:3px solid var(--ca); padding:9px 12px; border-radius:0 8px 8px 0; font-size:14px; margin:0 0 12px}
+  .plan .row{font-size:13.5px; margin:7px 0; display:flex; gap:8px}
+  .plan .row b{color:var(--muted); font-weight:700; flex:0 0 62px}
+  .plan .catch{color:var(--muted); font-size:12.5px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line)}
+  .plan .go{display:inline-block; margin-top:12px; font-weight:700; font-size:13px; text-decoration:none;
+    color:var(--ca); border:1px solid var(--ca); border-radius:10px; padding:8px 14px}
+  .plan .ribbon{position:absolute; top:12px; right:-32px; transform:rotate(45deg); background:var(--muted); color:#fff; font-size:10px; font-weight:700; letter-spacing:.1em; padding:3px 40px}
+  .empty{text-align:center; color:var(--muted); border:1.5px dashed var(--line); border-radius:18px; padding:36px 20px}
+
+  footer{margin:56px 0 40px; text-align:center; color:var(--muted); font-size:13px}
+  footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">SOLO TRIP × 経県値</p>
+    <h1>次どこ行く？</h1>
+    <p class="lead">行った県を塗り、未踏をゲームのように潰していく。一人旅の記録。</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="score">
+    <div class="big"><div class="num" id="scoreTotal">–<small>/235</small></div><div class="cap">経県値</div></div>
+    <div class="big"><div class="num" id="scoreMik">–</div><div class="cap">未踏の県</div></div>
+    <div class="big"><div class="num" id="scoreVisit">–<small>/47</small></div><div class="cap">踏んだ県</div></div>
+  </div>
+  <div class="bar"><i id="scoreBar" style="width:0%"></i></div>
+</div>
+
+<section class="wrap">
+  <p class="section-title">日本地図｜タップで県を見る</p>
+  <div class="mapcard">
+    <div class="map" id="map">
+<!--INLINE_SVG-->
+    </div>
+    <div class="controls">
+      <button class="btn primary" id="dice">🎲 次どこ行く？</button>
+      <button class="btn" id="focus" aria-pressed="false">未踏だけ光らせる</button>
+    </div>
+    <div class="info dim" id="info">県をタップすると、経県値とアクセスが出ます。</div>
+    <div class="legend" id="legend"></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <p class="section-title">一人旅プラン</p>
+  <div class="plans" id="plans"></div>
+</section>
+
+<footer class="wrap">
+  <p>プロンプト一本で生成した一人旅スキルの提案ページ。地図データは <a href="https://github.com/geolonia/japanese-prefectures">geolonia/japanese-prefectures</a>（MIT）。</p>
+</footer>
+
+<script src="data.js"></script>
+<script src="plans.js"></script>
+<script>
+(function(){
+  var K = window.KEIKENCHI || {prefectures:{},levels:[]};
+  var STATUS = {}; (K.levels||[]).forEach(function(l){ STATUS[l.score]=l; });
+  var TIER = {A:"Tier A ｜ 近い・安い", B:"Tier B ｜ 少し遠い", C:"Tier C ｜ 遠い・飛行機圏"};
+
+  // --- score header ---
+  var counts={0:0,1:0,2:0,3:0,4:0,5:0}, total=0;
+  Object.keys(K.prefectures).forEach(function(c){ var s=K.prefectures[c].score; counts[s]++; total+=s; });
+  var visited = 47 - counts[0];
+  setNum("scoreTotal", (K.total!=null?K.total:total), "/235");
+  setNum("scoreMik", (K.mikkou!=null?K.mikkou:counts[0]), "");
+  setNum("scoreVisit", visited, "/47");
+  var pct = Math.round((K.total!=null?K.total:total)/ (K.max||235) *100);
+  document.getElementById("scoreBar").style.width = pct+"%";
+
+  function setNum(id, n, suf){
+    var el=document.getElementById(id); if(!el) return;
+    el.innerHTML = n + (suf?'<small>'+suf+'</small>':'');
+  }
+
+  // --- legend ---
+  var leg=document.getElementById("legend");
+  (K.levels||[]).forEach(function(l){
+    var d=document.createElement("div"); d.className="li";
+    d.innerHTML='<span class="sw" style="background:var(--s'+l.score+')"></span>'+l.icon+
+      ' <span class="n">'+l.label+'</span> ('+counts[l.score]+')';
+    leg.appendChild(d);
+  });
+
+  // --- color + wire prefectures ---
+  var current=null;
+  document.querySelectorAll('.prefecture[data-code]').forEach(function(g){
+    var code=g.getAttribute('data-code'); var p=K.prefectures[code]; if(!p) return;
+    g.classList.add('s'+p.score);
+    g.setAttribute('tabindex','0'); g.setAttribute('role','button');
+    g.setAttribute('aria-label', p.name+' '+(STATUS[p.score]?STATUS[p.score].label:''));
+    function act(){ selectPref(code,true); }
+    g.addEventListener('click', act);
+    g.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); }});
+    g.addEventListener('mouseenter', function(){ selectPref(code,false); });
+  });
+
+  function selectPref(code, lock){
+    var p=K.prefectures[code]; if(!p) return;
+    if(current){ current.classList.remove('active'); }
+    var g=document.querySelector('.prefecture[data-code="'+code+'"]');
+    if(g){ g.classList.add('active'); current=g; }
+    var st=STATUS[p.score]||{icon:'',label:''};
+    var html='<p class="pname">'+p.name+'</p>'+
+             '<p class="pstatus">'+st.icon+' '+st.label+'（'+p.score+'点）'+(p.wish?' ・ ★wishlist':'')+'</p>';
+    if(p.score===0 && p.access){
+      html+='<p class="paccess"><span class="tierbadge">'+(p.tier||'')+'</span>'+
+            (TIER[p.tier]||'')+'<br>東京から：'+p.access+'</p>';
+    }
+    var info=document.getElementById("info");
+    info.className="info"; info.innerHTML=html;
+  }
+
+  // --- dice: pick a random 未踏 ---
+  var mikkouCodes=Object.keys(K.prefectures).filter(function(c){return K.prefectures[c].score===0;});
+  document.getElementById("dice").addEventListener("click", function(){
+    if(!mikkouCodes.length) return;
+    document.body.classList.remove("focus-mikkou");
+    document.getElementById("focus").setAttribute("aria-pressed","false");
+    var pick=mikkouCodes[Math.floor(Math.random()*mikkouCodes.length)];
+    selectPref(pick,true);
+    var g=document.querySelector('.prefecture[data-code="'+pick+'"]');
+    if(g && g.scrollIntoView){ document.getElementById("info").scrollIntoView({behavior:"smooth",block:"nearest"}); }
+  });
+
+  // --- focus toggle ---
+  var fb=document.getElementById("focus");
+  fb.addEventListener("click", function(){
+    var on=document.body.classList.toggle("focus-mikkou");
+    fb.setAttribute("aria-pressed", on?"true":"false");
+  });
+
+  // --- plans ---
+  var wrap=document.getElementById("plans");
+  var plans=window.SOLO_PLANS||[];
+  if(!plans.length){
+    wrap.innerHTML='<div class="empty">まだ提案がありません。<br>「一人旅したい」「〇〇に行きたい」と話すと、ここにプランが並びます。</div>';
+  } else {
+    plans.forEach(function(pl){
+      var t=pl.theme||{}; var acc=t.accent||'var(--accent)';
+      var el=document.createElement("article"); el.className="plan"; el.style.setProperty('--ca',acc);
+      var rows='';
+      function row(k,v){ return v?('<div class="row"><b>'+k+'</b><span>'+v+'</span></div>'):''; }
+      rows+=row('拠点', pl.base);
+      rows+=row('交通', pl.transport);
+      rows+=row('主役', pl.hero);
+      rows+=row('一人飲み', pl.drink);
+      rows+=row('費用', pl.cost);
+      el.innerHTML=
+        (pl.sample?'<div class="ribbon">SAMPLE</div>':'')+
+        '<div class="top">'+
+          '<div class="emoji">'+(t.emoji||'🧭')+'</div>'+
+          '<div class="ptitle">'+pl.title+'</div>'+
+          '<div class="meta"><span class="badge">'+pl.pref+' / '+(pl.status||'')+'</span>'+
+            (pl.nights||'')+(pl.keiken?' ・ 経県値 '+pl.keiken:'')+'</div>'+
+          (t.mood?'<div class="meta" style="margin-top:4px">'+t.mood+'</div>':'')+
+        '</div>'+
+        '<div class="body">'+
+          (pl.memory?'<p class="memory">🎬 '+pl.memory+'</p>':'')+
+          rows+
+          (pl.catch?'<div class="catch">⚠️ '+pl.catch+'</div>':'')+
+          (pl.url?'<a class="go" href="'+pl.url+'" target="_blank" rel="noopener">くわしく →</a>':'')+
+        '</div>';
+      wrap.appendChild(el);
+    });
+  }
+})();
+</script>
+</body>
+</html>
