@@ -8,10 +8,10 @@
  * 未踏(0)県のみ tier(A/B/C)・access・wish を持つ（行き先提案に使う）。
  */
 window.KEIKENCHI = {
-  updated: "2026-07-16",
-  total: 107,
+  updated: "2026-08-11",
+  total: 119,
   max: 235,
-  mikkou: 19,
+  mikkou: 16,
   levels: [
     { score: 5, icon: "🏠", label: "居住" },
     { score: 4, icon: "🛏️", label: "宿泊" },
@@ -22,10 +22,10 @@ window.KEIKENCHI = {
   ],
   prefectures: {
     "1":  { name: "北海道", score: 0, tier: "C", access: "飛行機／北海道新幹線（函館）", wish: true },
-    "2":  { name: "青森",   score: 0, tier: "B", access: "東北新幹線 約3.5h" },
-    "3":  { name: "岩手",   score: 0, tier: "B", access: "東北新幹線（盛岡）約2h" },
+    "2":  { name: "青森",   score: 4 },
+    "3":  { name: "岩手",   score: 4 },
     "4":  { name: "宮城",   score: 0, tier: "A", access: "東北新幹線（仙台）約1.5h" },
-    "5":  { name: "秋田",   score: 0, tier: "B", access: "秋田新幹線 約4h" },
+    "5":  { name: "秋田",   score: 4 },
     "6":  { name: "山形",   score: 0, tier: "A", access: "山形新幹線 約2.5h" },
     "7":  { name: "福島",   score: 4 },
     "8":  { name: "茨城",   score: 4 },
