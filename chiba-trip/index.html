@@ -4,13 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>千葉旅 マップ</title>
-<meta name="description" content="千葉旅で行きたい場所の一元管理マップ。名称・住所・当日の営業状況・推奨ルート。">
+<meta name="description" content="千葉旅で行きたい場所の一元管理マップ。名称・住所・営業状況・プラン比較。">
 <link rel="stylesheet" href="vendor/leaflet.css">
 <style>
   :root{
     --bg:#f6f4ef; --panel:#fff; --ink:#23201c; --sub:#7b736a; --line:#e2ddd3;
     --accent:#2f6f9f; --open:#2e8b57; --check:#c98a15; --closed:#c0392b;
-    --day1:#d2603a; --day2:#2f6f9f;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;overflow-x:hidden}
@@ -20,71 +19,92 @@
   }
   a{color:var(--accent)}
 
-  /* ── ヘッダ ───────────────────────────── */
   header{
-    padding:12px 16px; background:var(--panel); border-bottom:1px solid var(--line);
-    display:flex; flex-wrap:wrap; gap:10px 16px; align-items:baseline;
+    padding:11px 16px; background:var(--panel); border-bottom:1px solid var(--line);
+    display:flex; flex-wrap:wrap; gap:8px 14px; align-items:baseline;
   }
   h1{font-size:17px; margin:0; letter-spacing:.02em}
   .sub{font-size:12px; color:var(--sub)}
 
-  /* ── 操作バー ─────────────────────────── */
   .bar{
     display:flex; flex-wrap:wrap; gap:6px; align-items:center;
-    padding:9px 16px; background:var(--panel); border-bottom:1px solid var(--line);
+    padding:8px 16px; background:var(--panel); border-bottom:1px solid var(--line);
   }
   .bar .label{font-size:11px; color:var(--sub); margin-right:2px}
+  #cats,#plans{display:contents}
   .chip{
     font:inherit; font-size:12px; line-height:1; padding:7px 11px; border-radius:999px;
     border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
     white-space:nowrap;
   }
   .chip[aria-pressed="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
-  .chip.d1[aria-pressed="true"]{background:var(--day1); border-color:var(--day1)}
-  .chip.d2[aria-pressed="true"]{background:var(--day2); border-color:var(--day2)}
+  .chip.plan[aria-pressed="true"]{background:var(--accent); border-color:var(--accent)}
   .sep{width:1px; height:20px; background:var(--line); margin:0 4px}
-  #cats{display:contents}   /* 中のチップを直接 .bar の折り返しに乗せる */
+  select{
+    font:inherit; font-size:12px; padding:5px 7px; border-radius:6px;
+    border:1px solid var(--line); background:#fff; color:var(--ink);
+  }
 
-  /* ── レイアウト ───────────────────────── */
-  main{display:flex; height:calc(100% - 104px); min-height:520px}
-  #map{flex:1 1 58%; min-width:0; background:#dfe6e3}
+  main{display:flex; height:calc(100% - 140px); min-height:520px}
+  #map{flex:1 1 56%; min-width:0; background:#dfe6e3}
   #list{
-    flex:0 0 42%; max-width:460px; overflow-y:auto;
+    flex:0 0 44%; max-width:480px; overflow-y:auto;
+    transition:flex-basis .15s, max-width .15s;
     background:var(--panel); border-left:1px solid var(--line); padding:10px 12px 40px;
   }
-  @media (max-width:820px){
+  #list.wide{flex-basis:62%; max-width:none}     /* 比較表を出すときは横を広げる */
+  @media (max-width:860px){
     main{display:block; height:auto}
-    #map{height:52vh; min-height:300px}
+    #map{height:50vh; min-height:300px}
     #list{max-width:none; border-left:0; border-top:1px solid var(--line)}
   }
 
-  /* ── ルート概要 ───────────────────────── */
-  .routecard{
-    border:1px solid var(--line); border-left:4px solid var(--line);
-    border-radius:8px; padding:10px 12px; margin-bottom:10px; background:#fcfbf8;
-  }
-  .routecard h2{font-size:13px; margin:0 0 4px}
-  .routecard p{font-size:12px; color:var(--sub); margin:0 0 6px; line-height:1.65}
-  .routecard .stat{font-size:11px; color:var(--sub); font-variant-numeric:tabular-nums}
+  /* ── プラン見出し ── */
+  .plancard{border:1px solid var(--line); border-radius:9px; padding:12px 13px; margin-bottom:10px; background:#fcfbf8}
+  .plancard h2{font-size:15px; margin:0 0 3px}
+  .plancard .tagline{font-size:12px; color:var(--sub); margin:0 0 9px}
+  .nums{display:flex; flex-wrap:wrap; gap:0 16px; margin-bottom:9px}
+  .nums div{font-size:11px; color:var(--sub)}
+  .nums b{display:block; font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; font-weight:700}
+  .pros{font-size:12px; line-height:1.7; margin:0 0 4px}
+  .pros .k{font-weight:700; font-size:11px; padding:1px 6px; border-radius:4px; margin-right:5px}
+  .k.good{background:#e4f1e8; color:#26694a}
+  .k.hard{background:#fae5e2; color:#a2372a}
+  .k.who{background:#eae6f2; color:#4f3f77}
 
-  /* ── スポットカード ───────────────────── */
+  /* ── 1日のブロック ── */
+  .day{border-left:4px solid var(--line); border-radius:8px; padding:2px 0 2px 11px; margin:14px 0 8px}
+  .day h3{font-size:13px; margin:0 0 3px}
+  .day p{font-size:12px; color:var(--sub); margin:0 0 4px; line-height:1.65}
+  .day .stat{font-size:11px; color:var(--sub); font-variant-numeric:tabular-nums}
+
+  /* ── 立ち寄り先カード ── */
   .card{
-    border:1px solid var(--line); border-radius:8px; padding:10px 12px;
-    margin-bottom:8px; background:#fff; cursor:pointer; transition:border-color .12s;
+    border:1px solid var(--line); border-radius:8px; padding:9px 11px;
+    margin-bottom:7px; background:#fff; cursor:pointer; transition:border-color .12s;
   }
   .card:hover{border-color:#bfb6a8}
   .card.on{border-color:var(--ink); box-shadow:0 0 0 2px rgba(35,32,28,.08)}
-  .card h3{font-size:14px; margin:0 0 5px; display:flex; align-items:center; gap:7px; line-height:1.35}
+  .card.gate{background:#f7f5f0; cursor:default; border-style:dashed}
+  .card.dim{opacity:.62}
+  .card h4{font-size:13.5px; margin:0 0 4px; display:flex; align-items:center; gap:7px; line-height:1.35}
   .num{
     flex:none; width:20px; height:20px; border-radius:50%; color:#fff;
-    font-size:11px; font-weight:700; display:grid; place-items:center;
-    font-variant-numeric:tabular-nums;
+    font-size:11px; font-weight:700; display:grid; place-items:center; font-variant-numeric:tabular-nums;
   }
   .num.plain{background:#b3aa9c}
   .mark{flex:none; font-size:14px; font-weight:700; line-height:1}
   .mark.open{color:var(--open)} .mark.check{color:var(--check)} .mark.closed{color:var(--closed)}
+  .when{
+    font-size:12px; font-variant-numeric:tabular-nums; color:var(--ink);
+    background:#f1eee7; border-radius:5px; padding:2px 7px; display:inline-block; margin-bottom:4px;
+  }
   .meta{font-size:12px; color:var(--sub); line-height:1.7}
-  .meta .k{display:inline-block; min-width:3.6em; color:#a29889}
+  .warn{
+    font-size:11.5px; line-height:1.6; margin-top:5px; padding:5px 8px; border-radius:6px;
+    background:#fae9e6; border-left:3px solid #c0392b; color:#8e2d21; font-weight:600;
+  }
+  .warn.soft{background:#fdf6ec; border-left-color:#e0a94a; color:#7a5a1e}
   .addr{
     font-size:12px; background:#f7f5f0; border:1px solid var(--line); border-radius:6px;
     padding:5px 8px; margin:5px 0; display:flex; gap:8px; align-items:center;
@@ -94,34 +114,43 @@
     flex:none; font:inherit; font-size:11px; padding:3px 8px; border-radius:5px;
     border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--sub);
   }
-  .copy:active{background:#eee}
-  .tagrow{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px}
+  .tagrow{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; align-items:center}
   .tag{font-size:10.5px; padding:2px 7px; border-radius:999px; background:#efece5; color:var(--sub)}
   .tag.lucky{background:#fdf0dd; color:#96690b}
-  .gmap{font-size:11.5px; text-decoration:none}
+  .tag.sug{background:#e7eef5; color:#2f6f9f}
+  .gmap,.tel{font-size:11.5px; text-decoration:none; white-space:nowrap}
   .note{font-size:11.5px; color:var(--sub); line-height:1.65; margin-top:5px}
+  .storm{
+    font-size:11.5px; line-height:1.65; margin-top:5px; padding:6px 8px; border-radius:6px;
+    background:#fdf6ec; border-left:3px solid #e0a94a; color:#7a5a1e;
+  }
+  .alert{
+    margin:0 0 10px; padding:9px 11px; border-radius:8px; font-size:11.5px; line-height:1.7;
+    background:#fdf3e6; border:1px solid #e8d3ae; color:#7a5a1e;
+  }
+  .h{font-size:12px; font-weight:700; margin:16px 0 6px; color:var(--sub)}
 
-  /* ── 地図上のマーカー ─────────────────── */
+  /* ── 比較表 ── */
+  .cmpwrap{overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:10px}
+  table.cmp{border-collapse:collapse; font-size:12px; min-width:540px; width:100%}
+  table.cmp th,table.cmp td{border:1px solid var(--line); padding:7px 9px; text-align:left; vertical-align:top}
+  table.cmp thead th{background:#f4f1ea; font-size:11.5px; white-space:nowrap}
+  table.cmp th.rowh{background:#faf8f4; font-weight:700; white-space:nowrap}
+  table.cmp td{font-variant-numeric:tabular-nums}
+  .best{color:var(--open); font-weight:700}
+
+  /* ── マーカー ── */
   .pin{
     width:26px; height:26px; border-radius:50%; border:2.5px solid #fff;
     box-shadow:0 1px 4px rgba(0,0,0,.35); display:grid; place-items:center;
     color:#fff; font-size:12px; font-weight:700; font-variant-numeric:tabular-nums;
   }
-  .pin.small{width:18px; height:18px; font-size:0}
+  .pin.off{opacity:.45}
   .pin.sel{outline:3px solid rgba(35,32,28,.45); outline-offset:1px}
   .leaflet-popup-content{margin:10px 12px; font-size:12.5px; line-height:1.65}
   .leaflet-popup-content b{font-size:13.5px}
   .leaflet-container{font-family:inherit}
 
-  .alert{
-    margin:0 0 10px; padding:9px 11px; border-radius:8px; font-size:11.5px; line-height:1.7;
-    background:#fdf3e6; border:1px solid #e8d3ae; color:#7a5a1e;
-  }
-  .storm{
-    font-size:11.5px; line-height:1.65; margin-top:5px; padding:6px 8px; border-radius:6px;
-    background:#fdf6ec; border-left:3px solid #e0a94a; color:#7a5a1e;
-  }
-  .tel{font-size:11.5px; text-decoration:none; white-space:nowrap}
   footer{padding:14px 16px 30px; font-size:11.5px; color:var(--sub); line-height:1.8;
          background:var(--panel); border-top:1px solid var(--line)}
   footer code{background:#f1eee7; padding:1px 5px; border-radius:4px; font-size:11px}
@@ -135,13 +164,15 @@
 </header>
 
 <div class="bar">
-  <span class="label">営業日</span>
-  <button class="chip" data-day="sat" aria-pressed="true">土曜</button>
-  <button class="chip" data-day="sun" aria-pressed="false">日曜</button>
+  <span class="label">プラン</span>
+  <span id="plans"></span>
   <span class="sep"></span>
-  <span class="label">ルート</span>
-  <button class="chip d1" data-route="day1" aria-pressed="true">Day1</button>
-  <button class="chip d2" data-route="day2" aria-pressed="true">Day2</button>
+  <button class="chip" id="cmpbtn" aria-pressed="false">4案を比較</button>
+</div>
+<div class="bar">
+  <span class="label">出発</span>
+  <span class="label">1日目</span><select id="s1"></select>
+  <span class="label">2日目</span><select id="s2"></select>
   <span class="sep"></span>
   <span class="label">種類</span>
   <span id="cats"></span>
@@ -153,8 +184,11 @@
 </main>
 
 <footer>
-  <b>○</b> 開いてる　<b>△</b> 要予約・要確認　<b>✕</b> 休み　— 表示は上で選んだ日のもの。営業情報は公式サイト等の調査時点（2026-08-23）の内容で、直前に変わることがあります。<br>
-  場所を足すには、GoogleマップのリンクをClaudeに送るか <code>python3 add_spot.py "&lt;URL&gt;"</code>。ルートを変えたら <code>python3 build_routes.py</code>。<br>
+  <b>○</b> 開いてる　<b>△</b> 要予約・要確認　<b>✕</b> 休み　— 1日目の立ち寄り先は土曜、2日目は日曜の営業で判定しています。
+  時刻は出発時刻＋道路の所要時間＋滞在の目安を足した計算値で、信号や渋滞は入っていません。<br>
+  営業情報は公式サイト等の調査時点（2026-08-23）の内容で、直前に変わることがあります。
+  高速は令和8年8月千葉豪雨の通行止めが8/17 1:30に全解除（千葉東金道路の下り線は車線規制が継続）。<br>
+  場所を足すには、GoogleマップのリンクをClaudeに送るか <code>python3 add_spot.py "&lt;URL&gt;"</code>。プランを変えたら <code>python3 build_routes.py</code>。<br>
   地図 © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors／経路 <a href="http://project-osrm.org/">OSRM</a>／座標 国土地理院・OSM
 </footer>
 
@@ -165,185 +199,313 @@
 (function(){
   const MARK = {open:"○", check:"△", closed:"✕"};
   const COL  = {open:"#2e8b57", check:"#c98a15", closed:"#c0392b"};
-  const state = {day:"sat", routes:{day1:true, day2:true}, cats:new Set(), sel:null};
+  const DAYKEY = ["sat", "sun"];                       // 1日目=土, 2日目=日
+  const byId = {}; SPOTS.forEach(s => byId[s.id] = s);
 
-  // 同じ住所の施設（KURKKU FIELDSと地中図書館など）はピンが重なるので、少しずらして描く。
-  // ずらしても広域表示では重なるため、ルート上の地点を必ず上に載せる（zIndexOffset）。
+  const state = {plan:"a", cmp:false, start:[10*60, 9*60], cats:new Set(), sel:null};
+
+  // 同じ住所の施設（KURKKU FIELDSと地中図書館など）はピンが重なるので少しずらす
   const seen = new Map();
   SPOTS.forEach(s => {
     const k = s.lat.toFixed(4) + "," + s.lng.toFixed(4);
     const n = seen.get(k) || 0; seen.set(k, n + 1);
-    s._lat = s.lat + n * 0.0025; s._lng = s.lng + n * 0.0025; s._shifted = n > 0;
+    s._lat = s.lat + n * 0.0025; s._lng = s.lng + n * 0.0025;
   });
 
-  // ルート上の並び順（何番目に寄るか）を引けるようにしておく
-  const order = {};
-  ROUTES.forEach(r => r.stops.forEach((st, i) => {
-    if (st.id) (order[st.id] = order[st.id] || []).push({route:r, n:i + 1});
-  }));
+  /* ── 時刻の計算 ─────────────────────────────
+     出発時刻に、区間の所要時間と滞在の目安を足していく。
+     営業時間は "10:30–16:00" のような文字列から拾って、間に合うかを判定する。 */
+  const hhmm = m => String(Math.floor(m / 60) % 24).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+  const dur  = m => (m >= 60 ? Math.floor(m / 60) + "時間" + (m % 60 ? String(m % 60).padStart(2, "0") + "分" : "") : m + "分");
 
+  function window_(text){
+    const m = String(text || "").match(/(\d{1,2}):(\d{2})\s*[–—~〜-]\s*(\d{1,2}):(\d{2})/);
+    return m ? {o:+m[1] * 60 + +m[2], c:+m[3] * 60 + +m[4]} : null;
+  }
+
+  function schedule(route, di){
+    let t = state.start[di];
+    const out = [];
+    route.stops.forEach((st, i) => {
+      const arr = t, dep = t + st.stay;
+      const s = byId[st.id];
+      const h = s && s.hours && s.hours[DAYKEY[di]];
+      let warn = "", soft = false;
+      if (h && !st.gate){
+        const w = window_(h.text);
+        if (h.st === "closed") warn = "この日は休み。プランから外すか、順番を入れ替える。";
+        else if (w && arr > w.c) warn = hhmm(w.c) + "に閉まる。この時間だと間に合わない。";
+        else if (w && dep > w.c) warn = hhmm(w.c) + "閉店。滞在が" + dur(dep - w.c) + "はみ出す。";
+        else if (w && arr < w.o){ warn = hhmm(w.o) + "開き。" + dur(w.o - arr) + "早く着く。"; soft = true; }
+      }
+      out.push({...st, arr, dep, warn, soft, spot:s, day:di});
+      const l = route.legs[i];
+      if (l) t = dep + (l.min || 0);
+    });
+    return out;
+  }
+
+  const plan  = () => PLANS.find(p => p.id === state.plan);
+  const sched = () => plan().routes.map((r, i) => schedule(r, i));
+
+  /* ── 地図 ── */
   const map = L.map("map", {scrollWheelZoom:false}).setView([35.4, 140.3], 9);
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom:18, attribution:'&copy; OpenStreetMap'
-  }).addTo(map);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              {maxZoom:18, attribution:"&copy; OpenStreetMap"}).addTo(map);
   map.on("click", () => select(null));
 
-  const layers = {};   // spot.id -> marker
-  const lines  = {};   // route.id -> polyline[]
+  const layers = {};
+  SPOTS.forEach(s => { layers[s.id] = L.marker([s._lat, s._lng]).bindPopup("").on("click", () => select(s.id)); });
 
-  /* ── ルートの線（OSRMで取った実際の道路の形） ── */
-  ROUTES.forEach(r => {
-    lines[r.id] = r.legs.map(l => L.polyline(l.line, {
-      color:r.color, weight:4, opacity:.75,
-      dashArray: l.src === "straight" ? "6,7" : null   // 直線フォールバックは破線で区別
+  let drawn = [];            // いま地図に出ているルートの線
+  function drawRoutes(){
+    drawn.forEach(l => map.removeLayer(l)); drawn = [];
+    plan().routes.forEach(r => r.legs.forEach(l => {
+      const line = L.polyline(l.line, {color:r.color, weight:4, opacity:.75,
+        dashArray: l.src === "straight" ? "6,7" : null});   // 直線フォールバックは破線
+      line.addTo(map); drawn.push(line);
     }));
-  });
+  }
 
-  /* ── マーカー ── */
-  SPOTS.forEach(s => {
-    const m = L.marker([s._lat, s._lng], {icon:icon(s), zIndexOffset: order[s.id] ? 1000 : 0}).addTo(map);
-    m.bindPopup(popup(s));
-    m.on("click", () => select(s.id));
-    layers[s.id] = m;
-  });
-
-  // リストはルートを回る順に並べる（Day1 → Day2 → ルート外）
-  const seq = {};
-  ROUTES.forEach((r, ri) => r.stops.forEach((st, i) => {
-    if (st.id && !(st.id in seq)) seq[st.id] = ri * 100 + i;
-  }));
-  SPOTS.sort((a, b) => (seq[a.id] ?? 900) - (seq[b.id] ?? 900));
-
-  function icon(s){
-    const st = s.hours ? s.hours[state.day].st : "open";
-    const o  = (order[s.id] || []).filter(x => state.routes[x.route.id])[0];
-    const bg = o ? o.route.color : COL[st];
-    const label = o ? o.n : (s.cat === "宿" ? "宿" : "");
-    return L.divIcon({
-      className:"", iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-14],
-      html:`<div class="pin${state.sel === s.id ? " sel" : ""}" style="background:${bg}">${label}</div>
-            <div style="position:absolute;top:-7px;right:-7px;width:15px;height:15px;border-radius:50%;
-                        background:#fff;color:${COL[st]};font:700 11px/15px sans-serif;text-align:center;
-                        box-shadow:0 1px 3px rgba(0,0,0,.3)">${MARK[st]}</div>`
+  // いまのプランで、どのスポットが何日目の何番目か
+  function positions(){
+    const pos = {};
+    plan().routes.forEach((r, di) => {
+      let n = 0;
+      r.stops.forEach(st => {
+        if (st.gate) return;
+        n++;
+        if (!(st.id in pos)) pos[st.id] = {n:n, route:r, day:di};
+      });
     });
+    return pos;
   }
 
-  function popup(s){
-    const h = s.hours, d = h && h[state.day];
-    return `<b>${esc(s.name)}</b><br>
-      ${esc(s.address)}<br>
-      ${d ? `<span style="color:${COL[d.st]};font-weight:700">${MARK[d.st]} ${state.day === "sat" ? "土曜" : "日曜"}</span> ${esc(d.text)}<br>` : ""}
-      ${s.gmap ? `<a href="${s.gmap}" target="_blank" rel="noopener">Googleマップで開く</a>` : ""}`;
+  function paint(){
+    const pos = positions();
+    SPOTS.forEach(s => {
+      const m = layers[s.id];
+      if (!state.cats.has(s.cat)) { map.removeLayer(m); return; }
+      const p = pos[s.id];
+      const di = p ? p.day : 0;
+      const h = s.hours && s.hours[DAYKEY[di]];
+      const st = h ? h.st : "open";
+      m.setIcon(L.divIcon({
+        className:"", iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-14],
+        html:'<div class="pin' + (p ? "" : " off") + (state.sel === s.id ? " sel" : "") +
+             '" style="background:' + (p ? p.route.color : "#a49b8d") + '">' +
+             (p ? p.n : (s.cat === "宿" ? "宿" : "")) + '</div>' +
+             '<div style="position:absolute;top:-7px;right:-7px;width:15px;height:15px;border-radius:50%;' +
+             'background:#fff;color:' + COL[st] + ';font:700 11px/15px sans-serif;text-align:center;' +
+             'box-shadow:0 1px 3px rgba(0,0,0,.3)">' + MARK[st] + '</div>'
+      }));
+      m.setZIndexOffset(p ? 1000 : 0);
+      m.setPopupContent(
+        "<b>" + esc(s.name) + "</b><br>" + esc(s.address) + "<br>" +
+        (h ? '<span style="color:' + COL[st] + ';font-weight:700">' + MARK[st] + " " +
+             (di ? "日曜" : "土曜") + "</span> " + esc(h.text) + "<br>" : "") +
+        (p ? "このプランでは " + (p.day + 1) + "日目の " + p.n + " 番目" : "このプランでは寄らない") +
+        (s.gmap ? '<br><a href="' + s.gmap + '" target="_blank" rel="noopener">Googleマップで開く</a>' : ""));
+      m.addTo(map);
+    });
+    drawRoutes();
   }
 
-  /* ── 右側のリスト ── */
+  /* ── カード ── */
+  function tags(s){
+    return (s.tags || []).map(t =>
+      '<span class="tag' + (t === "ラッキー枠" ? " lucky" : t === "提案" ? " sug" : "") + '">' + esc(t) + "</span>").join("") +
+      (s.tel  ? '<a class="tel" href="tel:' + esc(s.tel) + '">☎ ' + esc(s.tel) + "</a>" : "") +
+      (s.gmap ? '<a class="gmap" href="' + s.gmap + '" target="_blank" rel="noopener">Googleマップ ↗</a>' : "");
+  }
+  function addr(s){
+    return '<div class="addr"><span>' + esc(s.address) + '</span>' +
+           '<button class="copy" data-copy="' + esc(s.address) + '">コピー</button></div>';
+  }
+
+  function stopCard(x, pos){
+    if (x.gate){
+      return '<div class="card gate"><h4><span class="num plain">·</span><span>' + esc(x.name) + "</span></h4>" +
+             '<div class="when">' + hhmm(x.arr) + "</div>" +
+             '<div class="note">' + esc(x.memo) + "</div></div>";
+    }
+    const s = x.spot, h = s.hours && s.hours[DAYKEY[x.day]], p = pos[s.id];
+    return '<div class="card' + (state.sel === s.id ? " on" : "") + '" data-id="' + esc(s.id) + '">' +
+      '<h4><span class="num" style="background:' + plan().routes[x.day].color + '">' + (p ? p.n : "·") + "</span>" +
+      "<span>" + esc(s.name) + "</span>" +
+      (h ? '<span class="mark ' + h.st + '">' + MARK[h.st] + "</span>" : "") + "</h4>" +
+      '<div class="when">' + hhmm(x.arr) + (x.stay ? " – " + hhmm(x.dep) + "（" + dur(x.stay) + "）" : "") + "</div>" +
+      (h ? '<div class="meta">' + (x.day ? "日曜" : "土曜") + "　" + esc(h.text) + "</div>" : "") +
+      (x.warn ? '<div class="warn' + (x.soft ? " soft" : "") + '">' + (x.soft ? "⏳ " : "⚠ ") + esc(x.warn) + "</div>" : "") +
+      (x.memo ? '<div class="note">' + esc(x.memo) + "</div>" : "") +
+      addr(s) +
+      (h && h.note ? '<div class="note">' + esc(h.note) + "</div>" : "") +
+      (s.storm ? '<div class="storm"><b>豪雨後</b>　' + esc(s.storm) + "</div>" : "") +
+      '<div class="tagrow"><span class="tag">' + esc(s.cat) + "</span>" + tags(s) + "</div></div>";
+  }
+
+  function offCard(s){
+    const a = s.hours && s.hours.sat, b = s.hours && s.hours.sun;
+    return '<div class="card dim' + (state.sel === s.id ? " on" : "") + '" data-id="' + esc(s.id) + '">' +
+      '<h4><span class="num plain">·</span><span>' + esc(s.name) + "</span></h4>" +
+      (a ? '<div class="meta">土 <span class="mark ' + a.st + '">' + MARK[a.st] + "</span> " + esc(a.text) +
+           '　/　日 <span class="mark ' + b.st + '">' + MARK[b.st] + "</span> " + esc(b.text) + "</div>" : "") +
+      addr(s) +
+      '<div class="tagrow"><span class="tag">' + esc(s.cat) + "</span>" + tags(s) + "</div></div>";
+  }
+
+  /* ── 比較表 ── */
+  function compare(){
+    const rows = PLANS.map(p => {
+      const sc = p.routes.map((r, i) => schedule(r, i));
+      return {p:p, end:sc.map(x => x[x.length - 1].arr),
+              warns:sc.reduce((n, x) => n + x.filter(y => y.warn && !y.soft).length, 0),
+              waits:sc.reduce((n, x) => n + x.filter(y => y.soft).length, 0)};
+    });
+    const minDist  = Math.min(...rows.map(r => r.p.dist));
+    const minMin   = Math.min(...rows.map(r => r.p.min));
+    const maxSpots = Math.max(...rows.map(r => r.p.spots));
+    const minWarn  = Math.min(...rows.map(r => r.warns));
+    const td = (v, best) => "<td" + (best ? ' class="best"' : "") + ">" + v + "</td>";
+    const line = (label, f) => "<tr><th class='rowh'>" + label + "</th>" + rows.map(f).join("") + "</tr>";
+
+    return '<div class="h">4案の比較</div><div class="cmpwrap"><table class="cmp"><thead><tr><th class="rowh"></th>' +
+      rows.map(r => "<th" + (r.p.id === state.plan ? ' style="background:#eef5fa"' : "") + ">" +
+                    esc(r.p.name) + "</th>").join("") + "</tr></thead><tbody>" +
+      line("ひとことで",       r => "<td>" + esc(r.p.tagline) + "</td>") +
+      line("立ち寄り数",       r => td(r.p.spots + " か所", r.p.spots === maxSpots)) +
+      line("走行距離",         r => td(r.p.dist + " km", r.p.dist === minDist)) +
+      line("運転時間",         r => td(dur(r.p.min), r.p.min === minMin)) +
+      line("滞在の合計",       r => "<td>" + dur(r.p.stay) + "</td>") +
+      line("1日目 宿に着く",   r => "<td>" + hhmm(r.end[0]) + "</td>") +
+      line("2日目 高速に乗る", r => "<td>" + hhmm(r.end[1]) + "</td>") +
+      line("間に合わない先", r => td(r.warns ? r.warns + " 件" : "なし", r.warns === minWarn)) +
+      line("開店待ちが出る",  r => "<td>" + (r.waits ? r.waits + " 件" : "なし") + "</td>") +
+      line("落とすもの",       r => "<td>" + (r.p.drops.length ? esc(r.p.drops.join("、")) : "なし") + "</td>") +
+      "</tbody></table></div>" +
+      '<div class="note" style="margin-bottom:14px">緑は各行でいちばん良い数字。1日目は' + hhmm(state.start[0]) +
+      "にICを通過、2日目は" + hhmm(state.start[1]) + "に宿を出る前提。上の出発時刻を変えると全部つられて動く。</div>" +
+      PLANS.map(p =>
+        '<div class="plancard"><h2>' + esc(p.name) + "</h2>" +
+        '<p class="tagline">' + esc(p.tagline) + "</p>" +
+        '<p class="pros"><span class="k good">good</span>' + esc(p.good) + "</p>" +
+        '<p class="pros"><span class="k hard">hard</span>' + esc(p.hard) + "</p>" +
+        '<p class="pros"><span class="k who">向き</span>' + esc(p.who) + "</p>" +
+        '<div class="tagrow"><button class="chip plan" data-plan="' + p.id + '">このプランを地図で見る</button></div></div>').join("");
+  }
+
+  /* ── 描画 ── */
   function render(){
     const cats = [...new Set(SPOTS.map(s => s.cat))];
     if (!state.cats.size) cats.forEach(c => state.cats.add(c));
 
+    document.getElementById("plans").innerHTML = PLANS.map(p =>
+      '<button class="chip plan" data-plan="' + p.id + '" aria-pressed="' + (state.plan === p.id) + '">' +
+      esc(p.name.split("｜")[0]) + "</button>").join("");
     document.getElementById("cats").innerHTML = cats.map(c =>
-      `<button class="chip" data-cat="${esc(c)}" aria-pressed="${state.cats.has(c)}">${esc(c)}</button>`).join("");
+      '<button class="chip" data-cat="' + esc(c) + '" aria-pressed="' + state.cats.has(c) + '">' + esc(c) + "</button>").join("");
+    document.getElementById("cmpbtn").setAttribute("aria-pressed", state.cmp);
 
-    const shown = SPOTS.filter(s => state.cats.has(s.cat));
-    document.getElementById("count").textContent = `${shown.length} / ${SPOTS.length} 件`;
+    const p = plan(), sc = sched(), pos = positions();
+    document.getElementById("count").textContent = "全" + SPOTS.length + "か所 / このプランは" + p.spots + "か所";
 
-    // ルート概要 → スポット一覧の順で組む
-    let html = `<div class="alert"><b>令和8年8月千葉豪雨（8/13–14）のあと</b>：
-      調べた範囲では、この10か所に豪雨を理由とした休業・閉鎖の告知は出ていません。
-      ただし公式サイトの更新が止まっている先（museum as it is・濃溝の滝の市の観光ページ）があり、
-      桟橋のような屋外の場所は現地判断になります。各カードの「豪雨後」欄と電話番号を見て、
-      行く前に確認してください。（調査 2026-08-23）</div>`;
+    let html = '<div class="alert"><b>令和8年8月千葉豪雨（8/13–14）のあと</b>：' +
+      "調べた範囲では、載せている場所に豪雨を理由とした休業・閉鎖の告知は出ていません。" +
+      "高速の通行止めも8/17 1:30に全解除済み（千葉東金道路の下り線は車線規制が継続）。" +
+      "ただし公式サイトの更新が止まっている先があり、桟橋や崖下の遊歩道は現地判断です。" +
+      "各カードの「豪雨後」欄と電話番号を見て、行く前に確認してください。（調査 2026-08-23）</div>";
 
-    html += ROUTES.filter(r => state.routes[r.id]).map(r => `
-      <div class="routecard" style="border-left-color:${r.color}">
-        <h2 style="color:${r.color}">${esc(r.name)}</h2>
-        <p>${esc(r.note)}</p>
-        <div class="stat">走行 ${r.totalDist} km ／ 移動だけで約 ${Math.floor(r.totalMin/60)}時間${r.totalMin%60}分
-          ・${r.stops.length}地点${r.partial ? "（一部は直線距離）" : ""}</div>
-      </div>`).join("");
+    if (state.cmp){
+      html += compare();
+    } else {
+      html += '<div class="plancard"><h2>' + esc(p.name) + "</h2>" +
+        '<p class="tagline">' + esc(p.tagline) + "</p>" +
+        '<div class="nums">' +
+          "<div><b>" + p.spots + "</b>立ち寄り</div>" +
+          "<div><b>" + p.dist + "</b>km</div>" +
+          "<div><b>" + dur(p.min) + "</b>運転</div>" +
+          "<div><b>" + hhmm(sc[1][sc[1].length - 1].arr) + "</b>帰りの高速</div>" +
+        "</div>" +
+        '<p class="pros"><span class="k good">good</span>' + esc(p.good) + "</p>" +
+        '<p class="pros"><span class="k hard">hard</span>' + esc(p.hard) + "</p>" +
+        '<p class="pros"><span class="k who">向き</span>' + esc(p.who) + "</p></div>";
 
-    html += shown.map(s => {
-      const d = s.hours ? s.hours[state.day] : null;
-      const o = (order[s.id] || []).filter(x => state.routes[x.route.id])[0];
-      return `
-      <div class="card${state.sel === s.id ? " on" : ""}" data-id="${esc(s.id)}">
-        <h3>
-          <span class="num${o ? "" : " plain"}" style="${o ? `background:${o.route.color}` : ""}">${o ? o.n : "·"}</span>
-          <span>${esc(s.name)}</span>
-          ${d ? `<span class="mark ${d.st}">${MARK[d.st]}</span>` : ""}
-        </h3>
-        ${d ? `<div class="meta"><span class="k">${state.day === "sat" ? "土曜" : "日曜"}</span>${esc(d.text)}</div>` : ""}
-        <div class="addr"><span>${esc(s.address)}</span><button class="copy" data-copy="${esc(s.address)}">コピー</button></div>
-        ${s.hours && s.hours.note ? `<div class="note">${esc(s.hours.note)}</div>` : ""}
-        ${s.storm ? `<div class="storm"><b>豪雨後</b>　${esc(s.storm)}</div>` : ""}
-        ${o && o.n < o.route.stops.length ? `<div class="note">→ 次は「${esc(o.route.stops[o.n].name)}」まで車で約${o.route.legs[o.n-1].min}分（${o.route.legs[o.n-1].dist}km）</div>` : ""}
-        <div class="tagrow">
-          <span class="tag">${esc(s.cat)}</span>
-          ${(s.tags||[]).map(t => `<span class="tag${t === "ラッキー枠" ? " lucky" : ""}">${esc(t)}</span>`).join("")}
-          ${s.tel ? `<a class="tel" href="tel:${esc(s.tel)}">☎ ${esc(s.tel)}</a>` : ""}
-          ${s.gmap ? `<a class="gmap" href="${s.gmap}" target="_blank" rel="noopener">Googleマップ ↗</a>` : ""}
-        </div>
-      </div>`;
-    }).join("");
+      p.routes.forEach((r, di) => {
+        const last = sc[di][sc[di].length - 1];
+        html += '<div class="day" style="border-left-color:' + r.color + '">' +
+          '<h3 style="color:' + r.color + '">' + (di + 1) + "日目（" + esc(r.day) + "）</h3>" +
+          "<p>" + esc(r.note) + "</p>" +
+          '<div class="stat">' + r.dist + " km ／ 運転 " + dur(r.min) + " ／ 滞在 " + dur(r.stay) +
+          " ／ " + hhmm(sc[di][0].arr) + " 〜 " + hhmm(last.arr) + "</div></div>";
+        html += sc[di].map(x => stopCard(x, pos)).join("");
+      });
 
-    document.getElementById("list").innerHTML = html;
-    SPOTS.forEach(s => {
-      const m = layers[s.id];
-      if (state.cats.has(s.cat)) { m.addTo(map); m.setIcon(icon(s)); m.setPopupContent(popup(s)); }
-      else map.removeLayer(m);
-    });
-    ROUTES.forEach(r => lines[r.id].forEach(l => state.routes[r.id] ? l.addTo(map) : map.removeLayer(l)));
+      const off = SPOTS.filter(s => !(s.id in pos) && state.cats.has(s.cat));
+      if (off.length){
+        html += '<div class="h">このプランでは寄らない（' + off.length + "か所）</div>" + off.map(offCard).join("");
+      }
+    }
+
+    const listEl = document.getElementById("list");
+    listEl.classList.toggle("wide", state.cmp);
+    listEl.innerHTML = html;
+    paint();
   }
 
   function select(id){
     state.sel = (state.sel === id) ? null : id;
     render();
     if (!state.sel) return;
-    const s = SPOTS.find(x => x.id === state.sel);
+    const s = byId[state.sel];
     map.setView([s._lat, s._lng], Math.max(map.getZoom(), 12), {animate:true});
     layers[s.id].openPopup();
-    const el = document.querySelector(`.card[data-id="${CSS.escape(s.id)}"]`);
+    const el = document.querySelector('.card[data-id="' + CSS.escape(s.id) + '"]');
     if (el) el.scrollIntoView({block:"nearest", behavior:"smooth"});
   }
 
   /* ── 操作 ── */
-  document.querySelector(".bar").addEventListener("click", e => {
+  const sel1 = document.getElementById("s1"), sel2 = document.getElementById("s2");
+  for (let m = 6 * 60; m <= 12 * 60; m += 30){
+    const o = '<option value="' + m + '"';
+    sel1.insertAdjacentHTML("beforeend", o + (m === state.start[0] ? " selected" : "") + ">" + hhmm(m) + "</option>");
+    sel2.insertAdjacentHTML("beforeend", o + (m === state.start[1] ? " selected" : "") + ">" + hhmm(m) + "</option>");
+  }
+  sel1.addEventListener("change", e => { state.start[0] = +e.target.value; render(); });
+  sel2.addEventListener("change", e => { state.start[1] = +e.target.value; render(); });
+
+  document.body.addEventListener("click", e => {
     const b = e.target.closest(".chip"); if (!b) return;
-    if (b.dataset.day){
-      state.day = b.dataset.day;
-      document.querySelectorAll("[data-day]").forEach(x =>
-        x.setAttribute("aria-pressed", x.dataset.day === state.day));
-    } else if (b.dataset.route){
-      const id = b.dataset.route;
-      state.routes[id] = !state.routes[id];
-      b.setAttribute("aria-pressed", state.routes[id]);
-    } else if (b.dataset.cat){
+    if (b.id === "cmpbtn") state.cmp = !state.cmp;
+    else if (b.dataset.plan){ state.plan = b.dataset.plan; state.cmp = false; state.sel = null; }
+    else if (b.dataset.cat){
       const c = b.dataset.cat;
       state.cats.has(c) ? state.cats.delete(c) : state.cats.add(c);
-    }
+    } else return;
     render();
+    if (b.dataset.plan) fit();
   });
 
   document.getElementById("list").addEventListener("click", e => {
     const cp = e.target.closest(".copy");
     if (cp){
       e.stopPropagation();
-      navigator.clipboard?.writeText(cp.dataset.copy).then(() => {
+      navigator.clipboard && navigator.clipboard.writeText(cp.dataset.copy).then(() => {
         cp.textContent = "コピー済"; setTimeout(() => cp.textContent = "コピー", 1200);
       });
       return;
     }
     const card = e.target.closest(".card");
-    if (card && !e.target.closest("a")) select(card.dataset.id);
+    if (card && card.dataset.id && !e.target.closest("a") && !e.target.closest(".chip")) select(card.dataset.id);
   });
 
-  function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
-  render();
+  // 初期表示。レイアウト確定前に fitBounds すると端が切れるので取り直してから合わせる
   const all = L.latLngBounds(SPOTS.map(s => [s._lat, s._lng]));
   function fit(){ map.invalidateSize(); map.fitBounds(all, {padding:[30,30]}); }
+  render();
   fit();
-  requestAnimationFrame(fit);          // レイアウト確定後にもう一度
+  requestAnimationFrame(fit);
   window.addEventListener("resize", fit);
 })();
 </script>
