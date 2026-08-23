@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>千葉旅 マップ</title>
+<meta name="description" content="千葉旅で行きたい場所の一元管理マップ。名称・住所・当日の営業状況・推奨ルート。">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<style>
+  :root{
+    --bg:#f6f4ef; --panel:#fff; --ink:#23201c; --sub:#7b736a; --line:#e2ddd3;
+    --accent:#2f6f9f; --open:#2e8b57; --check:#c98a15; --closed:#c0392b;
+    --day1:#d2603a; --day2:#2f6f9f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow-x:hidden}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    background:var(--bg); color:var(--ink); -webkit-text-size-adjust:100%;
+  }
+  a{color:var(--accent)}
+
+  /* ── ヘッダ ───────────────────────────── */
+  header{
+    padding:12px 16px; background:var(--panel); border-bottom:1px solid var(--line);
+    display:flex; flex-wrap:wrap; gap:10px 16px; align-items:baseline;
+  }
+  h1{font-size:17px; margin:0; letter-spacing:.02em}
+  .sub{font-size:12px; color:var(--sub)}
+
+  /* ── 操作バー ─────────────────────────── */
+  .bar{
+    display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+    padding:9px 16px; background:var(--panel); border-bottom:1px solid var(--line);
+  }
+  .bar .label{font-size:11px; color:var(--sub); margin-right:2px}
+  .chip{
+    font:inherit; font-size:12px; line-height:1; padding:7px 11px; border-radius:999px;
+    border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
+    white-space:nowrap;
+  }
+  .chip[aria-pressed="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
+  .chip.d1[aria-pressed="true"]{background:var(--day1); border-color:var(--day1)}
+  .chip.d2[aria-pressed="true"]{background:var(--day2); border-color:var(--day2)}
+  .sep{width:1px; height:20px; background:var(--line); margin:0 4px}
+  #cats{display:contents}   /* 中のチップを直接 .bar の折り返しに乗せる */
+
+  /* ── レイアウト ───────────────────────── */
+  main{display:flex; height:calc(100% - 104px); min-height:520px}
+  #map{flex:1 1 58%; min-width:0; background:#dfe6e3}
+  #list{
+    flex:0 0 42%; max-width:460px; overflow-y:auto;
+    background:var(--panel); border-left:1px solid var(--line); padding:10px 12px 40px;
+  }
+  @media (max-width:820px){
+    main{display:block; height:auto}
+    #map{height:52vh; min-height:300px}
+    #list{max-width:none; border-left:0; border-top:1px solid var(--line)}
+  }
+
+  /* ── ルート概要 ───────────────────────── */
+  .routecard{
+    border:1px solid var(--line); border-left:4px solid var(--line);
+    border-radius:8px; padding:10px 12px; margin-bottom:10px; background:#fcfbf8;
+  }
+  .routecard h2{font-size:13px; margin:0 0 4px}
+  .routecard p{font-size:12px; color:var(--sub); margin:0 0 6px; line-height:1.65}
+  .routecard .stat{font-size:11px; color:var(--sub); font-variant-numeric:tabular-nums}
+
+  /* ── スポットカード ───────────────────── */
+  .card{
+    border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+    margin-bottom:8px; background:#fff; cursor:pointer; transition:border-color .12s;
+  }
+  .card:hover{border-color:#bfb6a8}
+  .card.on{border-color:var(--ink); box-shadow:0 0 0 2px rgba(35,32,28,.08)}
+  .card h3{font-size:14px; margin:0 0 5px; display:flex; align-items:center; gap:7px; line-height:1.35}
+  .num{
+    flex:none; width:20px; height:20px; border-radius:50%; color:#fff;
+    font-size:11px; font-weight:700; display:grid; place-items:center;
+    font-variant-numeric:tabular-nums;
+  }
+  .num.plain{background:#b3aa9c}
+  .mark{flex:none; font-size:14px; font-weight:700; line-height:1}
+  .mark.open{color:var(--open)} .mark.check{color:var(--check)} .mark.closed{color:var(--closed)}
+  .meta{font-size:12px; color:var(--sub); line-height:1.7}
+  .meta .k{display:inline-block; min-width:3.6em; color:#a29889}
+  .addr{
+    font-size:12px; background:#f7f5f0; border:1px solid var(--line); border-radius:6px;
+    padding:5px 8px; margin:5px 0; display:flex; gap:8px; align-items:center;
+    justify-content:space-between; word-break:break-all;
+  }
+  .copy{
+    flex:none; font:inherit; font-size:11px; padding:3px 8px; border-radius:5px;
+    border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--sub);
+  }
+  .copy:active{background:#eee}
+  .tagrow{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px}
+  .tag{font-size:10.5px; padding:2px 7px; border-radius:999px; background:#efece5; color:var(--sub)}
+  .tag.lucky{background:#fdf0dd; color:#96690b}
+  .gmap{font-size:11.5px; text-decoration:none}
+  .note{font-size:11.5px; color:var(--sub); line-height:1.65; margin-top:5px}
+
+  /* ── 地図上のマーカー ─────────────────── */
+  .pin{
+    width:26px; height:26px; border-radius:50%; border:2.5px solid #fff;
+    box-shadow:0 1px 4px rgba(0,0,0,.35); display:grid; place-items:center;
+    color:#fff; font-size:12px; font-weight:700; font-variant-numeric:tabular-nums;
+  }
+  .pin.small{width:18px; height:18px; font-size:0}
+  .pin.sel{outline:3px solid rgba(35,32,28,.45); outline-offset:1px}
+  .leaflet-popup-content{margin:10px 12px; font-size:12.5px; line-height:1.65}
+  .leaflet-popup-content b{font-size:13.5px}
+  .leaflet-container{font-family:inherit}
+
+  .alert{
+    margin:0 0 10px; padding:9px 11px; border-radius:8px; font-size:11.5px; line-height:1.7;
+    background:#fdf3e6; border:1px solid #e8d3ae; color:#7a5a1e;
+  }
+  .storm{
+    font-size:11.5px; line-height:1.65; margin-top:5px; padding:6px 8px; border-radius:6px;
+    background:#fdf6ec; border-left:3px solid #e0a94a; color:#7a5a1e;
+  }
+  .tel{font-size:11.5px; text-decoration:none; white-space:nowrap}
+  footer{padding:14px 16px 30px; font-size:11.5px; color:var(--sub); line-height:1.8;
+         background:var(--panel); border-top:1px solid var(--line)}
+  footer code{background:#f1eee7; padding:1px 5px; border-radius:4px; font-size:11px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>千葉旅 行きたいところマップ</h1>
+  <span class="sub">1泊2日・宿は銚子　<span id="count"></span></span>
+</header>
+
+<div class="bar">
+  <span class="label">営業日</span>
+  <button class="chip" data-day="sat" aria-pressed="true">土曜</button>
+  <button class="chip" data-day="sun" aria-pressed="false">日曜</button>
+  <span class="sep"></span>
+  <span class="label">ルート</span>
+  <button class="chip d1" data-route="day1" aria-pressed="true">Day1</button>
+  <button class="chip d2" data-route="day2" aria-pressed="true">Day2</button>
+  <span class="sep"></span>
+  <span class="label">種類</span>
+  <span id="cats"></span>
+</div>
+
+<main>
+  <div id="map"></div>
+  <div id="list"></div>
+</main>
+
+<footer>
+  <b>○</b> 開いてる　<b>△</b> 要予約・要確認　<b>✕</b> 休み　— 表示は上で選んだ日のもの。営業情報は公式サイト等の調査時点（2026-08-23）の内容で、直前に変わることがあります。<br>
+  場所を足すには、GoogleマップのリンクをClaudeに送るか <code>python3 add_spot.py "&lt;URL&gt;"</code>。ルートを変えたら <code>python3 build_routes.py</code>。<br>
+  地図 © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors／経路 <a href="http://project-osrm.org/">OSRM</a>／座標 国土地理院・OSM
+</footer>
+
+<script src="vendor/leaflet.js"></script>
+<script src="spots.js"></script>
+<script src="routes.js"></script>
+<script>
+(function(){
+  const MARK = {open:"○", check:"△", closed:"✕"};
+  const COL  = {open:"#2e8b57", check:"#c98a15", closed:"#c0392b"};
+  const state = {day:"sat", routes:{day1:true, day2:true}, cats:new Set(), sel:null};
+
+  // 同じ住所の施設（KURKKU FIELDSと地中図書館など）はピンが重なるので、少しずらして描く。
+  // ずらしても広域表示では重なるため、ルート上の地点を必ず上に載せる（zIndexOffset）。
+  const seen = new Map();
+  SPOTS.forEach(s => {
+    const k = s.lat.toFixed(4) + "," + s.lng.toFixed(4);
+    const n = seen.get(k) || 0; seen.set(k, n + 1);
+    s._lat = s.lat + n * 0.0025; s._lng = s.lng + n * 0.0025; s._shifted = n > 0;
+  });
+
+  // ルート上の並び順（何番目に寄るか）を引けるようにしておく
+  const order = {};
+  ROUTES.forEach(r => r.stops.forEach((st, i) => {
+    if (st.id) (order[st.id] = order[st.id] || []).push({route:r, n:i + 1});
+  }));
+
+  const map = L.map("map", {scrollWheelZoom:false}).setView([35.4, 140.3], 9);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom:18, attribution:'&copy; OpenStreetMap'
+  }).addTo(map);
+  map.on("click", () => select(null));
+
+  const layers = {};   // spot.id -> marker
+  const lines  = {};   // route.id -> polyline[]
+
+  /* ── ルートの線（OSRMで取った実際の道路の形） ── */
+  ROUTES.forEach(r => {
+    lines[r.id] = r.legs.map(l => L.polyline(l.line, {
+      color:r.color, weight:4, opacity:.75,
+      dashArray: l.src === "straight" ? "6,7" : null   // 直線フォールバックは破線で区別
+    }));
+  });
+
+  /* ── マーカー ── */
+  SPOTS.forEach(s => {
+    const m = L.marker([s._lat, s._lng], {icon:icon(s), zIndexOffset: order[s.id] ? 1000 : 0}).addTo(map);
+    m.bindPopup(popup(s));
+    m.on("click", () => select(s.id));
+    layers[s.id] = m;
+  });
+
+  // リストはルートを回る順に並べる（Day1 → Day2 → ルート外）
+  const seq = {};
+  ROUTES.forEach((r, ri) => r.stops.forEach((st, i) => {
+    if (st.id && !(st.id in seq)) seq[st.id] = ri * 100 + i;
+  }));
+  SPOTS.sort((a, b) => (seq[a.id] ?? 900) - (seq[b.id] ?? 900));
+
+  function icon(s){
+    const st = s.hours ? s.hours[state.day].st : "open";
+    const o  = (order[s.id] || []).filter(x => state.routes[x.route.id])[0];
+    const bg = o ? o.route.color : COL[st];
+    const label = o ? o.n : (s.cat === "宿" ? "宿" : "");
+    return L.divIcon({
+      className:"", iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-14],
+      html:`<div class="pin${state.sel === s.id ? " sel" : ""}" style="background:${bg}">${label}</div>
+            <div style="position:absolute;top:-7px;right:-7px;width:15px;height:15px;border-radius:50%;
+                        background:#fff;color:${COL[st]};font:700 11px/15px sans-serif;text-align:center;
+                        box-shadow:0 1px 3px rgba(0,0,0,.3)">${MARK[st]}</div>`
+    });
+  }
+
+  function popup(s){
+    const h = s.hours, d = h && h[state.day];
+    return `<b>${esc(s.name)}</b><br>
+      ${esc(s.address)}<br>
+      ${d ? `<span style="color:${COL[d.st]};font-weight:700">${MARK[d.st]} ${state.day === "sat" ? "土曜" : "日曜"}</span> ${esc(d.text)}<br>` : ""}
+      ${s.gmap ? `<a href="${s.gmap}" target="_blank" rel="noopener">Googleマップで開く</a>` : ""}`;
+  }
+
+  /* ── 右側のリスト ── */
+  function render(){
+    const cats = [...new Set(SPOTS.map(s => s.cat))];
+    if (!state.cats.size) cats.forEach(c => state.cats.add(c));
+
+    document.getElementById("cats").innerHTML = cats.map(c =>
+      `<button class="chip" data-cat="${esc(c)}" aria-pressed="${state.cats.has(c)}">${esc(c)}</button>`).join("");
+
+    const shown = SPOTS.filter(s => state.cats.has(s.cat));
+    document.getElementById("count").textContent = `${shown.length} / ${SPOTS.length} 件`;
+
+    // ルート概要 → スポット一覧の順で組む
+    let html = `<div class="alert"><b>令和8年8月千葉豪雨（8/13–14）のあと</b>：
+      調べた範囲では、この10か所に豪雨を理由とした休業・閉鎖の告知は出ていません。
+      ただし公式サイトの更新が止まっている先（museum as it is・濃溝の滝の市の観光ページ）があり、
+      桟橋のような屋外の場所は現地判断になります。各カードの「豪雨後」欄と電話番号を見て、
+      行く前に確認してください。（調査 2026-08-23）</div>`;
+
+    html += ROUTES.filter(r => state.routes[r.id]).map(r => `
+      <div class="routecard" style="border-left-color:${r.color}">
+        <h2 style="color:${r.color}">${esc(r.name)}</h2>
+        <p>${esc(r.note)}</p>
+        <div class="stat">走行 ${r.totalDist} km ／ 移動だけで約 ${Math.floor(r.totalMin/60)}時間${r.totalMin%60}分
+          ・${r.stops.length}地点${r.partial ? "（一部は直線距離）" : ""}</div>
+      </div>`).join("");
+
+    html += shown.map(s => {
+      const d = s.hours ? s.hours[state.day] : null;
+      const o = (order[s.id] || []).filter(x => state.routes[x.route.id])[0];
+      return `
+      <div class="card${state.sel === s.id ? " on" : ""}" data-id="${esc(s.id)}">
+        <h3>
+          <span class="num${o ? "" : " plain"}" style="${o ? `background:${o.route.color}` : ""}">${o ? o.n : "·"}</span>
+          <span>${esc(s.name)}</span>
+          ${d ? `<span class="mark ${d.st}">${MARK[d.st]}</span>` : ""}
+        </h3>
+        ${d ? `<div class="meta"><span class="k">${state.day === "sat" ? "土曜" : "日曜"}</span>${esc(d.text)}</div>` : ""}
+        <div class="addr"><span>${esc(s.address)}</span><button class="copy" data-copy="${esc(s.address)}">コピー</button></div>
+        ${s.hours && s.hours.note ? `<div class="note">${esc(s.hours.note)}</div>` : ""}
+        ${s.storm ? `<div class="storm"><b>豪雨後</b>　${esc(s.storm)}</div>` : ""}
+        ${o && o.n < o.route.stops.length ? `<div class="note">→ 次は「${esc(o.route.stops[o.n].name)}」まで車で約${o.route.legs[o.n-1].min}分（${o.route.legs[o.n-1].dist}km）</div>` : ""}
+        <div class="tagrow">
+          <span class="tag">${esc(s.cat)}</span>
+          ${(s.tags||[]).map(t => `<span class="tag${t === "ラッキー枠" ? " lucky" : ""}">${esc(t)}</span>`).join("")}
+          ${s.tel ? `<a class="tel" href="tel:${esc(s.tel)}">☎ ${esc(s.tel)}</a>` : ""}
+          ${s.gmap ? `<a class="gmap" href="${s.gmap}" target="_blank" rel="noopener">Googleマップ ↗</a>` : ""}
+        </div>
+      </div>`;
+    }).join("");
+
+    document.getElementById("list").innerHTML = html;
+    SPOTS.forEach(s => {
+      const m = layers[s.id];
+      if (state.cats.has(s.cat)) { m.addTo(map); m.setIcon(icon(s)); m.setPopupContent(popup(s)); }
+      else map.removeLayer(m);
+    });
+    ROUTES.forEach(r => lines[r.id].forEach(l => state.routes[r.id] ? l.addTo(map) : map.removeLayer(l)));
+  }
+
+  function select(id){
+    state.sel = (state.sel === id) ? null : id;
+    render();
+    if (!state.sel) return;
+    const s = SPOTS.find(x => x.id === state.sel);
+    map.setView([s._lat, s._lng], Math.max(map.getZoom(), 12), {animate:true});
+    layers[s.id].openPopup();
+    const el = document.querySelector(`.card[data-id="${CSS.escape(s.id)}"]`);
+    if (el) el.scrollIntoView({block:"nearest", behavior:"smooth"});
+  }
+
+  /* ── 操作 ── */
+  document.querySelector(".bar").addEventListener("click", e => {
+    const b = e.target.closest(".chip"); if (!b) return;
+    if (b.dataset.day){
+      state.day = b.dataset.day;
+      document.querySelectorAll("[data-day]").forEach(x =>
+        x.setAttribute("aria-pressed", x.dataset.day === state.day));
+    } else if (b.dataset.route){
+      const id = b.dataset.route;
+      state.routes[id] = !state.routes[id];
+      b.setAttribute("aria-pressed", state.routes[id]);
+    } else if (b.dataset.cat){
+      const c = b.dataset.cat;
+      state.cats.has(c) ? state.cats.delete(c) : state.cats.add(c);
+    }
+    render();
+  });
+
+  document.getElementById("list").addEventListener("click", e => {
+    const cp = e.target.closest(".copy");
+    if (cp){
+      e.stopPropagation();
+      navigator.clipboard?.writeText(cp.dataset.copy).then(() => {
+        cp.textContent = "コピー済"; setTimeout(() => cp.textContent = "コピー", 1200);
+      });
+      return;
+    }
+    const card = e.target.closest(".card");
+    if (card && !e.target.closest("a")) select(card.dataset.id);
+  });
+
+  function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+  render();
+  const all = L.latLngBounds(SPOTS.map(s => [s._lat, s._lng]));
+  function fit(){ map.invalidateSize(); map.fitBounds(all, {padding:[30,30]}); }
+  fit();
+  requestAnimationFrame(fit);          // レイアウト確定後にもう一度
+  window.addEventListener("resize", fit);
+})();
+</script>
+</body>
+</html>
