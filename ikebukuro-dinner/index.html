@@ -38,7 +38,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 .hd-in{max-width:1360px;margin:0 auto;padding:11px 16px;display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap}
 .brand{font-size:18px;font-weight:700;margin:0;white-space:nowrap;letter-spacing:.01em}
-.tag{color:var(--ink3);font-size:12px;letter-spacing:.03em;flex:1 1 auto;min-width:0}
 .count{margin-left:auto;font-size:12.5px;color:var(--ink2);white-space:nowrap;flex:0 0 auto}
 .count b{color:var(--accent);font-size:17px;font-variant-numeric:tabular-nums;font-weight:700}
 
@@ -231,7 +230,6 @@ document.querySelector(".paint").addEventListener("click", function(e){
 <header class="hd">
   <div class="hd-in">
     <h1 class="brand">池袋の飲食店リスト</h1>
-    <span class="tag">4人で行ける店／駅から徒歩10分以内／評点は2サイトで確認</span>
     <span class="count"><b id="cnt">–</b> <span id="cntall"></span></span>
   </div>
 </header>
@@ -400,6 +398,13 @@ function drawChips(){
 }
 
 /* ---------- cards ---------- */
+/* 外部リンクは必ず別タブへ。個別指定の漏れ（Leafletの出典表記など）もここで拾う */
+function linkify(root){
+  (root||document).querySelectorAll('a[href^="http"]:not([target])').forEach(function(a){
+    a.target="_blank"; a.rel="noopener noreferrer";
+  });
+}
+
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 
@@ -464,6 +469,7 @@ function render(){
   });
   if(state.sel && !ids[state.sel]) state.sel=null;
   paintSel();
+  linkify();
   syncHash();
 }
 
@@ -573,6 +579,7 @@ document.querySelector(".paint").addEventListener("click", function(e){
 
 /* ---------- footer ---------- */
 document.getElementById("ft").innerHTML = D.footer_html;
+linkify();
 
 readHash();
 drawLegend();
@@ -583,7 +590,7 @@ function fitAll(){
   var pts=SHOPS.map(function(s){return [s.lat,s.lon];});
   map.fitBounds(L.latLngBounds(pts), {padding:[26,26]});
 }
-setTimeout(fitAll,80);
+setTimeout(function(){ fitAll(); linkify(); },80);
 window.addEventListener("load", fitAll);
 var rt; window.addEventListener("resize", function(){ clearTimeout(rt); rt=setTimeout(function(){ map.invalidateSize(); },180); });
 })();
