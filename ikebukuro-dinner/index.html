@@ -136,7 +136,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .cname{font-size:16.5px;font-weight:700;letter-spacing:.01em;line-height:1.35;margin:0 0 3px}
 .cname a{text-decoration:none;background-image:linear-gradient(currentColor,currentColor);background-size:0 1px;background-repeat:no-repeat;background-position:0 100%;transition:background-size .25s}
 .cname a:hover{background-size:100% 1px}
-.cname .ext{font-size:10px;color:var(--ink3);margin-left:5px;vertical-align:2px}
+.cname .ext{font-size:10px;color:var(--ink3);margin-left:5px;vertical-align:2px;white-space:nowrap;display:inline-block}
 .cmeta{font-size:12px;color:var(--ink2);display:flex;flex-wrap:wrap;gap:4px 9px;align-items:center}
 .cmeta .g{color:var(--ink)}
 .no{flex:0 0 auto;font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;padding-top:3px}
@@ -144,8 +144,12 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .rates{display:flex;gap:6px;flex-wrap:wrap;margin:11px 0 0}
 .rate{
   display:inline-flex;align-items:baseline;gap:5px;background:var(--surface2);
-  border:1px solid var(--line);border-radius:8px;padding:3px 9px;font-size:11.5px;color:var(--ink3)
+  border:1px solid var(--line);border-radius:8px;padding:3px 9px;font-size:11.5px;color:var(--ink3);
+  text-decoration:none
 }
+a.rate{transition:border-color .15s,background .15s}
+a.rate:hover{border-color:var(--line2);background:#fff}
+a.rate .src{text-decoration:underline;text-underline-offset:2px;text-decoration-color:var(--line2)}
 .rate b{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .rate.bud b{color:var(--accent)}
 
@@ -199,14 +203,16 @@ document.querySelector(".paint").addEventListener("click", function(e){
 });
 
 /* ---------- footer ---------- */
-.ft{border-top:1px solid var(--line);margin-top:26px;padding:26px 0 60px;font-size:12px;color:var(--ink2);line-height:1.95}
-.ft h2{font-size:12.5px;letter-spacing:.1em;color:var(--ink);margin:0 0 9px;font-weight:700}
+.ft{border-top:1px solid var(--line);margin-top:22px;padding:18px 0 56px;font-size:11.5px;color:var(--ink2);line-height:1.85}
+.ft h2{font-size:11.5px;letter-spacing:.08em;color:var(--ink3);margin:0 0 6px;font-weight:600}
 .ft h3{font-size:12.5px;color:var(--ink);margin:18px 0 5px;font-weight:700}
 .ft table{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:11.5px}
 .ft th,.ft td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
 .ft th{color:var(--ink);background:var(--surface2);font-weight:700;white-space:nowrap}
 .ft a{color:var(--accent)}
-.ft ul{margin:5px 0;padding-left:1.1em}
+.ft ul{margin:4px 0 10px;padding-left:1.05em}
+.ft p{margin:0 0 8px}
+.ft li{margin:1px 0}
 .scr{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
 .fab{
@@ -327,7 +333,7 @@ SHOPS.forEach(function(s){
     '<span class="pop-n">'+esc(s.name)+'</span>'+
     '<span class="pop-m">'+esc(s.genre_label)+' ・ '+esc(s.exit)+'徒歩'+s.walk_min+'分</span><br>'+
     '<span class="pop-b">'+esc(b.full)+'</span> <span class="pop-m">／ 食べログ '+s.tabelog.score.toFixed(2)+'</span><br>'+
-    '<a href="'+s.reserve_url+'" target="_blank" rel="noopener">'+esc(s.reserve_site)+'で見る →</a>'
+    '<a href="'+s.info_url+'" target="_blank" rel="noopener">'+esc(s.info_site)+'で見る →</a>'
   );
   m.on("click", function(){ select(s.id, "map"); });
   markers[s.id]=m;
@@ -418,10 +424,12 @@ function card(s, i){
   if(s.seats_note)   tags.push('<span class="tg">'+esc(s.seats_note)+"</span>");
 
   var rates='<span class="rate bud"><b>'+esc(b.full)+"</b></span>"+
-    '<span class="rate">食べログ <b>'+s.tabelog.score.toFixed(2)+"</b>"+
-      '<span style="color:var(--ink3)">('+s.tabelog.reviews.toLocaleString()+")</span></span>";
-  if(s.hotpepper) rates+='<span class="rate">ホットペッパー <b>'+s.hotpepper.score.toFixed(1)+"</b>"+
-      '<span style="color:var(--ink3)">('+s.hotpepper.n+")</span></span>";
+    '<a class="rate" href="'+s.tabelog.url+'" target="_blank" rel="noopener">'+
+      '<span class="src">食べログ</span> <b>'+s.tabelog.score.toFixed(2)+"</b>"+
+      "<span>("+s.tabelog.reviews.toLocaleString()+")</span></a>";
+  if(s.hotpepper) rates+='<a class="rate" href="'+s.hotpepper.url+'" target="_blank" rel="noopener">'+
+      '<span class="src">ホットペッパー</span> <b>'+s.hotpepper.score.toFixed(1)+"</b>"+
+      "<span>("+s.hotpepper.n+")</span></a>";
 
   var dl="";
   [["席",s.seats],["個室",s.private_room||"なし"],["飲み放題",s.nomihodai||"情報なし"],
@@ -433,8 +441,8 @@ function card(s, i){
     '<div class="chead">'+
       '<div class="glyph" style="background:'+p.c+';color:'+p.ink+'">'+s.glyph+"</div>"+
       '<div class="ctitle">'+
-        '<h2 class="cname"><a href="'+s.reserve_url+'" target="_blank" rel="noopener">'+esc(s.name)+
-          '<span class="ext">'+esc(s.reserve_site)+" ↗</span></a></h2>"+
+        '<h2 class="cname"><a href="'+s.info_url+'" target="_blank" rel="noopener">'+esc(s.name)+
+          '<span class="ext">'+esc(s.info_site)+" ↗</span></a></h2>"+
         '<div class="cmeta"><span class="g">'+esc(s.genre_label)+"</span><span>"+esc(s.exit)+" 徒歩"+s.walk_min+"分</span><span>"+s.dist_m+"m</span></div>"+
       "</div>"+
       '<div class="no">'+(i+1)+"</div>"+
@@ -445,7 +453,7 @@ function card(s, i){
     '<p class="cmt">'+esc(s.comment)+"</p>"+
     '<details class="more"><summary>店の詳細</summary><dl class="dl">'+dl+"</dl></details>"+
     '<div class="cfoot">'+
-      '<a class="act pri" href="'+s.reserve_url+'" target="_blank" rel="noopener">予約ページ</a>'+
+      (s.book_url?'<a class="act pri" href="'+s.book_url+'" target="_blank" rel="noopener">'+esc(s.book_site)+"で予約</a>":"")+
       '<button class="act" data-focus="'+s.id+'">地図で見る</button>'+
       '<a class="act" href="'+s.gmap+'" target="_blank" rel="noopener">Googleマップ</a>'+
       (s.tel?'<a class="act" href="tel:'+esc(s.tel.replace(/[^0-9+]/g,""))+'">'+esc(s.tel)+"</a>":"")+

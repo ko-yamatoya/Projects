@@ -116,10 +116,16 @@ for name, blabel, glyph in FINAL:
     elif net.startswith('リクエスト'): rkind='ネット予約（リクエスト）'
     elif '電話予約のみ' in rsv:        rkind='電話予約のみ'
     else:                            rkind='電話予約'
-    if hid:
-        rurl='https://www.hotpepper.jp/%s/'%hid; rsite='ホットペッパー'
+    hpurl='https://www.hotpepper.jp/%s/'%hid if hid else ''
+    # 店名リンクは「口コミの実体が多い方」へ。ホットペッパーは掲載だけで口コミが
+    # ほとんど無い店があり、そこへ飛ばすと評価の見えないページに着いてしまう。
+    hp_total = R.get('total_reviews') or 0
+    if hid and hp_total > x['reviews']:
+        iurl, isite = hpurl, 'ホットペッパー'
     else:
-        rurl=x['url']; rsite='食べログ'
+        iurl, isite = x['url'], '食べログ'
+    # 予約ボタンはネット予約ができる店だけ出す（それ以外は電話が確実）
+    burl, bsite = (hpurl, 'ホットペッパー') if (hid and rkind.startswith('ネット')) else ('', '')
     rnote=re.sub(r'^予約可\s*','',rsv)[:90] or '予約可'
 
     # 口コミ
@@ -148,7 +154,8 @@ for name, blabel, glyph in FINAL:
         private_room=room, room4=room4, nomihodai=nomi,
         seats=(t.get('席数') or '情報なし')[:70], seats_note=C['seat'],
         signature=C['sig'], comment=C['cmt'],
-        reserve_url=rurl, reserve_site=rsite, reserve_kind=rkind, instant=instant, reserve_note=rnote,
+        info_url=iurl, info_site=isite, book_url=burl, book_site=bsite,
+        reserve_kind=rkind, instant=instant, reserve_note=rnote,
         tel=d.get('tel') or '', hours=hours, closed=closed_of(hours),
         low_ratio_text=lowtxt, latest_review=(latest+'（口コミの訪問月）') if latest else '情報なし',
         sources=srcs,
