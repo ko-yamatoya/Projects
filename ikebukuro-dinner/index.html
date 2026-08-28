@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>池袋、4人で。｜駅から歩ける店リスト</title>
+<title>池袋の飲食店リスト</title>
 <meta name="description" content="JR池袋駅から徒歩10分圏内。食べログとホットペッパーグルメの評点を二重に通した店だけを、地図と一覧にまとめたページ。">
 <meta name="theme-color" content="#0e0e12">
 <link rel="stylesheet" href="vendor/leaflet.css">
@@ -37,8 +37,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   border-bottom:1px solid var(--line);
 }
 .hd-in{max-width:1360px;margin:0 auto;padding:11px 16px;display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap}
-.brand{font-family:var(--serif);font-size:21px;letter-spacing:.06em;font-weight:600;margin:0;white-space:nowrap}
-.brand em{font-style:normal;color:var(--accent)}
+.brand{font-size:18px;font-weight:700;margin:0;white-space:nowrap;letter-spacing:.01em}
 .tag{color:var(--ink3);font-size:12px;letter-spacing:.03em;flex:1 1 auto;min-width:0}
 .count{margin-left:auto;font-size:12.5px;color:var(--ink2);white-space:nowrap;flex:0 0 auto}
 .count b{color:var(--accent);font-size:17px;font-variant-numeric:tabular-nums;font-weight:700}
@@ -231,8 +230,8 @@ document.querySelector(".paint").addEventListener("click", function(e){
 
 <header class="hd">
   <div class="hd-in">
-    <h1 class="brand">池袋、<em>4人</em>で。</h1>
-    <span class="tag">駅から歩ける／評点を2サイトで通した店</span>
+    <h1 class="brand">池袋の飲食店リスト</h1>
+    <span class="tag">4人で行ける店／駅から徒歩10分以内／評点は2サイトで確認</span>
     <span class="count"><b id="cnt">–</b> <span id="cntall"></span></span>
   </div>
 </header>

@@ -12,6 +12,6 @@
 | shichinarabe（七並べ対決 記録アプリ） | https://ko-yamatoya.github.io/Projects/shichinarabe/ |
 | solo-trip（経県ゲーム / 一人旅ダッシュボード） | https://ko-yamatoya.github.io/Projects/solo-trip/ |
 | chiba-trip（千葉旅 行きたいところマップ） | https://ko-yamatoya.github.io/Projects/chiba-trip/ |
-| ikebukuro-dinner（池袋、4人で。飲食店マップ） | https://ko-yamatoya.github.io/Projects/ikebukuro-dinner/ |
+| ikebukuro-dinner（池袋の飲食店リスト） | https://ko-yamatoya.github.io/Projects/ikebukuro-dinner/ |
 
 運用ルールは [CLAUDE.md](CLAUDE.md) を参照（1デモ=1サブフォルダ、独立リポジトリは作らない）。
