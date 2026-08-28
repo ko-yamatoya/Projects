@@ -82,6 +82,14 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .legend .sw{width:19px;height:9px;border-radius:2px}
 .legend .lg-x{display:flex;justify-content:space-between;margin-top:3px;font-variant-numeric:tabular-nums}
 .mapwrap{position:relative}
+.paint{position:absolute;left:12px;bottom:22px;z-index:500;display:flex;gap:2px;
+  background:rgba(20,20,26,.9);border:1px solid var(--line);border-radius:9px;padding:3px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.paint b{font-size:9.5px;letter-spacing:.08em;color:var(--ink3);align-self:center;padding:0 5px;font-weight:400}
+.paint button{font-size:11.5px;padding:4px 10px;border-radius:6px;color:var(--ink2);white-space:nowrap}
+.paint button.on{background:var(--surface3);color:var(--ink);font-weight:600}
+.legend .gitem{display:flex;align-items:center;gap:6px;margin-top:3px}
+.legend .gsw{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
 
 /* ---------- controls ---------- */
 .controls{padding:16px 0 6px;position:relative}
@@ -165,6 +173,32 @@ details.more[open] summary::after{transform:rotate(180deg)}
 
 .empty{padding:44px 8px;text-align:center;color:var(--ink3);font-size:13.5px}
 
+/* ---------- paint mode ---------- */
+function drawLegend(){
+  var el=document.getElementById("legend"), h="";
+  if(state.paint==="genre"){
+    h+='<div class="lg-t">ジャンルの系統</div>';
+    GRP.forEach(function(g){ h+='<div class="gitem"><span class="gsw" style="background:'+g.color+'"></span>'+esc(g.label)+"</div>"; });
+    h+='<div class="lg-t" style="margin-top:7px">ピンの文字＝ジャンル</div>';
+  }else{
+    h+='<div class="lg-t">夜・1人あたり予算</div><div class="ramp">'+
+       BUDGET.map(function(b){ return '<span class="sw" style="background:'+b.c+'"></span>'; }).join("")+
+       '</div><div class="lg-x"><span>2千円台</span><span>5千円台</span></div>'+
+       '<div class="lg-t" style="margin-top:7px">ピンの文字＝ジャンル</div>';
+  }
+  el.innerHTML=h;
+}
+function repaint(){
+  SHOPS.forEach(function(s){ markers[s.id].setIcon(icon(s)); });
+  drawLegend(); paintSel();
+}
+document.querySelector(".paint").addEventListener("click", function(e){
+  var b=e.target.closest("[data-paint]"); if(!b) return;
+  state.paint=b.getAttribute("data-paint");
+  document.querySelectorAll(".paint button").forEach(function(x){ x.classList.toggle("on", x===b); });
+  render(); repaint();
+});
+
 /* ---------- footer ---------- */
 .ft{border-top:1px solid var(--line);margin-top:26px;padding:26px 0 60px;font-size:12px;color:var(--ink3);line-height:1.95}
 .ft h2{font-size:12px;letter-spacing:.1em;color:var(--ink2);margin:0 0 9px;font-weight:600}
@@ -207,16 +241,12 @@ details.more[open] summary::after{transform:rotate(180deg)}
   <div class="mapcol">
     <div class="mapwrap">
       <div id="map"></div>
-      <div class="legend">
-        <div class="lg-t">夜・1人あたり予算</div>
-        <div class="ramp">
-          <span class="sw" style="background:var(--b1)"></span>
-          <span class="sw" style="background:var(--b2)"></span>
-          <span class="sw" style="background:var(--b3)"></span>
-          <span class="sw" style="background:var(--b4)"></span>
-        </div>
-        <div class="lg-x"><span>2千円台</span><span>5千円台</span></div>
-        <div class="lg-t" style="margin-top:7px">ピンの文字＝ジャンル</div>
+      <div class="paint">
+        <b>色</b>
+        <button type="button" data-paint="budget" class="on">予算</button>
+        <button type="button" data-paint="genre">ジャンル</button>
+      </div>
+      <div class="legend" id="legend">
       </div>
     </div>
   </div>
@@ -262,7 +292,7 @@ var BUDGET = [
 var FEAT = [
   {k:"room",   label:"4人で使える個室", t:function(s){return s.room4;}},
   {k:"nomi",   label:"飲み放題あり", t:function(s){return s.nomihodai;}},
-  {k:"net",    label:"ネット予約可", t:function(s){return s.reserve_kind.indexOf("ネット")>=0;}},
+  {k:"net",    label:"ネットで予約できる", t:function(s){return s.reserve_kind.indexOf("ネット")>=0;}},
   {k:"near",   label:"駅5分以内",   t:function(s){return s.walk_min<=5;}},
   {k:"cheap",  label:"4,000円以内", t:function(s){return s.budget_band==="2000"||s.budget_band==="3000";}}
 ];
@@ -270,7 +300,13 @@ var EXITS = ["西口","北口","東口"];
 var bmap={}; BUDGET.forEach(function(b){bmap[b.k]=b;});
 var gmap={}; GEN.forEach(function(g){gmap[g.key]=g;});
 
-var state = {q:"", genre:[], budget:[], feat:[], exit:[], sort:"budget", sel:null};
+var GRP = D.groups, grpmap={}; GRP.forEach(function(g){grpmap[g.key]=g;});
+var state = {q:"", genre:[], budget:[], feat:[], exit:[], sort:"budget", sel:null, paint:"budget"};
+function paintOf(s){ return state.paint==="genre" ? {c:grpmap[s.group].color, ink:grpmap[s.group].ink}
+                                                  : {c:bmap[s.budget_band].c, ink:bmap[s.budget_band].ink}; }
+function pinHtml(s){ var p=paintOf(s);
+  return '<div class="pin" data-id="'+s.id+'" style="background:'+p.c+'"><span style="color:'+p.ink+'">'+s.glyph+"</span></div>"; }
+function icon(s){ return L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-26],html:pinHtml(s)}); }
 
 /* ---------- map ---------- */
 var map = L.map("map",{zoomControl:true, scrollWheelZoom:false, attributionControl:true})
@@ -288,11 +324,7 @@ L.circleMarker([35.72953,139.71107],{radius:6,color:"#f3efe7",weight:2,fillColor
 var markers = {};
 SHOPS.forEach(function(s){
   var b = bmap[s.budget_band];
-  var ic = L.divIcon({
-    className:"", iconSize:[30,30], iconAnchor:[15,29], popupAnchor:[0,-26],
-    html:'<div class="pin" data-id="'+s.id+'" style="background:'+b.c+'"><span style="color:'+b.ink+'">'+s.glyph+'</span></div>'
-  });
-  var m = L.marker([s.lat,s.lon],{icon:ic, title:s.name}).addTo(map);
+  var m = L.marker([s.lat,s.lon],{icon:icon(s), title:s.name}).addTo(map);
   m.bindPopup(
     '<span class="pop-n">'+esc(s.name)+'</span>'+
     '<span class="pop-m">'+esc(s.genre_label)+' ・ '+esc(s.exit)+'徒歩'+s.walk_min+'分</span><br>'+
@@ -373,7 +405,7 @@ function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 
 function card(s, i){
-  var b=bmap[s.budget_band], g=gmap[s.genre];
+  var b=bmap[s.budget_band], p=paintOf(s);
   var tags=[];
   if(s.room4) tags.push('<span class="tg k">個室</span>');
   if(s.nomihodai)    tags.push('<span class="tg k">飲み放題</span>');
@@ -394,7 +426,7 @@ function card(s, i){
 
   return '<article class="card" id="c'+s.id+'" data-id="'+s.id+'">'+
     '<div class="chead">'+
-      '<div class="glyph" style="background:'+b.c+';color:'+b.ink+'">'+s.glyph+"</div>"+
+      '<div class="glyph" style="background:'+p.c+';color:'+p.ink+'">'+s.glyph+"</div>"+
       '<div class="ctitle">'+
         '<h2 class="cname"><a href="'+s.reserve_url+'" target="_blank" rel="noopener">'+esc(s.name)+
           '<span class="ext">'+esc(s.reserve_site)+" ↗</span></a></h2>"+
@@ -493,6 +525,7 @@ function syncHash(){
   if(state.feat.length) p.push("f="+state.feat.join(","));
   if(state.exit.length) p.push("e="+encodeURIComponent(state.exit.join(",")));
   if(state.sort!=="budget") p.push("s="+state.sort);
+  if(state.paint!=="budget") p.push("c="+state.paint);
   if(state.q) p.push("q="+encodeURIComponent(state.q));
   var h=p.length?"#"+p.join("&"):"";
   if(location.hash!==h) history.replaceState(null,"",location.pathname+location.search+h);
@@ -507,16 +540,45 @@ function readHash(){
     else if(k==="f") state.feat=v.split(",");
     else if(k==="e") state.exit=v.split(",");
     else if(k==="s") state.sort=v;
+    else if(k==="c"){ state.paint=v; document.querySelectorAll(".paint button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-paint")===v); }); }
     else if(k==="q"){ state.q=v; document.getElementById("q").value=v; }
   });
   document.getElementById("sort").value=state.sort;
 }
 
+/* ---------- paint mode ---------- */
+function drawLegend(){
+  var el=document.getElementById("legend"), h="";
+  if(state.paint==="genre"){
+    h+='<div class="lg-t">ジャンルの系統</div>';
+    GRP.forEach(function(g){ h+='<div class="gitem"><span class="gsw" style="background:'+g.color+'"></span>'+esc(g.label)+"</div>"; });
+    h+='<div class="lg-t" style="margin-top:7px">ピンの文字＝ジャンル</div>';
+  }else{
+    h+='<div class="lg-t">夜・1人あたり予算</div><div class="ramp">'+
+       BUDGET.map(function(b){ return '<span class="sw" style="background:'+b.c+'"></span>'; }).join("")+
+       '</div><div class="lg-x"><span>2千円台</span><span>5千円台</span></div>'+
+       '<div class="lg-t" style="margin-top:7px">ピンの文字＝ジャンル</div>';
+  }
+  el.innerHTML=h;
+}
+function repaint(){
+  SHOPS.forEach(function(s){ markers[s.id].setIcon(icon(s)); });
+  drawLegend(); paintSel();
+}
+document.querySelector(".paint").addEventListener("click", function(e){
+  var b=e.target.closest("[data-paint]"); if(!b) return;
+  state.paint=b.getAttribute("data-paint");
+  document.querySelectorAll(".paint button").forEach(function(x){ x.classList.toggle("on", x===b); });
+  render(); repaint();
+});
+
 /* ---------- footer ---------- */
 document.getElementById("ft").innerHTML = D.footer_html;
 
 readHash();
+drawLegend();
 render();
+if(state.paint!=="budget") repaint();
 function fitAll(){
   map.invalidateSize();                       // 先にサイズを確定させないと zoom がずれる
   var pts=SHOPS.map(function(s){return [s.lat,s.lon];});

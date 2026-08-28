@@ -13,6 +13,15 @@ GENRES = [
   ("bal","バル・イタリアン","伊"), ("beer","ビア・ワイン","杯"), ("nabe","そば・鍋","鍋"),
 ]
 GKEY = {lab:(k,gl) for k,lab,gl in GENRES}
+# 地図の「ジャンルで色分け」用の系統。4色に抑えているのは、全ペア検証で5色以上だと
+# 通常視の識別下限(ΔE15)を割るため（tools/valpal.py）。文字（漢字）が識別の主役で、色は補助。
+GROUPS = [
+  ("wa",   "和・酒場", "#c98500", "#241802", ["izakaya","private","yakitori","nabe"]),
+  ("niku", "肉",       "#d55181", "#ffffff", ["yakiniku"]),
+  ("sakana","魚",      "#3987e5", "#ffffff", ["seafood"]),
+  ("world","世界の料理","#008300", "#ffffff", ["chinese","korean","ethnic","bal","beer"]),
+]
+GRP = {g:(k,c,i) for k,_,c,i,ks in GROUPS for g in ks}
 
 def hav(a,b,c,d):
     R=6371000.0
@@ -97,13 +106,19 @@ for name, blabel, glyph in FINAL:
     elif HI.get('飲み放題','').startswith('なし'): nomi=''
     elif '飲み放題' in (t.get('ドリンク') or '')+(t.get('コース') or ''): nomi='あり（価格は情報なし）'
 
-    # 予約
+    # 予約の入口。ホットペッパーの「ネット予約受付時間」の書き出しが即予約かリクエストかを示す。
+    # 想定利用（金曜19時・4名）でネットに空き枠が出るかは avail_map.json で別途確認済み（内部確認のみ）。
     rsv=(t.get('予約可否') or '')
+    net=(HI.get('ネット予約受付時間') or '')
+    instant = net.startswith('即予約')
+    if instant:                      rkind='ネット即予約'
+    elif net.startswith('リクエスト'): rkind='ネット予約（リクエスト）'
+    elif '電話予約のみ' in rsv:        rkind='電話予約のみ'
+    else:                            rkind='電話予約'
     if hid:
-        rurl='https://www.hotpepper.jp/%s/'%hid; rsite='ホットペッパー'; rkind='ネット予約可'
+        rurl='https://www.hotpepper.jp/%s/'%hid; rsite='ホットペッパー'
     else:
-        rurl=x['url']; rsite='食べログ'; rkind='ネット予約可' if '予約可' in rsv else '要問い合わせ'
-    if '電話予約のみ' in rsv: rkind='電話予約のみ'
+        rurl=x['url']; rsite='食べログ'
     rnote=re.sub(r'^予約可\s*','',rsv)[:90] or '予約可'
 
     # 口コミ
@@ -122,7 +137,7 @@ for name, blabel, glyph in FINAL:
     hours=(t.get('営業時間') or '')[:150]
     shops.append(dict(
         id=x['id'], name=name, kana='',
-        genre=gkey, genre_label=blabel, glyph=glyph,
+        genre=gkey, genre_label=blabel, glyph=glyph, group=GRP[gkey][0],
         lat=lat, lon=lon, dist_m=dist, walk_min=max(1,math.ceil(dist/80)),
         exit=exit_of(x,d), cuisine=x['genres'],
         budget_band=band(x['budget_dinner']),
@@ -132,7 +147,7 @@ for name, blabel, glyph in FINAL:
         private_room=room, room4=room4, nomihodai=nomi,
         seats=(t.get('席数') or '情報なし')[:70], seats_note=C['seat'],
         signature=C['sig'], comment=C['cmt'],
-        reserve_url=rurl, reserve_site=rsite, reserve_kind=rkind, reserve_note=rnote,
+        reserve_url=rurl, reserve_site=rsite, reserve_kind=rkind, instant=instant, reserve_note=rnote,
         tel=d.get('tel') or '', hours=hours, closed=closed_of(hours),
         low_ratio_text=lowtxt, latest_review=(latest+'（口コミの訪問月）') if latest else '情報なし',
         sources=srcs,
@@ -143,6 +158,7 @@ today=datetime.date.today().isoformat()
 FOOT = open('footer.html',encoding='utf-8').read()
 data=dict(generated=today, station='JR池袋駅',
           genres=[dict(key=k,label=l,glyph=g) for k,l,g in GENRES],
+          groups=[dict(key=k,label=l,color=c,ink=i) for k,l,c,i,_ in GROUPS],
           shops=shops, footer_html=FOOT)
 json.dump(data, open(os.path.join(OUT,'data.json'),'w'), ensure_ascii=False, indent=1)
 open(os.path.join(OUT,'data.js'),'w',encoding='utf-8').write(
