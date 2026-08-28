@@ -15,10 +15,11 @@ GENRES = [
 GKEY = {lab:(k,gl) for k,lab,gl in GENRES}
 # 地図の「ジャンルで色分け」用の系統。4色に抑えているのは、全ペア検証で5色以上だと
 # 通常視の識別下限(ΔE15)を割るため（tools/valpal.py）。文字（漢字）が識別の主役で、色は補助。
+# 明るい地図面(#f2efe9)に対して4色とも3.4:1以上、全ペアの通常視の色差16.3。
 GROUPS = [
-  ("wa",   "和・酒場", "#c98500", "#241802", ["izakaya","private","yakitori","nabe"]),
-  ("niku", "肉",       "#d55181", "#ffffff", ["yakiniku"]),
-  ("sakana","魚",      "#3987e5", "#ffffff", ["seafood"]),
+  ("wa",   "和・酒場", "#e34948", "#ffffff", ["izakaya","private","yakitori","nabe"]),
+  ("niku", "肉",       "#4a3aa7", "#ffffff", ["yakiniku"]),
+  ("sakana","魚",      "#2a78d6", "#ffffff", ["seafood"]),
   ("world","世界の料理","#008300", "#ffffff", ["chinese","korean","ethnic","bal","beer"]),
 ]
 GRP = {g:(k,c,i) for k,_,c,i,ks in GROUPS for g in ks}

@@ -5,16 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>池袋の飲食店リスト</title>
 <meta name="description" content="JR池袋駅から徒歩10分圏内。食べログとホットペッパーグルメの評点を二重に通した店だけを、地図と一覧にまとめたページ。">
-<meta name="theme-color" content="#0e0e12">
+<meta name="theme-color" content="#f7f5f0">
 <link rel="stylesheet" href="vendor/leaflet.css">
 <style>
 :root{
-  --bg:#0e0e12; --bg2:#141419; --surface:#1a1a20; --surface2:#22222a; --surface3:#2b2b35;
-  --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
-  --ink:#f3efe7; --ink2:#b9b3a8; --ink3:#8a8479;
-  --accent:#eaa93a; --accent-ink:#1a1206;
-  /* 予算ランプ（単一色・順序尺度／dataviz検証済み: ΔL>=0.105, コントラスト>=3.1:1 vs #1b1b21） */
-  --b1:#9c5a18; --b2:#c9821c; --b3:#eaa93a; --b4:#ffd08a;
+  --bg:#f7f5f0; --bg2:#efece5; --surface:#ffffff; --surface2:#f4f1ea; --surface3:#e7e2d7;
+  --line:rgba(26,22,16,.13); --line2:rgba(26,22,16,.28);
+  --ink:#1b1a17; --ink2:#55524a; --ink3:#726c5e;
+  --accent:#b4550a; --accent-ink:#ffffff;
+  /* 予算ランプ（単一色・順序尺度／tools/valpal.py で検証: ΔL>=0.128, 彩度>=0.10,
+     地図面(#f2efe9)コントラスト 2.00〜9.86。薄い=安い / 濃い=高い） */
+  --b1:#ff8d42; --b2:#d85a00; --b3:#9c3f00; --b4:#662700;
   --radius:14px;
   --sans:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic Medium",Meiryo,system-ui,sans-serif;
   --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
@@ -32,7 +33,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* ---------- header ---------- */
 .hd{
   position:sticky; top:0; z-index:900;
-  background:linear-gradient(180deg,rgba(14,14,18,.96),rgba(14,14,18,.82));
+  background:linear-gradient(180deg,rgba(247,245,240,.97),rgba(247,245,240,.86));
   backdrop-filter:saturate(140%) blur(14px); -webkit-backdrop-filter:saturate(140%) blur(14px);
   border-bottom:1px solid var(--line);
 }
@@ -49,29 +50,29 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .mapcol{position:sticky;top:74px}
   .listcol{padding:0}
 }
-#map{height:44vh;min-height:290px;background:#1b1b21;border-block:1px solid var(--line)}
+#map{height:44vh;min-height:290px;background:#eeebe4;border-block:1px solid var(--line)}
 @media(min-width:1000px){#map{height:calc(100vh - 128px);border:1px solid var(--line);border-radius:var(--radius)}}
-.leaflet-container{font-family:var(--sans);background:#1b1b21}
-.leaflet-tile{filter:grayscale(1) invert(1) brightness(.72) contrast(1.18)}
-.leaflet-tile-pane{opacity:.92}
-.leaflet-control-attribution{background:rgba(14,14,18,.72)!important;color:var(--ink3)!important;font-size:10px}
+.leaflet-container{font-family:var(--sans);background:#eeebe4}
+/* ピンを主役にするため、地図は彩度を落として少し明るくする */
+.leaflet-tile{filter:saturate(.32) brightness(1.07) contrast(.92)}
+.leaflet-control-attribution{background:rgba(255,255,255,.82)!important;color:var(--ink3)!important;font-size:10px}
 .leaflet-control-attribution a{color:var(--ink2)!important}
-.leaflet-bar a{background:#22222a;color:#f3efe7;border-color:rgba(255,255,255,.12)}
-.leaflet-bar a:hover{background:#2f2f3a}
+.leaflet-bar a{background:#ffffff;color:var(--ink);border-color:rgba(26,22,16,.14)}
+.leaflet-bar a:hover{background:var(--surface2)}
 
 /* ---------- pins ---------- */
 .pin{
   width:30px;height:30px;border-radius:50% 50% 50% 6px;transform:rotate(-45deg);
-  display:grid;place-items:center;border:1.5px solid rgba(20,20,25,.85);
-  box-shadow:0 2px 7px rgba(0,0,0,.55); transition:transform .18s ease, box-shadow .18s ease;
+  display:grid;place-items:center;border:2px solid #fff;
+  box-shadow:0 2px 6px rgba(40,30,15,.34); transition:transform .18s ease, box-shadow .18s ease;
 }
 .pin span{transform:rotate(45deg);font-size:13px;font-weight:700;line-height:1;font-family:var(--serif)}
-.pin.on{transform:rotate(-45deg) scale(1.32);box-shadow:0 0 0 3px rgba(234,169,58,.45),0 4px 14px rgba(0,0,0,.6);z-index:9999}
+.pin.on{transform:rotate(-45deg) scale(1.32);box-shadow:0 0 0 3px rgba(180,85,10,.5),0 4px 14px rgba(40,30,15,.4);z-index:9999}
 .leaflet-marker-icon{background:none;border:0}
 
 .legend{
   position:absolute;right:12px;bottom:22px;z-index:500;
-  background:rgba(20,20,26,.9);border:1px solid var(--line);border-radius:10px;
+  background:rgba(255,255,255,.93);border:1px solid var(--line);border-radius:10px;
   padding:9px 11px;font-size:10.5px;color:var(--ink2);line-height:1.5;
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none
 }
@@ -81,11 +82,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .legend .lg-x{display:flex;justify-content:space-between;margin-top:3px;font-variant-numeric:tabular-nums}
 .mapwrap{position:relative}
 .paint{position:absolute;left:12px;bottom:22px;z-index:500;display:flex;gap:2px;
-  background:rgba(20,20,26,.9);border:1px solid var(--line);border-radius:9px;padding:3px;
+  background:rgba(255,255,255,.93);border:1px solid var(--line);border-radius:9px;padding:3px;
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .paint b{font-size:9.5px;letter-spacing:.08em;color:var(--ink3);align-self:center;padding:0 5px;font-weight:400}
 .paint button{font-size:11.5px;padding:4px 10px;border-radius:6px;color:var(--ink2);white-space:nowrap}
-.paint button.on{background:var(--surface3);color:var(--ink);font-weight:600}
+.paint button.on{background:var(--ink);color:#fff;font-weight:600}
 .legend .gitem{display:flex;align-items:center;gap:6px;margin-top:3px}
 .legend .gsw{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
 
@@ -94,7 +95,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .search{
   width:100%;background:var(--surface);border:1px solid var(--line);border-radius:11px;
   padding:11px 13px 11px 38px;color:var(--ink);font-size:14.5px;outline:none;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8479' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M20 20l-3.6-3.6'/></svg>");
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23726c5e' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M20 20l-3.6-3.6'/></svg>");
   background-repeat:no-repeat;background-position:12px 50%;background-size:16px
 }
 .search:focus{border-color:var(--line2);background-color:var(--surface2)}
@@ -121,11 +122,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #cards{padding:14px 0 8px;display:flex;flex-direction:column;gap:12px}
 .card{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-  padding:15px 16px 13px;transition:border-color .18s,background .18s,transform .18s;
-  scroll-margin-top:78px
+  padding:15px 16px 13px;transition:border-color .18s,background .18s,box-shadow .18s;
+  box-shadow:0 1px 2px rgba(40,30,15,.05); scroll-margin-top:78px
 }
-.card:hover{border-color:var(--line2)}
-.card.on{border-color:var(--accent);background:var(--surface2);box-shadow:0 0 0 1px var(--accent) inset}
+.card:hover{border-color:var(--line2);box-shadow:0 3px 12px rgba(40,30,15,.09)}
+.card.on{border-color:var(--accent);background:#fffaf4;box-shadow:0 0 0 1px var(--accent) inset,0 3px 14px rgba(180,85,10,.13)}
 .chead{display:flex;gap:11px;align-items:flex-start}
 .glyph{
   flex:0 0 auto;width:36px;height:36px;border-radius:9px;display:grid;place-items:center;
@@ -198,26 +199,26 @@ document.querySelector(".paint").addEventListener("click", function(e){
 });
 
 /* ---------- footer ---------- */
-.ft{border-top:1px solid var(--line);margin-top:26px;padding:26px 0 60px;font-size:12px;color:var(--ink3);line-height:1.95}
-.ft h2{font-size:12px;letter-spacing:.1em;color:var(--ink2);margin:0 0 9px;font-weight:600}
-.ft h3{font-size:12px;color:var(--ink2);margin:18px 0 5px;font-weight:600}
+.ft{border-top:1px solid var(--line);margin-top:26px;padding:26px 0 60px;font-size:12px;color:var(--ink2);line-height:1.95}
+.ft h2{font-size:12.5px;letter-spacing:.1em;color:var(--ink);margin:0 0 9px;font-weight:700}
+.ft h3{font-size:12.5px;color:var(--ink);margin:18px 0 5px;font-weight:700}
 .ft table{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:11.5px}
 .ft th,.ft td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
-.ft th{color:var(--ink2);background:var(--surface);font-weight:600;white-space:nowrap}
-.ft a{color:var(--ink2)}
+.ft th{color:var(--ink);background:var(--surface2);font-weight:700;white-space:nowrap}
+.ft a{color:var(--accent)}
 .ft ul{margin:5px 0;padding-left:1.1em}
 .scr{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
 .fab{
   position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:800;
   background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:11px 17px;
-  font-size:13px;font-weight:700;box-shadow:0 6px 22px rgba(0,0,0,.5);
+  font-size:13px;font-weight:700;box-shadow:0 6px 22px rgba(40,30,15,.3);
   opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;transform:translateY(8px)
 }
 .fab.show{opacity:1;pointer-events:auto;transform:none}
 @media(min-width:1000px){.fab{display:none}}
-.leaflet-popup-content-wrapper{background:var(--surface2);color:var(--ink);border-radius:11px;box-shadow:0 8px 26px rgba(0,0,0,.6)}
-.leaflet-popup-tip{background:var(--surface2)}
+.leaflet-popup-content-wrapper{background:#fff;color:var(--ink);border-radius:11px;box-shadow:0 8px 26px rgba(40,30,15,.22)}
+.leaflet-popup-tip{background:#fff}
 .leaflet-popup-content{margin:11px 13px;font-size:13px;line-height:1.6}
 .pop-n{font-weight:700;font-size:14px;display:block;margin-bottom:3px}
 .pop-m{color:var(--ink3);font-size:11.5px}
@@ -281,10 +282,10 @@ document.querySelector(".paint").addEventListener("click", function(e){
 var D = window.__DATA__;
 var SHOPS = D.shops, GEN = D.genres;
 var BUDGET = [
-  {k:"2000", label:"2千円台", full:"￥2,000〜2,999", c:"var(--b1)", ink:"#fff"},
+  {k:"2000", label:"2千円台", full:"￥2,000〜2,999", c:"var(--b1)", ink:"#231402"},
   {k:"3000", label:"3千円台", full:"￥3,000〜3,999", c:"var(--b2)", ink:"#fff"},
-  {k:"4000", label:"4千円台", full:"￥4,000〜4,999", c:"var(--b3)", ink:"#241802"},
-  {k:"5000", label:"5千円台", full:"￥5,000〜5,999", c:"var(--b4)", ink:"#241802"}
+  {k:"4000", label:"4千円台", full:"￥4,000〜4,999", c:"var(--b3)", ink:"#fff"},
+  {k:"5000", label:"5千円台", full:"￥5,000〜5,999", c:"var(--b4)", ink:"#fff"}
 ];
 var FEAT = [
   {k:"room",   label:"4人で使える個室", t:function(s){return s.room4;}},
