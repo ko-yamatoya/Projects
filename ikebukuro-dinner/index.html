@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>池袋、4人で。｜駅から歩ける店リスト</title>
+<meta name="description" content="JR池袋駅から徒歩10分圏内。食べログとホットペッパーグルメの評点を二重に通した店だけを、地図と一覧にまとめたページ。">
+<meta name="theme-color" content="#0e0e12">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<style>
+:root{
+  --bg:#0e0e12; --bg2:#141419; --surface:#1a1a20; --surface2:#22222a; --surface3:#2b2b35;
+  --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+  --ink:#f3efe7; --ink2:#b9b3a8; --ink3:#8a8479;
+  --accent:#eaa93a; --accent-ink:#1a1206;
+  /* 予算ランプ（単一色・順序尺度／dataviz検証済み: ΔL>=0.105, コントラスト>=3.1:1 vs #1b1b21） */
+  --b1:#9c5a18; --b2:#c9821c; --b3:#eaa93a; --b4:#ffd08a;
+  --radius:14px;
+  --sans:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic Medium",Meiryo,system-ui,sans-serif;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  -webkit-font-smoothing:antialiased; line-height:1.7; font-size:15px;
+  overflow-x:hidden;
+}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* ---------- header ---------- */
+.hd{
+  position:sticky; top:0; z-index:900;
+  background:linear-gradient(180deg,rgba(14,14,18,.96),rgba(14,14,18,.82));
+  backdrop-filter:saturate(140%) blur(14px); -webkit-backdrop-filter:saturate(140%) blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.hd-in{max-width:1360px;margin:0 auto;padding:11px 16px;display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:21px;letter-spacing:.06em;font-weight:600;margin:0;white-space:nowrap}
+.brand em{font-style:normal;color:var(--accent)}
+.tag{color:var(--ink3);font-size:12px;letter-spacing:.03em;flex:1 1 auto;min-width:0}
+.count{margin-left:auto;font-size:12.5px;color:var(--ink2);white-space:nowrap;flex:0 0 auto}
+.count b{color:var(--accent);font-size:17px;font-variant-numeric:tabular-nums;font-weight:700}
+
+/* ---------- layout ---------- */
+.layout{max-width:1360px;margin:0 auto;padding:0;overflow-x:clip}
+.listcol{padding:0 16px}
+@media(min-width:1000px){
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,540px);gap:26px;align-items:start;padding:18px 18px 0}
+  .mapcol{position:sticky;top:74px}
+  .listcol{padding:0}
+}
+#map{height:44vh;min-height:290px;background:#1b1b21;border-block:1px solid var(--line)}
+@media(min-width:1000px){#map{height:calc(100vh - 128px);border:1px solid var(--line);border-radius:var(--radius)}}
+.leaflet-container{font-family:var(--sans);background:#1b1b21}
+.leaflet-tile{filter:grayscale(1) invert(1) brightness(.72) contrast(1.18)}
+.leaflet-tile-pane{opacity:.92}
+.leaflet-control-attribution{background:rgba(14,14,18,.72)!important;color:var(--ink3)!important;font-size:10px}
+.leaflet-control-attribution a{color:var(--ink2)!important}
+.leaflet-bar a{background:#22222a;color:#f3efe7;border-color:rgba(255,255,255,.12)}
+.leaflet-bar a:hover{background:#2f2f3a}
+
+/* ---------- pins ---------- */
+.pin{
+  width:30px;height:30px;border-radius:50% 50% 50% 6px;transform:rotate(-45deg);
+  display:grid;place-items:center;border:1.5px solid rgba(20,20,25,.85);
+  box-shadow:0 2px 7px rgba(0,0,0,.55); transition:transform .18s ease, box-shadow .18s ease;
+}
+.pin span{transform:rotate(45deg);font-size:13px;font-weight:700;line-height:1;font-family:var(--serif)}
+.pin.on{transform:rotate(-45deg) scale(1.32);box-shadow:0 0 0 3px rgba(234,169,58,.45),0 4px 14px rgba(0,0,0,.6);z-index:9999}
+.leaflet-marker-icon{background:none;border:0}
+
+.legend{
+  position:absolute;right:12px;bottom:22px;z-index:500;
+  background:rgba(20,20,26,.9);border:1px solid var(--line);border-radius:10px;
+  padding:9px 11px;font-size:10.5px;color:var(--ink2);line-height:1.5;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none
+}
+.legend .lg-t{color:var(--ink3);letter-spacing:.08em;font-size:9.5px;margin-bottom:5px}
+.legend .ramp{display:flex;gap:3px;align-items:center}
+.legend .sw{width:19px;height:9px;border-radius:2px}
+.legend .lg-x{display:flex;justify-content:space-between;margin-top:3px;font-variant-numeric:tabular-nums}
+.mapwrap{position:relative}
+
+/* ---------- controls ---------- */
+.controls{padding:16px 0 6px;position:relative}
+.search{
+  width:100%;background:var(--surface);border:1px solid var(--line);border-radius:11px;
+  padding:11px 13px 11px 38px;color:var(--ink);font-size:14.5px;outline:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8479' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M20 20l-3.6-3.6'/></svg>");
+  background-repeat:no-repeat;background-position:12px 50%;background-size:16px
+}
+.search:focus{border-color:var(--line2);background-color:var(--surface2)}
+.frow{margin-top:11px}
+.flabel{font-size:10.5px;letter-spacing:.1em;color:var(--ink3);margin-bottom:6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{
+  border:1px solid var(--line);background:var(--surface);border-radius:999px;
+  padding:5px 11px;font-size:12.5px;color:var(--ink2);white-space:nowrap;
+  transition:background .15s,border-color .15s,color .15s;display:inline-flex;align-items:center;gap:5px
+}
+.chip:hover{border-color:var(--line2);color:var(--ink)}
+.chip .n{font-size:10.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.chip.on .n{color:rgba(26,18,6,.6)}
+.chip .dot{width:8px;height:8px;border-radius:2px;flex:0 0 auto}
+.chip[disabled]{opacity:.32;pointer-events:none}
+.sortrow{display:flex;align-items:center;gap:10px;margin-top:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.sel{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:13px;color:var(--ink)}
+.reset{margin-left:auto;font-size:12px;color:var(--ink3);text-decoration:underline;text-underline-offset:3px}
+.reset:hover{color:var(--ink)}
+
+/* ---------- cards ---------- */
+#cards{padding:14px 0 8px;display:flex;flex-direction:column;gap:12px}
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:15px 16px 13px;transition:border-color .18s,background .18s,transform .18s;
+  scroll-margin-top:78px
+}
+.card:hover{border-color:var(--line2)}
+.card.on{border-color:var(--accent);background:var(--surface2);box-shadow:0 0 0 1px var(--accent) inset}
+.chead{display:flex;gap:11px;align-items:flex-start}
+.glyph{
+  flex:0 0 auto;width:36px;height:36px;border-radius:9px;display:grid;place-items:center;
+  font-family:var(--serif);font-size:17px;font-weight:700;line-height:1
+}
+.ctitle{flex:1;min-width:0}
+.cname{font-size:16.5px;font-weight:700;letter-spacing:.01em;line-height:1.35;margin:0 0 3px}
+.cname a{text-decoration:none;background-image:linear-gradient(currentColor,currentColor);background-size:0 1px;background-repeat:no-repeat;background-position:0 100%;transition:background-size .25s}
+.cname a:hover{background-size:100% 1px}
+.cname .ext{font-size:10px;color:var(--ink3);margin-left:5px;vertical-align:2px}
+.cmeta{font-size:12px;color:var(--ink2);display:flex;flex-wrap:wrap;gap:4px 9px;align-items:center}
+.cmeta .g{color:var(--ink)}
+.no{flex:0 0 auto;font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;padding-top:3px}
+
+.rates{display:flex;gap:6px;flex-wrap:wrap;margin:11px 0 0}
+.rate{
+  display:inline-flex;align-items:baseline;gap:5px;background:var(--surface2);
+  border:1px solid var(--line);border-radius:8px;padding:3px 9px;font-size:11.5px;color:var(--ink3)
+}
+.rate b{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.rate.bud b{color:var(--accent)}
+
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+.tg{font-size:11px;border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--ink2)}
+.tg.k{border-color:rgba(234,169,58,.42);color:var(--accent)}
+
+.sig{margin-top:10px;font-size:12.5px;color:var(--ink2)}
+.sig .lb{color:var(--ink3);font-size:10.5px;letter-spacing:.08em;margin-right:7px}
+.cmt{margin-top:9px;font-size:13.5px;line-height:1.85;color:var(--ink)}
+
+.cfoot{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;padding-top:11px;border-top:1px solid var(--line)}
+.act{font-size:12px;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--ink2);text-decoration:none;transition:.15s}
+.act:hover{border-color:var(--line2);color:var(--ink);background:var(--surface2)}
+.act.pri{border-color:rgba(234,169,58,.45);color:var(--accent)}
+details.more{margin-top:10px}
+details.more summary{font-size:12px;color:var(--ink3);cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"▾";font-size:11px;line-height:1;transition:transform .2s}
+details.more[open] summary::after{transform:rotate(180deg)}
+.dl{margin:9px 0 0;font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.dl dt{color:var(--ink3);white-space:nowrap}
+.dl dd{margin:0;color:var(--ink2)}
+
+.empty{padding:44px 8px;text-align:center;color:var(--ink3);font-size:13.5px}
+
+/* ---------- footer ---------- */
+.ft{border-top:1px solid var(--line);margin-top:26px;padding:26px 0 60px;font-size:12px;color:var(--ink3);line-height:1.95}
+.ft h2{font-size:12px;letter-spacing:.1em;color:var(--ink2);margin:0 0 9px;font-weight:600}
+.ft h3{font-size:12px;color:var(--ink2);margin:18px 0 5px;font-weight:600}
+.ft table{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:11.5px}
+.ft th,.ft td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+.ft th{color:var(--ink2);background:var(--surface);font-weight:600;white-space:nowrap}
+.ft a{color:var(--ink2)}
+.ft ul{margin:5px 0;padding-left:1.1em}
+.scr{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+.fab{
+  position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:800;
+  background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:11px 17px;
+  font-size:13px;font-weight:700;box-shadow:0 6px 22px rgba(0,0,0,.5);
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;transform:translateY(8px)
+}
+.fab.show{opacity:1;pointer-events:auto;transform:none}
+@media(min-width:1000px){.fab{display:none}}
+.leaflet-popup-content-wrapper{background:var(--surface2);color:var(--ink);border-radius:11px;box-shadow:0 8px 26px rgba(0,0,0,.6)}
+.leaflet-popup-tip{background:var(--surface2)}
+.leaflet-popup-content{margin:11px 13px;font-size:13px;line-height:1.6}
+.pop-n{font-weight:700;font-size:14px;display:block;margin-bottom:3px}
+.pop-m{color:var(--ink3);font-size:11.5px}
+.pop-b{color:var(--accent);font-weight:700}
+.leaflet-popup-close-button{color:var(--ink3)!important}
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <div class="hd-in">
+    <h1 class="brand">池袋、<em>4人</em>で。</h1>
+    <span class="tag">駅から歩ける／評点を2サイトで通した店</span>
+    <span class="count"><b id="cnt">–</b> <span id="cntall"></span></span>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="mapcol">
+    <div class="mapwrap">
+      <div id="map"></div>
+      <div class="legend">
+        <div class="lg-t">夜・1人あたり予算</div>
+        <div class="ramp">
+          <span class="sw" style="background:var(--b1)"></span>
+          <span class="sw" style="background:var(--b2)"></span>
+          <span class="sw" style="background:var(--b3)"></span>
+          <span class="sw" style="background:var(--b4)"></span>
+        </div>
+        <div class="lg-x"><span>2千円台</span><span>5千円台</span></div>
+        <div class="lg-t" style="margin-top:7px">ピンの文字＝ジャンル</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="listcol">
+    <div class="controls">
+      <input class="search" id="q" type="search" placeholder="店名・料理・雰囲気で絞り込む" autocomplete="off">
+      <div class="frow"><div class="flabel">ジャンル</div><div class="chips" id="fGenre"></div></div>
+      <div class="frow"><div class="flabel">予算（夜・1人）</div><div class="chips" id="fBudget"></div></div>
+      <div class="frow"><div class="flabel">条件</div><div class="chips" id="fFeat"></div></div>
+      <div class="frow"><div class="flabel">出口</div><div class="chips" id="fExit"></div></div>
+      <div class="sortrow">
+        <label for="sort" style="font-size:12px;color:var(--ink3)">並び</label>
+        <select class="sel" id="sort">
+          <option value="budget">予算が安い順</option>
+          <option value="score">評価が高い順</option>
+          <option value="dist">駅から近い順</option>
+          <option value="name">五十音順</option>
+        </select>
+        <button class="reset" id="reset">絞り込みを消す</button>
+      </div>
+    </div>
+    <div id="cards"></div>
+    <footer class="ft" id="ft"></footer>
+  </div>
+</div>
+
+<button class="fab" id="fab">地図へ</button>
+
+<script src="vendor/leaflet.js"></script>
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+var D = window.__DATA__;
+var SHOPS = D.shops, GEN = D.genres;
+var BUDGET = [
+  {k:"2000", label:"2千円台", full:"￥2,000〜2,999", c:"var(--b1)", ink:"#fff"},
+  {k:"3000", label:"3千円台", full:"￥3,000〜3,999", c:"var(--b2)", ink:"#fff"},
+  {k:"4000", label:"4千円台", full:"￥4,000〜4,999", c:"var(--b3)", ink:"#241802"},
+  {k:"5000", label:"5千円台", full:"￥5,000〜5,999", c:"var(--b4)", ink:"#241802"}
+];
+var FEAT = [
+  {k:"room",   label:"4人で使える個室", t:function(s){return s.room4;}},
+  {k:"nomi",   label:"飲み放題あり", t:function(s){return s.nomihodai;}},
+  {k:"net",    label:"ネット予約可", t:function(s){return s.reserve_kind.indexOf("ネット")>=0;}},
+  {k:"near",   label:"駅5分以内",   t:function(s){return s.walk_min<=5;}},
+  {k:"cheap",  label:"4,000円以内", t:function(s){return s.budget_band==="2000"||s.budget_band==="3000";}}
+];
+var EXITS = ["西口","北口","東口"];
+var bmap={}; BUDGET.forEach(function(b){bmap[b.k]=b;});
+var gmap={}; GEN.forEach(function(g){gmap[g.key]=g;});
+
+var state = {q:"", genre:[], budget:[], feat:[], exit:[], sort:"budget", sel:null};
+
+/* ---------- map ---------- */
+var map = L.map("map",{zoomControl:true, scrollWheelZoom:false, attributionControl:true})
+           .setView([35.7300,139.7115], 15);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  maxZoom:19,
+  attribution:'地図 &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+map.on("click", function(){ select(null); });
+
+/* 池袋駅 */
+L.circleMarker([35.72953,139.71107],{radius:6,color:"#f3efe7",weight:2,fillColor:"#0e0e12",fillOpacity:1})
+ .addTo(map).bindTooltip("JR池袋駅",{direction:"top",offset:[0,-6]});
+
+var markers = {};
+SHOPS.forEach(function(s){
+  var b = bmap[s.budget_band];
+  var ic = L.divIcon({
+    className:"", iconSize:[30,30], iconAnchor:[15,29], popupAnchor:[0,-26],
+    html:'<div class="pin" data-id="'+s.id+'" style="background:'+b.c+'"><span style="color:'+b.ink+'">'+s.glyph+'</span></div>'
+  });
+  var m = L.marker([s.lat,s.lon],{icon:ic, title:s.name}).addTo(map);
+  m.bindPopup(
+    '<span class="pop-n">'+esc(s.name)+'</span>'+
+    '<span class="pop-m">'+esc(s.genre_label)+' ・ '+esc(s.exit)+'徒歩'+s.walk_min+'分</span><br>'+
+    '<span class="pop-b">'+esc(b.full)+'</span> <span class="pop-m">／ 食べログ '+s.tabelog.score.toFixed(2)+'</span><br>'+
+    '<a href="'+s.reserve_url+'" target="_blank" rel="noopener">'+esc(s.reserve_site)+'で見る →</a>'
+  );
+  m.on("click", function(){ select(s.id, "map"); });
+  markers[s.id]=m;
+});
+
+function pinEl(id){
+  var m=markers[id]; if(!m) return null;
+  var el=m.getElement(); return el?el.querySelector(".pin"):null;
+}
+
+/* ---------- filtering ---------- */
+function matches(s, skip){
+  if(state.q){
+    var q=state.q.toLowerCase();
+    var hay=(s.name+" "+s.genre_label+" "+s.signature.join(" ")+" "+s.comment+" "+s.exit+" "+s.cuisine).toLowerCase();
+    if(hay.indexOf(q)<0) return false;
+  }
+  if(skip!=="genre"  && state.genre.length  && state.genre.indexOf(s.genre)<0) return false;
+  if(skip!=="budget" && state.budget.length && state.budget.indexOf(s.budget_band)<0) return false;
+  if(skip!=="exit"   && state.exit.length   && state.exit.indexOf(s.exit)<0) return false;
+  if(skip!=="feat"){
+    for(var i=0;i<state.feat.length;i++){
+      var f=featOf(state.feat[i]); if(!f || !f.t(s)) return false;
+    }
+  }
+  return true;
+}
+function featOf(k){ for(var i=0;i<FEAT.length;i++) if(FEAT[i].k===k) return FEAT[i]; return null; }
+
+var SORTS = {
+  budget:function(a,b){ return (+a.budget_band)-(+b.budget_band) || b.tabelog.score-a.tabelog.score; },
+  score: function(a,b){ return b.tabelog.score-a.tabelog.score || (+a.budget_band)-(+b.budget_band); },
+  dist:  function(a,b){ return a.dist_m-b.dist_m; },
+  name:  function(a,b){ return (a.kana||a.name).localeCompare(b.kana||b.name,"ja"); }
+};
+
+function visible(){ return SHOPS.filter(function(s){return matches(s);}).sort(SORTS[state.sort]); }
+
+/* ---------- chips ---------- */
+function chipRow(el, items, key){
+  el.innerHTML="";
+  items.forEach(function(it){
+    var b=document.createElement("button");
+    b.className="chip"+(state[key].indexOf(it.k)>=0?" on":"");
+    b.type="button";
+    b.innerHTML=(it.dot?'<span class="dot" style="background:'+it.dot+'"></span>':"")+
+                esc(it.label)+(it.n!=null?' <span class="n">'+it.n+"</span>":"");
+    if(it.n===0) b.setAttribute("disabled","");
+    b.onclick=function(){
+      var i=state[key].indexOf(it.k);
+      if(i>=0) state[key].splice(i,1); else state[key].push(it.k);
+      render();
+    };
+    el.appendChild(b);
+  });
+}
+function countIf(pred, skip){
+  var n=0; SHOPS.forEach(function(s){ if(matches(s,skip)&&pred(s)) n++; }); return n;
+}
+function drawChips(){
+  chipRow(document.getElementById("fGenre"),
+    GEN.map(function(g){ return {k:g.key,label:g.label,n:countIf(function(s){return s.genre===g.key;},"genre")}; }),"genre");
+  chipRow(document.getElementById("fBudget"),
+    BUDGET.map(function(b){ return {k:b.k,label:b.label,dot:b.c,n:countIf(function(s){return s.budget_band===b.k;},"budget")}; }),"budget");
+  chipRow(document.getElementById("fFeat"),
+    FEAT.map(function(f){ return {k:f.k,label:f.label,n:countIf(f.t,"feat")}; }),"feat");
+  chipRow(document.getElementById("fExit"),
+    EXITS.map(function(e){ return {k:e,label:e,n:countIf(function(s){return s.exit===e;},"exit")}; }),"exit");
+}
+
+/* ---------- cards ---------- */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+
+function card(s, i){
+  var b=bmap[s.budget_band], g=gmap[s.genre];
+  var tags=[];
+  if(s.room4) tags.push('<span class="tg k">個室</span>');
+  if(s.nomihodai)    tags.push('<span class="tg k">飲み放題</span>');
+  tags.push('<span class="tg">'+esc(s.reserve_kind)+"</span>");
+  if(s.seats_note)   tags.push('<span class="tg">'+esc(s.seats_note)+"</span>");
+
+  var rates='<span class="rate bud"><b>'+esc(b.full)+"</b></span>"+
+    '<span class="rate">食べログ <b>'+s.tabelog.score.toFixed(2)+"</b>"+
+      '<span style="color:var(--ink3)">('+s.tabelog.reviews.toLocaleString()+")</span></span>";
+  if(s.hotpepper) rates+='<span class="rate">ホットペッパー <b>'+s.hotpepper.score.toFixed(1)+"</b>"+
+      '<span style="color:var(--ink3)">('+s.hotpepper.n+")</span></span>";
+
+  var dl="";
+  [["席",s.seats],["個室",s.private_room||"なし"],["飲み放題",s.nomihodai||"情報なし"],
+   ["営業",s.hours],["定休",s.closed],["予約",s.reserve_note],
+   ["低評価の割合",s.low_ratio_text],["直近の口コミ",s.latest_review],["情報の取得元",s.sources.join("・")]
+  ].forEach(function(p){ if(p[1]) dl+="<dt>"+esc(p[0])+"</dt><dd>"+esc(p[1])+"</dd>"; });
+
+  return '<article class="card" id="c'+s.id+'" data-id="'+s.id+'">'+
+    '<div class="chead">'+
+      '<div class="glyph" style="background:'+b.c+';color:'+b.ink+'">'+s.glyph+"</div>"+
+      '<div class="ctitle">'+
+        '<h2 class="cname"><a href="'+s.reserve_url+'" target="_blank" rel="noopener">'+esc(s.name)+
+          '<span class="ext">'+esc(s.reserve_site)+" ↗</span></a></h2>"+
+        '<div class="cmeta"><span class="g">'+esc(s.genre_label)+"</span><span>"+esc(s.exit)+" 徒歩"+s.walk_min+"分</span><span>"+s.dist_m+"m</span></div>"+
+      "</div>"+
+      '<div class="no">'+(i+1)+"</div>"+
+    "</div>"+
+    '<div class="rates">'+rates+"</div>"+
+    '<div class="tags">'+tags.join("")+"</div>"+
+    (s.signature.length?'<div class="sig"><span class="lb">名物</span>'+esc(s.signature.join(" / "))+"</div>":"")+
+    '<p class="cmt">'+esc(s.comment)+"</p>"+
+    '<details class="more"><summary>店の詳細</summary><dl class="dl">'+dl+"</dl></details>"+
+    '<div class="cfoot">'+
+      '<a class="act pri" href="'+s.reserve_url+'" target="_blank" rel="noopener">予約ページ</a>'+
+      '<button class="act" data-focus="'+s.id+'">地図で見る</button>'+
+      '<a class="act" href="'+s.gmap+'" target="_blank" rel="noopener">Googleマップ</a>'+
+      (s.tel?'<a class="act" href="tel:'+esc(s.tel.replace(/[^0-9+]/g,""))+'">'+esc(s.tel)+"</a>":"")+
+    "</div>"+
+  "</article>";
+}
+
+function render(){
+  var list=visible();
+  document.getElementById("cnt").textContent=list.length;
+  document.getElementById("cntall").textContent="／ "+SHOPS.length+"軒";
+  drawChips();
+  var wrap=document.getElementById("cards");
+  wrap.innerHTML = list.length ? list.map(card).join("")
+    : '<div class="empty">条件に合う店がありません。<br>絞り込みを緩めてください。</div>';
+
+  var ids={}; list.forEach(function(s){ids[s.id]=1;});
+  SHOPS.forEach(function(s){
+    var m=markers[s.id];
+    if(ids[s.id]){ if(!map.hasLayer(m)) m.addTo(map); }
+    else { if(map.hasLayer(m)) map.removeLayer(m); }
+  });
+  if(state.sel && !ids[state.sel]) state.sel=null;
+  paintSel();
+  syncHash();
+}
+
+function paintSel(){
+  document.querySelectorAll(".card.on").forEach(function(e){e.classList.remove("on");});
+  document.querySelectorAll(".pin.on").forEach(function(e){e.classList.remove("on");});
+  if(!state.sel) return;
+  var c=document.getElementById("c"+state.sel); if(c) c.classList.add("on");
+  var p=pinEl(state.sel); if(p) p.classList.add("on");
+}
+
+function select(id, from){
+  state.sel=id; paintSel();
+  if(!id) return;
+  var s=SHOPS.filter(function(x){return x.id===id;})[0]; if(!s) return;
+  if(from==="map"){
+    var c=document.getElementById("c"+id);
+    if(c) c.scrollIntoView({behavior:"smooth",block:"start"});
+  }else{
+    map.flyTo([s.lat,s.lon], Math.max(map.getZoom(),16), {duration:.55});
+    markers[id].openPopup();
+    if(window.matchMedia("(max-width:999px)").matches){
+      document.getElementById("map").scrollIntoView({behavior:"smooth",block:"center"});
+    }
+  }
+}
+
+/* ---------- events ---------- */
+document.getElementById("cards").addEventListener("click", function(e){
+  var b=e.target.closest("[data-focus]");
+  if(b){ select(b.getAttribute("data-focus"),"card"); return; }
+  var c=e.target.closest(".card");
+  if(c && !e.target.closest("a")) select(c.getAttribute("data-id"),"card");
+});
+var qt;
+document.getElementById("q").addEventListener("input", function(e){
+  clearTimeout(qt); var v=e.target.value;
+  qt=setTimeout(function(){ state.q=v.trim(); render(); },140);
+});
+document.getElementById("sort").addEventListener("change", function(e){ state.sort=e.target.value; render(); });
+document.getElementById("reset").addEventListener("click", function(){
+  state={q:"",genre:[],budget:[],feat:[],exit:[],sort:state.sort,sel:null};
+  document.getElementById("q").value=""; render();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+document.getElementById("fab").addEventListener("click", function(){
+  document.getElementById("map").scrollIntoView({behavior:"smooth",block:"start"});
+});
+window.addEventListener("scroll", function(){
+  document.getElementById("fab").classList.toggle("show", window.scrollY>460);
+}, {passive:true});
+
+/* ---------- hash state ---------- */
+function syncHash(){
+  var p=[];
+  if(state.genre.length) p.push("g="+state.genre.join(","));
+  if(state.budget.length) p.push("b="+state.budget.join(","));
+  if(state.feat.length) p.push("f="+state.feat.join(","));
+  if(state.exit.length) p.push("e="+encodeURIComponent(state.exit.join(",")));
+  if(state.sort!=="budget") p.push("s="+state.sort);
+  if(state.q) p.push("q="+encodeURIComponent(state.q));
+  var h=p.length?"#"+p.join("&"):"";
+  if(location.hash!==h) history.replaceState(null,"",location.pathname+location.search+h);
+}
+function readHash(){
+  var h=location.hash.replace(/^#/,""); if(!h) return;
+  h.split("&").forEach(function(kv){
+    var i=kv.indexOf("="); if(i<0) return;
+    var k=kv.slice(0,i), v=decodeURIComponent(kv.slice(i+1));
+    if(k==="g") state.genre=v.split(",");
+    else if(k==="b") state.budget=v.split(",");
+    else if(k==="f") state.feat=v.split(",");
+    else if(k==="e") state.exit=v.split(",");
+    else if(k==="s") state.sort=v;
+    else if(k==="q"){ state.q=v; document.getElementById("q").value=v; }
+  });
+  document.getElementById("sort").value=state.sort;
+}
+
+/* ---------- footer ---------- */
+document.getElementById("ft").innerHTML = D.footer_html;
+
+readHash();
+render();
+function fitAll(){
+  map.invalidateSize();                       // 先にサイズを確定させないと zoom がずれる
+  var pts=SHOPS.map(function(s){return [s.lat,s.lon];});
+  map.fitBounds(L.latLngBounds(pts), {padding:[26,26]});
+}
+setTimeout(fitAll,80);
+window.addEventListener("load", fitAll);
+var rt; window.addEventListener("resize", function(){ clearTimeout(rt); rt=setTimeout(function(){ map.invalidateSize(); },180); });
+})();
+</script>
+</body>
+</html>
