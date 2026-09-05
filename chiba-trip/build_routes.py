@@ -61,13 +61,18 @@ def main():
                 if "gate" in st:
                     g = gates[st["gate"]]
                     stops.append({"id": "", "name": g["name"], "lat": g["lat"], "lng": g["lng"],
-                                  "stay": 0, "memo": "出発地からここまでは各自", "gate": True})
+                                  "stay": st.get("stay", g.get("stay", 0)),
+                                  "memo": st.get("memo", g.get("memo", "")),
+                                  "gate": True, "kind": g.get("kind", "gate"),
+                                  "at": st.get("at"), "limit": st.get("limit")})
                 else:
                     s = spots.get(st["spot"])
                     if not s:
                         raise SystemExit(f'spots.js に無い地点: {st["spot"]}')
                     stops.append({"id": s["id"], "name": s["name"], "lat": s["lat"], "lng": s["lng"],
-                                  "stay": st.get("stay", 45), "memo": st.get("memo", ""), "gate": False})
+                                  "stay": st.get("stay", 45), "memo": st.get("memo", ""),
+                                  "gate": False, "kind": "spot",
+                                  "at": st.get("at"), "limit": st.get("limit")})
             legs = []
             for a, b in zip(stops, stops[1:]):
                 print(f'  {a["name"]} → {b["name"]}')
