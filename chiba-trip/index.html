@@ -208,7 +208,7 @@
   const DAYKEY = ["sat", "sun"];                       // 1日目=土, 2日目=日
   const byId = {}; SPOTS.forEach(s => byId[s.id] = s);
 
-  const state = {plan:"a", cmp:false, start:[9*60, 9*60], cats:new Set(), sel:null};  // 1日目=レンタカー受付9:00
+  const state = {plan:"k", cmp:false, start:[9*60, 9*60], cats:new Set(), sel:null};  // 1日目=レンタカー受付9:00
 
   // 同じ住所の施設（KURKKU FIELDSと地中図書館など）はピンが重なるので少しずらす
   const seen = new Map();
@@ -447,8 +447,8 @@
       "<b>原岡桟橋の夕日は今回どのプランでも取れません</b>。A案からは外しました。</li>" +
       "<li><b>昼の予約時刻がこの旅のいちばん効くつまみです。</b>" +
       "8か所はどちらでも回れますが、コストが変わります。" +
-      "<b>13:00</b>ならA案（museum→mitosaya→昼→Overview）で待ち時間3分・宿に16:23着。" +
-      "<b>12:30</b>ならK案（museum→昼→mitosaya→Overview）で、昼の手前に41分空いて宿は17:53着。" +
+      "<b>12:30</b>ならK案（museum→昼→mitosaya→Overview）。昼の手前に41分空いて、宿は17:53着。" +
+      "<b>13:00</b>ならA案（museum→mitosaya→昼→Overview）。待ち時間3分で、宿に16:23着。" +
       "落とす場所は増えないので、あとは「待つか、宿に早く入るか」の好みです。</li>" +
       "</ul></div>" +
       '<div class="alert"><b>令和8年8月千葉豪雨（8/13–14）のあと</b>：' +
