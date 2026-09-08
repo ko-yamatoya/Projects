@@ -87,6 +87,7 @@ def main():
                            "stops": stops, "legs": legs,
                            "dist": d, "min": m, "stay": stay})
         out.append({**{k: p[k] for k in ("id", "name", "tagline", "good", "hard", "who", "drops")},
+                    "start": p.get("start", ["09:00", "09:00"]),
                     "routes": routes,
                     "dist": round(p_dist, 1), "min": p_min, "stay": p_stay,
                     "spots": len({s["id"] for r in routes for s in r["stops"] if s["id"]}),

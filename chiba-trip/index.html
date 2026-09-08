@@ -208,7 +208,7 @@
   const DAYKEY = ["sat", "sun"];                       // 1日目=土, 2日目=日
   const byId = {}; SPOTS.forEach(s => byId[s.id] = s);
 
-  const state = {plan:"k", cmp:false, start:[9*60, 9*60], cats:new Set(), sel:null};  // 1日目=レンタカー受付9:00
+  const state = {plan:"k", cmp:false, start:null, cats:new Set(), sel:null};  // start はプラン切替時にそのプランの既定値へ  // 1日目=レンタカー受付9:00
 
   // 同じ住所の施設（KURKKU FIELDSと地中図書館など）はピンが重なるので少しずらす
   const seen = new Map();
@@ -231,8 +231,8 @@
 
   const hm = s => { const m = String(s || "").match(/^(\d{1,2}):(\d{2})$/); return m ? +m[1] * 60 + +m[2] : null; };
 
-  function schedule(route, di){
-    let t = state.start[di];
+  function schedule(route, di, t0){
+    let t = t0;
     const out = [];
     route.stops.forEach((st, i) => {
       const arr = t;
@@ -263,7 +263,8 @@
   }
 
   const plan  = () => PLANS.find(p => p.id === state.plan);
-  const sched = () => plan().routes.map((r, i) => schedule(r, i));
+  const defStart = p => p.start.map(hm);
+  const sched = () => plan().routes.map((r, i) => schedule(r, i, state.start[i]));
 
   /* ── 地図 ── */
   const map = L.map("map", {scrollWheelZoom:false}).setView([35.4, 140.3], 9);
@@ -378,12 +379,13 @@
   /* ── 比較表 ── */
   function compare(){
     const rows = PLANS.map(p => {
-      const sc = p.routes.map((r, i) => schedule(r, i));
-      const lunch = sc[0].find(y => y.at);
+      const st = (p.id === state.plan) ? state.start : defStart(p);
+      const sc = p.routes.map((r, i) => schedule(r, i, st[i]));
+      const lunch = sc[0].find(y => y.at), lib = sc[1].find(y => y.at);
       return {p:p, end:sc.map(x => x[x.length - 1].arr),
               warns:sc.reduce((n, x) => n + x.filter(y => y.warn && !y.soft).length, 0),
               waits:sc.reduce((n, x) => n + x.reduce((w, y) => w + (y.gate ? 0 : y.wait || 0), 0), 0),
-              lunch:lunch ? lunch.at : null};
+              lunch:lunch ? lunch.at : null, lib:lib ? lib.at : null};
     });
     const minDist  = Math.min(...rows.map(r => r.p.dist));
     const minMin   = Math.min(...rows.map(r => r.p.min));
@@ -402,17 +404,21 @@
       line("運転時間",         r => td(dur(r.p.min), r.p.min === minMin)) +
       line("滞在の合計",       r => "<td>" + dur(r.p.stay) + "</td>") +
       line("1日目 宿に着く",   r => "<td>" + hhmm(r.end[0]) + "</td>") +
+      line("2日目 宿を出る",   r => "<td>" + esc(r.p.start[1]) + "</td>") +
       line("2日目 羽田に戻る", r => td(hhmm(r.end[1]) + (r.end[1] > 17 * 60
              ? "（" + dur(r.end[1] - 17 * 60) + "遅れ）" : "（余裕 " + dur(17 * 60 - r.end[1]) + "）"),
              r.end[1] <= 17 * 60)) +
-      line("昼の予約時刻",   r => "<td>" + (r.lunch ? esc(r.lunch) + "（巡るインド）" : "—") + "</td>") +
+      line("1日目 昼の予約", r => "<td>" + (r.lunch ? esc(r.lunch) + "（巡るインド・予約済み）" : "—") + "</td>") +
+      line("2日目 図書館の予約", r => "<td>" + (r.lib ? esc(r.lib) + "（地中図書館・これから取る）" : "—") + "</td>") +
       line("間に合わない先", r => td(r.warns ? r.warns + " 件" : "なし", r.warns === minWarn)) +
       line("手前で待つ時間",  r => td(r.waits ? dur(r.waits) : "なし", r.waits === minWait)) +
       line("落とすもの",       r => "<td>" + (r.p.drops.length ? esc(r.p.drops.join("、")) : "なし") + "</td>") +
       "</tbody></table></div>" +
-      '<div class="note" style="margin-bottom:14px">緑は各行でいちばん良い数字。1日目は' + hhmm(state.start[0]) +
-      "に八重洲口店で受付（発車は20分後）、2日目は" + hhmm(state.start[1]) +
-      "に宿を出る前提。返却期限は17:00。上の出発時刻を変えると全部つられて動く。</div>" +
+      '<div class="note" style="margin-bottom:14px">緑は各行でいちばん良い数字。' +
+      "1日目はどちらも" + hhmm(defStart(rows[0].p)[0]) + "に八重洲口店で受付（発車は20分後）。" +
+      "2日目に宿を出る時刻はプランごとに違い、" +
+      rows.map(r => esc(r.p.name.split("｜")[0]) + "案は" + r.p.start[1]).join("／") +
+      "。返却期限は17:00。表示中のプランだけは上の出発時刻の指定が効く。</div>" +
       PLANS.map(p =>
         '<div class="plancard"><h2>' + esc(p.name) + "</h2>" +
         '<p class="tagline">' + esc(p.tagline) + "</p>" +
@@ -424,6 +430,7 @@
 
   /* ── 描画 ── */
   function render(){
+    syncSel();
     const cats = [...new Set(SPOTS.map(s => s.cat))];
     if (!state.cats.size) cats.forEach(c => state.cats.add(c));
 
@@ -437,26 +444,24 @@
     const p = plan(), sc = sched(), pos = positions();
     document.getElementById("count").textContent = "全" + SPOTS.length + "か所 / このプランは" + p.spots + "か所";
 
-    let html = '<div class="alert car"><b>この旅は「動かせない予約3つ」で決まります</b>' +
+    let html = '<div class="alert car"><b>決まっていること／これから決めること</b>' +
       "<ul>" +
-      "<li><b>レンタカー</b>　1日目 9:00 八重洲口店で受付、2日目 17:00 羽田空港店で返却。" +
-      "手続き20分を見て発車は9:20。アクアライン→圏央道で長南まで約1時間15分なので、" +
-      "房総に入るのは10時半すぎ。museum as it is は10:30開きなので、ぎりぎり間に合う計算です。</li>" +
-      "<li><b>2日目 地中図書館（14:00の枠を取る前提）</b>　12:00–17:00・会員登録＋事前予約制で、" +
-      "登録は3人とも済み。図書館から羽田は40分なので、<b>16:20に図書館を出れば返却に間に合います</b>。" +
-      "この日は先に鋸南のばんやで早い昼→クルックフィールズの場内→図書館、の順。" +
-      "返却に一番近い区間が一番短くなる並びにしてあります。" +
+      "<li><b>レンタカー（決定）</b>　1日目 9:00 八重洲口店で受付、2日目 17:00 羽田空港店で返却。" +
+      "手続き20分を見て発車は9:20。</li>" +
+      "<li><b>1日目の昼 12:30（予約済み）</b>　巡るインド。これで1日目の並びは確定しました。" +
+      "museum（10:34–11:19）→ 昼 12:30 → mitosaya 14:03–15:33 → Overview 15:58–16:43 → 宿 17:53。" +
+      "museumを45分見ても11:49に着くので、昼の手前が41分空きます。" +
+      "遅れているならmuseumを飛ばせば必ず間に合う、という形にしてあります。</li>" +
+      "<li><b>2日目の地中図書館 → <u>14:30の枠</u>で取ってください</b>　12:00–17:00・要予約（登録は3人とも済み）。" +
+      "1時間で出れば羽田に16:10着、返却まで50分残ります。" +
+      "図書館→羽田は40分で、この日いちばん短い区間。返却に一番近いところを一番短くしてあります。" +
       "予約サイトに「地中図書館 臨時休業」の枠が別に出ているので、日付を選ぶときに確認を。</li>" +
-      "<li><b>1日目 巡るインド（完全予約制・050-3479-3339）</b>　" +
-      "ここの時刻でプランが決まります。8か所はどちらでも回れて、変わるのはコストだけ。" +
-      "<b>12:30</b>ならK案（museum→昼→mitosaya→Overview）。昼の手前に41分空いて、宿は17:53着。" +
-      "<b>13:00</b>ならA案（museum→mitosaya→昼→Overview）。待ち時間3分で、宿に16:23着。" +
-      "「待つか、宿に早く入るか」の好みです。</li>" +
       "</ul>" +
-      "<b>落とすもの</b>：濃溝の滝と原岡桟橋。17:00返却だと房総を16時前には出る必要があり、" +
-      "日没18時前後の原岡桟橋の夕景とは物理的に両立しません。" +
-      "濃溝の滝は、地中図書館に時間を振るために外しました（洞窟にハート形の光が差すのは彼岸ごろの朝6:30–7:30で、" +
-      "どのみち今回の時間帯では見られません）。</div>" +
+      "<b>K案とA案の違いは2日目だけです。</b>" +
+      "<b>K</b>は宿を9:00に出て、ばんや（1時間30分）→ クルックフィールズ場内（1時間15分）→ 図書館の3か所。" +
+      "<b>A</b>は宿を8:30に出て、ばんや（45分）→ <b>原岡桟橋</b>（30分）→ <b>濃溝の滝</b>（35分）→ 場内（50分）→ 図書館の5か所。" +
+      "図書館の枠も羽田到着16:10も同じなので、差は「30分早起きして2か所増やすか、その30分と滞在時間をばんやと場内に回すか」です。" +
+      "原岡桟橋は午前に行くことになります（日没18時前後と17:00返却は両立しないため、夕景は今回どうやっても取れません）。</div>" +
       '<div class="alert"><b>令和8年8月千葉豪雨（8/13–14）のあと</b>：' +
       "調べた範囲では、載せている場所に豪雨を理由とした休業・閉鎖の告知は出ていません。" +
       "高速の通行止めも8/17 1:30に全解除済み（千葉東金道路の下り線は車線規制が継続）。" +
@@ -514,17 +519,20 @@
   /* ── 操作 ── */
   const sel1 = document.getElementById("s1"), sel2 = document.getElementById("s2");
   for (let m = 6 * 60; m <= 12 * 60; m += 30){
-    const o = '<option value="' + m + '"';
-    sel1.insertAdjacentHTML("beforeend", o + (m === state.start[0] ? " selected" : "") + ">" + hhmm(m) + "</option>");
-    sel2.insertAdjacentHTML("beforeend", o + (m === state.start[1] ? " selected" : "") + ">" + hhmm(m) + "</option>");
+    const o = '<option value="' + m + '">' + hhmm(m) + "</option>";
+    sel1.insertAdjacentHTML("beforeend", o);
+    sel2.insertAdjacentHTML("beforeend", o);
   }
+  state.start = defStart(plan());                    // 最初は既定プランの出発時刻
+  function syncSel(){ sel1.value = state.start[0]; sel2.value = state.start[1]; }
   sel1.addEventListener("change", e => { state.start[0] = +e.target.value; render(); });
   sel2.addEventListener("change", e => { state.start[1] = +e.target.value; render(); });
 
   document.body.addEventListener("click", e => {
     const b = e.target.closest(".chip"); if (!b) return;
     if (b.id === "cmpbtn") state.cmp = !state.cmp;
-    else if (b.dataset.plan){ state.plan = b.dataset.plan; state.cmp = false; state.sel = null; }
+    else if (b.dataset.plan){ state.plan = b.dataset.plan; state.cmp = false; state.sel = null;
+                              state.start = defStart(plan()); }
     else if (b.dataset.cat){
       const c = b.dataset.cat;
       state.cats.has(c) ? state.cats.delete(c) : state.cats.add(c);
