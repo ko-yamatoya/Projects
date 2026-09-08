@@ -259,11 +259,11 @@ window.SPOTS = [
         "st": "check",
         "text": "12:00–17:00 ※会員・要予約"
       },
-      "note": "火・水休。KURKKU FIELDS MEMBERSHIP（年1,000円／千葉県民500円）加入者の事前予約制。当日枠は現地インフォメーションで",
-      "src": "kurkkufields.jp/experience/library"
+      "note": "火・水休。KURKKU FIELDS MEMBERSHIP 加入者の事前予約制。会員登録は3人とも完了済み。残りは予約だけ（kurkkufields.resv.jp）。予約サイトに「地中図書館 臨時休業」という枠が別に出ているので、日付を選ぶときに休業になっていないかを見る",
+      "src": "kurkkufields.jp/facility/library（2026-09-08 再確認）"
     },
     "tel": "",
-    "storm": "本体と同じく休園の告知なし。ただし会員制＋事前予約なので、豪雨うんぬん以前に枠の確保が先"
+    "storm": "本体と同じく休園の告知なし。行くと決めたので、あとは2日目の枠を押さえるだけ"
   },
   {
     "id": "宿-銚子-豊里台",
