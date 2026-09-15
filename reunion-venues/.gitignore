@@ -1,0 +1,5 @@
+tools/cache/
+tools/*.json
+tools/*.log
+tools/dossier.txt
+__pycache__/

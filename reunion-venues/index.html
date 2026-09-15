@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>15名の同窓会 お店候補｜渋谷・新宿</title>
+<meta name="description" content="渋谷・新宿で15名が個室か貸切で入れて、飲み放題付き1人5,000円以内の店。食べログの基準を満たす店だけを地図と一覧で。">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#fafaf7">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<style>
+:root{
+  --bg:#fafaf7; --card:#fff; --soft:#f2f1ec; --line:#e4e2da; --line2:#cfccc2;
+  --ink:#1d1c19; --ink2:#5a574f; --ink3:#8a867c;
+  --accent:#c2410c; --accent-soft:#fff1e8; --good:#15803d; --good-soft:#eaf6ee;
+  --sans:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic Medium",Meiryo,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* header */
+.hd{max-width:1280px;margin:0 auto;padding:22px 18px 6px}
+.hd h1{font-size:22px;margin:0;letter-spacing:.01em}
+.hd .lead{margin:4px 0 0;color:var(--ink2);font-size:13.5px}
+.rules{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rules span{font-size:12px;background:var(--soft);border-radius:999px;padding:3px 10px;color:var(--ink2)}
+
+/* layout */
+.layout{max-width:1280px;margin:0 auto;padding:8px 18px 0}
+@media(min-width:980px){
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 470px;gap:24px;align-items:start}
+  .mapcol{position:sticky;top:12px;order:2}
+}
+#map{height:320px;border-radius:14px;border:1px solid var(--line);background:#eceae3}
+@media(min-width:980px){#map{height:calc(100vh - 24px)}}
+.leaflet-container{font-family:var(--sans)}
+.leaflet-tile{filter:saturate(.25) brightness(1.06)}
+.pin{width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.35);transition:transform .15s}
+.pin.on{background:var(--accent);transform:scale(1.3)}
+.leaflet-marker-icon{background:none;border:0}
+.st{position:absolute;left:-5px;top:-5px;display:flex;align-items:center;gap:4px;white-space:nowrap;pointer-events:none;
+  font-size:11px;font-weight:700;color:#4b5563;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+.st i{width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid #fff;flex:0 0 auto}
+.mapbtns{display:flex;gap:6px;margin:8px 0 0}
+.mapbtns button{font-size:12.5px;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 12px;color:var(--ink2)}
+
+/* filters */
+.bar{position:sticky;top:0;z-index:800;background:rgba(250,250,247,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:4px}
+.seg-row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.seg{display:inline-flex;background:var(--soft);border-radius:10px;padding:3px}
+.seg button{font-size:13px;padding:4px 11px;border-radius:8px;color:var(--ink2);white-space:nowrap}
+.seg button.on{background:var(--card);color:var(--ink);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.bar-foot{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12.5px;color:var(--ink2)}
+.bar-foot label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.bar-foot select{font:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:3px 6px;background:var(--card)}
+.bar-foot .cnt{margin-left:auto;white-space:nowrap}
+.bar-foot .cnt b{font-size:16px;color:var(--ink)}
+
+/* cards */
+#cards{display:flex;flex-direction:column;gap:14px;padding:12px 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;scroll-margin-top:110px;transition:border-color .15s,box-shadow .15s}
+.card.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.top{display:flex;gap:12px;align-items:flex-start}
+.num{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;margin-top:2px}
+.card.on .num{background:var(--accent)}
+.ttl{flex:1;min-width:0}
+.name{font-size:17px;font-weight:700;line-height:1.4;margin:0}
+.meta{font-size:12.5px;color:var(--ink2);margin-top:2px}
+.price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:12px 0 0}
+.price .yen{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.price .yen small{font-size:12px;font-weight:400;color:var(--ink2);margin-right:4px}
+.cospa{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;border-radius:8px;padding:2px 9px}
+.cospa b{font-size:14px}
+.cospa.g3{background:var(--good-soft);color:var(--good)}
+.cospa.g2{background:var(--accent-soft);color:var(--accent)}
+.cospa.g1{background:var(--soft);color:var(--ink2)}
+.cospa-note{font-size:12px;color:var(--ink3);width:100%}
+.facts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.facts span{font-size:12px;border:1px solid var(--line);border-radius:7px;padding:1px 8px;color:var(--ink2)}
+.facts .slot{border-color:#b7dfc3;color:var(--good);background:var(--good-soft)}
+.why{margin:12px 0 0;padding:0;list-style:none}
+.why li{position:relative;padding-left:22px;font-size:14px;line-height:1.75;margin-top:3px}
+.why li::before{content:"✓";position:absolute;left:2px;top:0;color:var(--good);font-weight:700}
+.warn{margin-top:8px;font-size:12.5px;color:#9a3412;background:#fff7ed;border-radius:8px;padding:5px 10px}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.lk{display:inline-flex;align-items:baseline;gap:5px;font-size:13px;text-decoration:none;border:1px solid var(--line);border-radius:9px;padding:5px 11px;color:var(--ink);background:var(--card)}
+.lk:hover{border-color:var(--line2);background:var(--soft)}
+.lk b{font-variant-numeric:tabular-nums}
+.lk small{color:var(--ink3);font-size:11px}
+.lk.book{background:var(--accent);border-color:var(--accent);color:#fff}
+.lk.book:hover{filter:brightness(1.07)}
+details.more{margin-top:10px}
+details.more summary{font-size:12.5px;color:var(--ink3);cursor:pointer}
+.dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px}
+.dl dt{color:var(--ink3);white-space:nowrap}
+.dl dd{margin:0;color:var(--ink2)}
+.empty{text-align:center;color:var(--ink3);padding:40px 0}
+
+.ft{font-size:12.5px;color:var(--ink2);border-top:1px solid var(--line);margin-top:14px;padding:14px 0 60px;line-height:1.85}
+.ft h2{font-size:13px;color:var(--ink);margin:12px 0 4px}
+.ft ul{margin:0 0 8px;padding-left:1.2em}
+.ft a{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <h1>15名の同窓会 お店候補</h1>
+  <p class="lead">渋谷・新宿／10月25日(日)の夜。条件を満たした店だけを載せています。</p>
+  <div class="rules" id="rules"></div>
+</header>
+
+<div class="layout">
+  <div class="mapcol">
+    <div id="map"></div>
+    <div class="mapbtns">
+      <button type="button" data-jump="all">全体</button>
+      <button type="button" data-jump="shibuya">渋谷に寄る</button>
+      <button type="button" data-jump="shinjuku">新宿に寄る</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="bar">
+      <div class="seg-row">
+        <div class="seg" data-key="area">
+          <button data-v="" class="on">すべて</button><button data-v="shibuya">渋谷</button><button data-v="shinjuku">新宿</button>
+        </div>
+        <div class="seg" data-key="price">
+          <button data-v="" class="on">予算すべて</button><button data-v="4000">〜4,000円</button><button data-v="4500">〜4,500円</button>
+        </div>
+      </div>
+      <div class="bar-foot">
+        <label><input type="checkbox" id="slot"> 10/25に空き枠が出ている店だけ</label>
+        <select id="sort" aria-label="並び順">
+          <option value="rec">おすすめ順</option>
+          <option value="price">安い順</option>
+          <option value="score">食べログ評価順</option>
+        </select>
+        <span class="cnt"><b id="cnt">–</b> 軒</span>
+      </div>
+    </div>
+    <div id="cards"></div>
+    <footer class="ft" id="ft"></footer>
+  </main>
+</div>
+
+<script src="vendor/leaflet.js"></script>
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+var D=window.__DATA__, SHOPS=D.shops;
+var state={area:"",room:"",price:"",slot:false,sort:"rec",sel:null};
+var GRADE={3:"◎",2:"○",1:"△"};
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function yen(n){return n.toLocaleString();}
+
+document.getElementById("rules").innerHTML=D.rules.map(function(r){return"<span>"+esc(r)+"</span>";}).join("");
+document.getElementById("ft").innerHTML=D.footer_html;
+
+/* map */
+var map=L.map("map",{scrollWheelZoom:false}).setView([35.674,139.701],14);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
+/* 駅は店のピンより下の層に置く（ラベルがピンを隠さないように） */
+D.stations.forEach(function(st){
+  L.marker([st.lat,st.lon],{interactive:false,zIndexOffset:-1000,icon:L.divIcon({className:"",iconSize:[0,0],
+    html:'<div class="st"><i></i>'+esc(st.name)+"</div>"})}).addTo(map);
+});
+var markers={};
+function icon(s,n){return L.divIcon({className:"",iconSize:[28,28],iconAnchor:[14,14],
+  html:'<div class="pin'+(state.sel===s.id?" on":"")+'">'+n+"</div>"});}
+
+/* list */
+function visible(){
+  var list=SHOPS.filter(function(s){
+    if(state.area&&s.area!==state.area)return false;
+    if(state.room&&s.room_kind!==state.room)return false;
+    if(state.price&&!(s.course_min&&s.course_min<=+state.price))return false;
+    if(state.slot&&!s.slot.length)return false;
+    return true;
+  });
+  var S={rec:function(a,b){return a.rank-b.rank;},
+         price:function(a,b){return(a.course_min||1e9)-(b.course_min||1e9);},
+         score:function(a,b){return b.tabelog.score-a.tabelog.score;}};
+  return list.sort(S[state.sort]);
+}
+function card(s,i){
+  var price=s.course_min
+    ? '<span class="yen"><small>飲み放題付きコース</small>'+yen(s.course_min)+"円〜</span>"
+    : '<span class="yen"><small>夜の予算</small>'+esc(s.budget_text)+"</span>";
+  var cospa='<span class="cospa g'+s.cospa.grade+'">コスパ <b>'+GRADE[s.cospa.grade]+"</b></span>";
+  var facts=['<span>'+esc(s.space_label)+"</span>"];
+  if(s.slot.length)facts.push('<span class="slot">10/25 '+s.slot.map(function(t){return +t.slice(0,2)+"時";}).join("・")+"に空き枠</span>");
+  if(s.service_pct)facts.push("<span>サービス料"+s.service_pct+"%</span>");
+  var links='<a class="lk" href="'+s.tabelog.url+'" target="_blank" rel="noopener">食べログ <b>'+s.tabelog.score.toFixed(2)+"</b><small>"+s.tabelog.reviews.toLocaleString()+"件</small></a>";
+  if(s.hotpepper)links+='<a class="lk" href="'+s.hotpepper.url+'" target="_blank" rel="noopener">ホットペッパー'+
+    (s.hotpepper.score?" <b>"+s.hotpepper.score.toFixed(1)+"</b><small>"+s.hotpepper.n+"件</small>":"")+"</a>";
+  if(s.gnavi)links+='<a class="lk" href="'+s.gnavi+'" target="_blank" rel="noopener">ぐるなび</a>';
+  links+='<a class="lk" href="'+s.gmap+'" target="_blank" rel="noopener">Googleマップ</a>';
+  if(s.book_url)links+='<a class="lk book" href="'+s.book_url+'" target="_blank" rel="noopener">ネット予約</a>';
+  var dl="";
+  [["部屋",s.room_text],["貸切",s.charter_text],["コース",s.course_text],["日曜の営業",s.sunday_hours],
+   ["料金の注意",s.charge_text],["口コミの傾向",s.review_text],["電話",s.tel]].forEach(function(p){
+    if(p[1])dl+="<dt>"+esc(p[0])+"</dt><dd>"+esc(p[1])+"</dd>";});
+  return '<article class="card'+(state.sel===s.id?" on":"")+'" id="c'+s.id+'" data-id="'+s.id+'">'+
+    '<div class="top"><div class="num">'+(i+1)+'</div><div class="ttl">'+
+      '<h2 class="name">'+esc(s.name)+"</h2>"+
+      '<div class="meta">'+esc(s.genre_label)+"・"+esc(s.station)+" 徒歩"+s.walk_min+"分</div></div></div>"+
+    '<div class="price">'+price+cospa+'<span class="cospa-note">'+esc(s.cospa.note)+"</span></div>"+
+    '<div class="facts">'+facts.join("")+"</div>"+
+    '<ul class="why">'+s.reasons.map(function(r){return"<li>"+esc(r)+"</li>";}).join("")+"</ul>"+
+    (s.caution?'<div class="warn">'+esc(s.caution)+"</div>":"")+
+    '<div class="links">'+links+"</div>"+
+    (dl?'<details class="more"><summary>詳しい情報</summary><dl class="dl">'+dl+"</dl></details>":"")+
+  "</article>";
+}
+function render(){
+  var list=visible();
+  document.getElementById("cnt").textContent=list.length;
+  document.getElementById("cards").innerHTML=list.length?list.map(card).join(""):'<div class="empty">条件に合う店がありません</div>';
+  Object.keys(markers).forEach(function(id){map.removeLayer(markers[id]);});
+  markers={};
+  list.forEach(function(s,i){
+    var m=L.marker([s.lat,s.lon],{icon:icon(s,i+1),title:s.name,zIndexOffset:state.sel===s.id?1000:0}).addTo(map);
+    m.on("click",function(){select(s.id,true);});
+    markers[s.id]=m;
+  });
+}
+function select(id,fromMap){
+  state.sel=id;render();
+  var s=SHOPS.filter(function(x){return x.id===id;})[0];if(!s)return;
+  if(fromMap){var c=document.getElementById("c"+id);if(c)c.scrollIntoView({behavior:"smooth",block:"start"});}
+  else map.flyTo([s.lat,s.lon],Math.max(map.getZoom(),16),{duration:.5});
+}
+function fit(area){
+  map.invalidateSize();
+  var pts=SHOPS.filter(function(s){return area==="all"||s.area===area;}).map(function(s){return[s.lat,s.lon];});
+  if(pts.length)map.fitBounds(L.latLngBounds(pts),{padding:[30,30],maxZoom:16});
+}
+
+document.querySelectorAll(".seg").forEach(function(seg){
+  seg.addEventListener("click",function(e){
+    var b=e.target.closest("button");if(!b)return;
+    seg.querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===b);});
+    state[seg.getAttribute("data-key")]=b.getAttribute("data-v");render();
+  });
+});
+document.getElementById("slot").addEventListener("change",function(e){state.slot=e.target.checked;render();});
+document.getElementById("sort").addEventListener("change",function(e){state.sort=e.target.value;render();});
+document.getElementById("cards").addEventListener("click",function(e){
+  if(e.target.closest("a,summary,details"))return;
+  var c=e.target.closest(".card");if(c)select(c.getAttribute("data-id"),false);
+});
+document.querySelector(".mapbtns").addEventListener("click",function(e){
+  var b=e.target.closest("[data-jump]");if(b)fit(b.getAttribute("data-jump"));
+});
+render();
+setTimeout(function(){fit("all");},50);
+window.addEventListener("load",function(){fit("all");});
+})();
+</script>
+</body>
+</html>

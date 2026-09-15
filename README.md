@@ -9,5 +9,6 @@
 | chiba-trip（千葉旅 行きたいところマップ） | https://ko-yamatoya.github.io/Projects/chiba-trip/ |
 | solo-trip（経県ゲーム / 一人旅ダッシュボード） | https://ko-yamatoya.github.io/Projects/solo-trip/ |
 | asaichi-ai（朝イチAI のLP・プライバシー・利用規約） | https://ko-yamatoya.github.io/Projects/asaichi-ai/ |
+| reunion-venues（15名の同窓会 店さがし／渋谷・新宿） | https://ko-yamatoya.github.io/Projects/reunion-venues/ |
 
 運用ルールは [CLAUDE.md](CLAUDE.md) を参照（1デモ=1サブフォルダ、独立リポジトリは作らない）。
