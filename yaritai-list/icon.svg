@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="やりたいことリスト">
+  <rect width="512" height="512" fill="#1a1916"/>
+  <g fill="none" stroke="#f7f5f1" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M150 268 l58 58 L362 186"/>
+  </g>
+  <g fill="#f7f5f1" opacity=".55">
+    <circle cx="150" cy="150" r="13"/>
+    <circle cx="150" cy="210" r="13"/>
+  </g>
+  <g stroke="#f7f5f1" stroke-width="13" stroke-linecap="round" opacity=".55">
+    <path d="M196 150 h166"/>
+    <path d="M196 210 h122"/>
+  </g>
+</svg>
