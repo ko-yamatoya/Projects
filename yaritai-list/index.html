@@ -322,6 +322,9 @@ details.fold summary::marker{color:var(--hair-strong)}
 .tri-btns .big:hover{background:var(--surface-2)}
 .tri-btns .big .dot{width:11px; height:11px; border-radius:50%; flex:none}
 .tri-btns .big .lab{flex:1; font-size:15px}
+.wtp-grid{display:grid; grid-template-columns:1fr 1fr; gap:9px}
+.wtp-grid .big{min-height:52px; padding:0 13px; gap:9px}
+.wtp-grid .big .lab{font-size:14px}
 .tri-btns .big .key{font-size:11px; color:var(--muted); border:1px solid var(--hair); border-radius:5px; padding:1px 6px; font-variant-numeric:tabular-nums}
 
 /* ============================================================ charts */
@@ -526,12 +529,22 @@ const MONEY_KEYS  = ['pay','free','paid'];
 /* 積み上げ順: 未設定(neutral) を端に置く。隣接ペアのCVD分離を検証済み（dataviz validator） */
 const MONEY_STACK = ['', 'pay', 'free', 'paid'];
 const WTP = [
-  { v:'1k',    label:'〜1千円' },
-  { v:'10k',   label:'〜1万円' },
-  { v:'100k',  label:'〜10万円' },
-  { v:'100k+', label:'10万円+' },
+  { v:'1k',   label:'〜1千円' },
+  { v:'10k',  label:'〜1万円' },
+  { v:'30k',  label:'〜3万円' },
+  { v:'50k',  label:'〜5万円' },
+  { v:'100k', label:'〜10万円' },
+  { v:'200k', label:'〜20万円' },
+  { v:'300k', label:'〜30万円' },
+  { v:'500k', label:'〜50万円' },
+  { v:'1m',   label:'〜100万円' },
+  { v:'1m+',  label:'100万円+' },
 ];
+/* 旧4段階（〜1千/〜1万/〜10万/10万+）で入れた値の読み替え。
+   旧「10万+」は 10万〜∞ なので、新しい区分では控えめに「〜20万円」に寄せる。 */
+const WTP_LEGACY = { '100k+':'200k' };
 const WTP_KEYS = WTP.map(w=>w.v);
+const wtpCode = v => (WTP_LEGACY[v] || v);
 const WTP_LABEL = Object.fromEntries(WTP.map(w=>[w.v,w.label]));
 const CATEGORIES = ['旅（国内）','旅（海外）','学び・教養','資格・仕事','カメラ・写真','芸術・音楽',
   '食・酒','からだ','モノ・道具','暮らし・住まい','人・関係','表現・伝える','体験','お金・投資'];
@@ -582,7 +595,7 @@ function normalizeItem(raw){
     category: String(raw.category==null?'':raw.category).trim(),
     memo: String(raw.memo==null?'':raw.memo),
     money,
-    wtp: (money==='pay' && WTP_KEYS.includes(raw.wtp)) ? raw.wtp : null,
+    wtp: (money==='pay' && WTP_KEYS.includes(wtpCode(raw.wtp))) ? wtpCode(raw.wtp) : null,
     when: String(raw.when==null?'':raw.when).trim(),
     nextStep: String(raw.nextStep==null?'':raw.nextStep).trim(),
     done,
@@ -1192,7 +1205,9 @@ function renderTriage(){
     </div>
     ${pend ? `<div class="tri-btns">
         <div class="viz-note" style="margin:0 2px 2px">いくらまで払える？</div>
-        ${WTP.map((w,n)=>`<button class="big" data-w="${w.v}"><span class="dot" style="background:var(--s1)"></span><span class="lab">${esc(w.label)}</span><span class="key">${n+1}</span></button>`).join('')}
+        <div class="wtp-grid">
+          ${WTP.map((w,n)=>`<button class="big" data-w="${w.v}"><span class="dot" style="background:var(--s1)"></span><span class="lab">${esc(w.label)}</span><span class="key">${n===9?'0':n+1}</span></button>`).join('')}
+        </div>
         <button class="btn ghost sm" data-t="skipwtp">金額はあとで</button>
       </div>`
       : `<div class="tri-btns">
@@ -1861,7 +1876,7 @@ function bindKeys(){
     if(k==='g'){ go('log'); return; }
     if(k==='d'){ go('data'); return; }
     if(S.view==='triage'){
-      if(k==='1'||k==='2'||k==='3'||k==='4'){ e.preventDefault(); triageAct(k); return; }
+      if(k>='0' && k<='9'){ e.preventDefault(); triageAct(k==='0'?'10':k); return; }
       if(k==='s'){ e.preventDefault();
         const q=live().filter(i=>i.money===null); const i=q[0];
         if(i){ S.items=S.items.filter(x=>x!==i).concat([i]); renderTriage(); } return; }

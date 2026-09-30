@@ -46,6 +46,10 @@
     eq('normalize: done=falseならdoneAtは消す', YL.normalizeItem({ title: 'x', done: false, doneAt: '2026-01-01' }).doneAt, null);
     ok('normalize(analysis): summary空は捨てる', YL.normalizeAnalysis({ summary: '' }) === null);
     eq('normalize: 短いidも尊重する（マージで重複しない）', YL.normalizeItem({ id: 'id-1', title: 'x' }).id, 'id-1');
+    eq('normalize: 旧金額帯 100k+ は 200k に読み替える',
+       YL.normalizeItem({ title: 'x', money: 'pay', wtp: '100k+' }).wtp, '200k');
+    eq('normalize: 新しい金額帯もそのまま通る',
+       YL.normalizeItem({ title: 'x', money: 'pay', wtp: '1m+' }).wtp, '1m+');
 
     /* ============================ 2. マージ規則 ======================== */
     const base = (o) => Object.assign({
@@ -184,11 +188,12 @@
       document.querySelector('[data-t="1"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
       await sleep(60);
       ok('仕分け: payを選ぶと金額帯カードが出る', !!document.querySelector('[data-w="10k"]'));
-      document.querySelector('[data-w="10k"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      ok('仕分け: 金額帯は10段階', document.querySelectorAll('.wtp-grid [data-w]').length === 10);
+      document.querySelector('[data-w="300k"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
       await sleep(60);
       const it = YL.live().find(i => i.title === t0);
       eq('仕分け: money=pay が入る', it && it.money, 'pay');
-      eq('仕分け: wtp=10k が入る', it && it.wtp, '10k');
+      eq('仕分け: wtp=300k が入る', it && it.wtp, '300k');
       ok('仕分け: historyにmoney変更が残る', it.history.some(h => h.field === 'money' && h.to === 'pay'));
       eq('仕分け: 残りが0件になる', YL.live().filter(i => i.money === null).length, 0);
     }
