@@ -195,6 +195,27 @@
       YL.S.f.cat = []; YL.renderAll(); await sleep(40);
       eq('絞り込み: 解除で全件に戻る', document.querySelectorAll('#list-out li.item').length, YL.live().length);
     }
+    {
+      // 回帰テスト: 詳細シートを開き直したとき、前の項目に書き込まれないこと
+      YL.go('list'); await sleep(50);
+      const rows = [...document.querySelectorAll('#list-out li.item')];
+      if (rows.length >= 2) {
+        const idA = rows[0].dataset.id, idB = rows[1].dataset.id;
+        const titleA = YL.byId(idA).title, catA = YL.byId(idA).category;
+        const click = el => el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        click(rows[0].querySelector('[data-act="open"]')); await sleep(120);
+        click(document.querySelector('#sheet [data-x="close"]')); await sleep(340);
+        const rows2 = [...document.querySelectorAll('#list-out li.item')];
+        click(rows2[1].querySelector('[data-act="open"]')); await sleep(120);
+        document.querySelector('#d-title').value = 'シート回帰テストで書き換えたタイトル';
+        document.querySelector('#d-cat').value = 'テスト用カテゴリ';
+        click(document.querySelector('#sheet [data-x="save"]')); await sleep(160);
+        eq('シート: 保存したのは開いている項目だけ（タイトル）', YL.byId(idB).title, 'シート回帰テストで書き換えたタイトル');
+        eq('シート: 開いている項目のカテゴリは保存される', YL.byId(idB).category, 'テスト用カテゴリ');
+        eq('シート: 前に開いた項目のタイトルは無傷', YL.byId(idA).title, titleA);
+        eq('シート: 前に開いた項目のカテゴリも無傷', YL.byId(idA).category, catA);
+      }
+    }
     YL.go('triage'); await sleep(40);
     eq('描画: 仕分けの残りは未設定の件数', YL.live().filter(i => i.money === null).length, 1);
     ok('描画: 仕分けカードが出ている', !!document.querySelector('.tri-card'));

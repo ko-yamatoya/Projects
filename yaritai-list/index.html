@@ -804,7 +804,14 @@ function hideToast(){ const el=$('#toast'); el.classList.remove('on'); clearTime
 
 let sheetCloser=null;
 function openSheet(html, onMount){
-  const sh=$('#sheet'), sc=$('#scrim');
+  const old=$('#sheet'), sc=$('#scrim');
+  /* 前に開いたシートのリスナーを必ず捨てる。
+     同じ要素を使い回すと、古いシートの保存処理が生き残り、
+     次に別の項目を保存したときに「いまのフォームの値」を古い項目にも書き込む。
+     （実際にタイトルが2件上書きされた。cloneNode(false) で属性だけ引き継ぐ） */
+  const sh=old.cloneNode(false);
+  sh.classList.remove('on');
+  old.replaceWith(sh);
   sh.innerHTML='<div class="grab"></div>'+html;
   sh.hidden=false; sc.hidden=false;
   requestAnimationFrame(()=>{ sh.classList.add('on'); sc.classList.add('on'); });
