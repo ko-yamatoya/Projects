@@ -30,7 +30,7 @@
   /* data colors — dataviz skill の既定パレット（自前サーフェスで再検証済み） */
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
   --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s-neutral:#7a7872;
-  --good:#0ca30c; --critical:#d03b3b;
+  --good:#0ca30c; --critical:#d03b3b; --star:#c98500;
   --shadow:0 1px 2px rgba(26,25,22,.05), 0 8px 24px -12px rgba(26,25,22,.18);
   --sheet-shadow:0 -1px 0 var(--hair), 0 -20px 60px -20px rgba(26,25,22,.35);
   --r:14px; --r-sm:9px;
@@ -47,7 +47,7 @@
     --on-ink:#16150f;
     --focus:#7fb0f0;
     --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
-    --s5:#d55181; --s6:#008300; --s7:#9085e9; --s-neutral:#898781;
+    --s5:#d55181; --s6:#008300; --s7:#9085e9; --s-neutral:#898781; --star:#eda100;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
     --sheet-shadow:0 -1px 0 var(--hair), 0 -20px 60px -20px rgba(0,0,0,.7);
   }
@@ -61,7 +61,7 @@
   --on-ink:#16150f;
   --focus:#7fb0f0;
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
-  --s5:#d55181; --s6:#008300; --s7:#9085e9; --s-neutral:#898781;
+  --s5:#d55181; --s6:#008300; --s7:#9085e9; --s-neutral:#898781; --star:#eda100;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
   --sheet-shadow:0 -1px 0 var(--hair), 0 -20px 60px -20px rgba(0,0,0,.7);
 }
@@ -94,7 +94,10 @@ header.top{
   padding-top:env(safe-area-inset-top);
 }
 .top-in{display:flex; align-items:center; gap:10px; min-height:52px}
-.brand{font-family:var(--serif); font-size:17px; letter-spacing:.06em; font-weight:400; white-space:nowrap}
+.brand{display:inline-flex; align-items:center; gap:9px; font-size:14.5px; font-weight:600;
+  letter-spacing:.09em; white-space:nowrap}
+.brand i{width:7px; height:7px; border-radius:50%; background:var(--s1); flex:none;
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--s1) 16%, transparent)}
 .top-sp{flex:1}
 .iconbtn{
   width:36px; height:36px; display:grid; place-items:center;
@@ -192,7 +195,8 @@ label.fl{display:block; font-size:12px; letter-spacing:.04em; color:var(--muted)
 .chip.m-paid  .dot{background:var(--s3)} .chip.m-paid {background:color-mix(in srgb, var(--s3) 11%, var(--surface)); border-color:color-mix(in srgb, var(--s3) 26%, var(--hair))}
 .chip.m-null{border-style:dashed; background:transparent; color:var(--muted)}
 .chip.m-null .dot{background:transparent; border:1.5px dashed var(--s-neutral); width:9px; height:9px}
-.chip.cat{background:transparent; border-color:var(--hair-strong); color:var(--muted)}
+.chip.cat{background:transparent; border-color:var(--hair-strong); color:var(--ink-2)}
+.chip.cat.tint{color:var(--ink-2)}
 .chip.wtp{background:transparent; border-color:transparent; color:var(--muted); padding-left:0; font-variant-numeric:tabular-nums}
 body[data-pub="1"] .sens{display:none !important}
 
@@ -223,10 +227,35 @@ body[data-pub="1"] .sens{display:none !important}
 /* ============================================================ filters */
 .filters{display:flex; flex-direction:column; gap:9px; margin:0 0 6px}
 .filters .row1{display:flex; gap:8px; align-items:center}
+.filters input[type=search]{flex:1 1 auto; min-width:0}
+#f-more{display:flex; flex-direction:column; gap:9px}
+.catfil{display:flex; flex-wrap:wrap; gap:6px; padding:2px 0 0}
+.catfil button{
+  font-size:12px; line-height:1; padding:7px 11px; border-radius:999px;
+  border:1px solid var(--hair-strong); background:var(--surface); color:var(--ink-2);
+  display:inline-flex; align-items:center; gap:6px;
+}
+.catfil button i{width:7px; height:7px; border-radius:50%; background:var(--s-neutral); flex:none}
+.catfil button[aria-pressed="true"]{border-color:var(--ink); color:var(--ink); font-weight:600}
+.catfil button.all{border-style:dashed}
+.catfil button[aria-pressed="true"].all{border-style:solid; background:var(--ink); color:var(--on-ink)}
+.fbtn{
+  position:relative; flex:none; width:38px; height:38px; border-radius:50%;
+  border:1px solid var(--hair-strong); background:var(--surface); color:var(--ink-2);
+  display:grid; place-items:center; transition:background .12s, color .12s, border-color .12s;
+}
+.fbtn svg{width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round}
+.fbtn:hover{background:var(--surface-2)}
+.fbtn[aria-expanded="true"]{background:var(--ink); color:var(--on-ink); border-color:var(--ink)}
+.fdot{position:absolute; top:0; right:0; width:9px; height:9px; border-radius:50%;
+  background:var(--s1); border:2px solid var(--plane)}
 .filters select{min-height:36px; padding:5px 9px; font-size:13px; width:auto; flex:1 1 0; min-width:0; border-radius:999px; text-overflow:ellipsis}
 .filters input[type=search]{min-height:36px; padding:6px 13px; font-size:13.5px; border-radius:999px}
-.fmeta{display:flex; align-items:baseline; gap:10px; color:var(--muted); font-size:12px; margin:10px 0 8px; padding:0 2px}
+.fmeta{display:flex; align-items:baseline; gap:12px; color:var(--muted); font-size:12px; margin:12px 0 8px; padding:0 3px}
 .fmeta b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+.fmeta .sp{flex:1}
+.fmeta button{color:var(--ink-2); font-size:12px; border-bottom:1px solid var(--hair-strong); padding-bottom:1px}
+.fmeta button:hover{color:var(--ink); border-bottom-color:var(--ink)}
 
 /* ============================================================ list */
 .group-h{
@@ -257,7 +286,7 @@ li.item.swiping .item-in{transition:none}
 }
 .tick svg{width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round}
 .tick:hover{border-color:var(--ink-2)}
-.item.done .tick{background:var(--ink); border-color:var(--ink); color:var(--on-ink)}
+.item.done .tick{background:var(--good); border-color:var(--good); color:#fff}
 .item-body{flex:1; min-width:0}
 .item-t{font-size:15px; line-height:1.45; word-break:break-word}
 .item.done .item-t{color:var(--ink-2)}
@@ -265,7 +294,7 @@ li.item.swiping .item-in{transition:none}
 .item-sub .s{font-size:11.5px; color:var(--muted); display:inline-flex; align-items:center; gap:4px}
 .item-sub .s svg{width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
 .item-right{flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:5px}
-.stars{font-size:11px; letter-spacing:1px; color:var(--muted)}
+.stars{font-size:11px; letter-spacing:1px; color:var(--star)}
 .empty{text-align:center; color:var(--muted); font-size:13.5px; padding:46px 16px; line-height:1.9}
 .empty b{display:block; font-family:var(--serif); font-size:16px; color:var(--ink-2); font-weight:400; margin-bottom:6px}
 
@@ -306,13 +335,13 @@ details.fold summary::marker{color:var(--hair-strong)}
 /* ============================================================ triage */
 .tri-wrap{display:flex; flex-direction:column; gap:14px}
 .tri-card{
-  min-height:210px; display:flex; flex-direction:column; justify-content:center; gap:14px;
-  padding:30px 22px; text-align:center;
+  min-height:224px; display:flex; flex-direction:column; justify-content:center; gap:16px;
+  padding:36px 24px; text-align:center;
 }
 .tri-card .t{font-family:var(--serif); font-size:24px; line-height:1.5; letter-spacing:.03em; word-break:break-word}
 .tri-prog{display:flex; align-items:center; gap:10px; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums}
 .tri-bar{flex:1; height:3px; border-radius:2px; background:var(--surface-3); overflow:hidden}
-.tri-bar i{display:block; height:100%; background:var(--ink); border-radius:2px; transition:width .3s}
+.tri-bar i{display:block; height:100%; background:var(--s1); border-radius:2px; transition:width .3s}
 .tri-btns{display:flex; flex-direction:column; gap:9px}
 .tri-btns .big{
   display:flex; align-items:center; gap:12px; text-align:left;
@@ -421,7 +450,7 @@ kbd{
 <body>
 <header class="top">
   <div class="wrap top-in">
-    <span class="brand">やりたいこと</span>
+    <span class="brand"><i></i>やりたいこと</span>
     <span class="top-sp"></span>
     <span class="pubflag">公開モード</span>
     <button class="iconbtn" id="btn-random" title="今日なにする？ (r)" aria-label="今日なにする？">
@@ -450,15 +479,23 @@ kbd{
         <button class="btn primary" type="submit" aria-label="追加"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
       </form>
       <div class="filters">
-        <input type="search" id="f-q" placeholder="検索" aria-label="検索">
         <div class="row1">
-          <select id="f-status" aria-label="達成状況"></select>
-          <select id="f-money" aria-label="money区分"></select>
-          <select id="f-cat" aria-label="カテゴリ"></select>
+          <input type="search" id="f-q" placeholder="検索" aria-label="検索">
+          <button type="button" class="fbtn" id="f-toggle" aria-expanded="false" aria-controls="f-more" aria-label="絞り込みと並べ替え">
+            <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>
+            <i class="fdot" hidden></i>
+          </button>
         </div>
-        <div class="row1">
-          <select id="f-sort" aria-label="並び順"></select>
-          <select id="f-group" aria-label="グルーピング"></select>
+        <div id="f-more" hidden>
+          <div class="row1">
+            <select id="f-status" aria-label="達成状況"></select>
+            <select id="f-money" aria-label="やりたさ"></select>
+          </div>
+          <div class="row1">
+            <select id="f-sort" aria-label="並び順"></select>
+            <select id="f-group" aria-label="グルーピング"></select>
+          </div>
+          <div class="catfil" id="f-cat" role="group" aria-label="カテゴリで絞り込み（複数選べます）"></div>
         </div>
       </div>
       <div class="fmeta" id="f-meta"></div>
@@ -469,7 +506,7 @@ kbd{
   <!-- ===== 仕分け ===== -->
   <section class="view" id="v-triage" hidden aria-label="仕分け">
     <div class="wrap">
-      <div class="vhead"><h2>仕分け</h2><p>money区分が未設定のものを1件ずつ。3択をタップするだけ。</p></div>
+      <div class="vhead"><h2>仕分け</h2><p>やりたさが未設定のものを1件ずつ。3択をタップするだけ。</p></div>
       <div id="triage-out" class="tri-wrap"></div>
     </div>
   </section>
@@ -520,10 +557,12 @@ kbd{
 
 /* ---------- 定数 ---------- */
 const SCHEMA_VERSION = 1;
+/* money: JSON上のフィールド名は仕様どおり money のまま。UIでは「やりたさ」と呼ぶ。
+   払ってでも > タダなら > そこまででもない、の強さの順に並ぶ */
 const MONEY = {
   pay : { label:'払ってでもやりたい', short:'払ってでも', cls:'m-pay',  varName:'--s1' },
   free: { label:'タダならやる',       short:'タダなら',   cls:'m-free', varName:'--s2' },
-  paid: { label:'お金をもらえるならやる', short:'もらえるなら', cls:'m-paid', varName:'--s3' },
+  paid: { label:'そこまででもない',       short:'そこまで',   cls:'m-paid', varName:'--s3' },
 };
 const MONEY_KEYS  = ['pay','free','paid'];
 /* 積み上げ順: 未設定(neutral) を端に置く。隣接ペアのCVD分離を検証済み（dataviz validator） */
@@ -721,7 +760,8 @@ function loadPrefs(){
 }
 function savePrefs(){
   try{ localStorage.setItem(PREF_KEY, JSON.stringify({
-    theme:S.theme, pub:S.pub, f:S.f, sort:S.sort, group:S.group, range:S.range, logTab:S.logTab
+    theme:S.theme, pub:S.pub, f:S.f, sort:S.sort, group:S.group, range:S.range,
+    logTab:S.logTab, filterOpen:S.filterOpen
   })); }catch(e){}
 }
 
@@ -730,8 +770,8 @@ const S = {
   items:[], analyses:[],
   view:'list', logTab:'timeline',
   theme:'auto', pub:false,
-  f:{ q:'', status:'all', money:'', cat:'' },
-  sort:'createdAt-desc', group:'none', range:'12',
+  f:{ q:'', status:'all', money:'', cat:[] },
+  sort:'createdAt-desc', group:'none', range:'12', filterOpen:false,
   triageQueue:[], triagePending:null, lastTriage:null,
   pendingImport:null,
 };
@@ -839,10 +879,11 @@ function softDelete(id){
 const SORTS = [
   ['createdAt-desc','追加が新しい順'], ['createdAt-asc','追加が古い順'],
   ['doneAt-desc','達成が新しい順'],   ['wtp-desc','払える額が高い順'],
-  ['wtp-asc','払える額が低い順'],     ['title-asc','タイトル順'],
+  ['wtp-asc','払える額が低い順'],     ['money-desc','やりたさが強い順'],
+  ['title-asc','タイトル順'],
   ['updatedAt-desc','更新が新しい順'],
 ];
-const GROUPS = [['none','グルーピングなし'],['category','カテゴリ別'],['money','money区分別'],['status','達成状況別']];
+const GROUPS = [['none','グルーピングなし'],['category','カテゴリ別'],['money','やりたさ別'],['status','達成状況別']];
 const STATUSES = [['all','すべて'],['open','未達成'],['done','達成済み']];
 
 function usedCategories(){
@@ -854,21 +895,32 @@ function usedCategories(){
 function fillSelects(){
   const opt=(v,l,sel)=>`<option value="${esc(v)}"${sel===v?' selected':''}>${esc(l)}</option>`;
   $('#f-status').innerHTML = STATUSES.map(([v,l])=>opt(v,l,S.f.status)).join('');
-  $('#f-money').innerHTML  = [['','money区分すべて'],['null','未設定'],...MONEY_KEYS.map(k=>[k,MONEY[k].label])]
+  $('#f-money').innerHTML  = [['','やりたさ すべて'],['null','未設定'],...MONEY_KEYS.map(k=>[k,MONEY[k].label])]
     .map(([v,l])=>opt(v,l,S.f.money)).join('');
-  $('#f-cat').innerHTML    = [['','カテゴリすべて'],['__none','カテゴリなし'],...usedCategories().map(c=>[c,c])]
-    .map(([v,l])=>opt(v,l,S.f.cat)).join('');
+  const cats = usedCategories(), sel = new Set(S.f.cat);
+  const hasNoCat = live().some(i=>!i.category);
+  const catBtn = (v,l,tintVar)=>{
+    const on = v==='' ? sel.size===0 : sel.has(v);
+    const style = (tintVar && on) ? ` style="background:color-mix(in srgb, var(${tintVar}) 14%, var(--surface)); border-color:color-mix(in srgb, var(${tintVar}) 45%, var(--hair))"` : '';
+    const dot = tintVar ? `<i style="background:var(${tintVar})"></i>` : '';
+    return `<button type="button" data-cat="${esc(v)}" aria-pressed="${on}" class="${v===''?'all':''}"${style}>${dot}${esc(l)}</button>`;
+  };
+  $('#f-cat').innerHTML = [catBtn('','すべて',null)]
+    .concat(cats.map(c=>catBtn(c, c, CAT_COLOR.get(c)||null)))
+    .concat(hasNoCat ? [catBtn('__none','カテゴリなし',null)] : []).join('');
   $('#f-sort').innerHTML   = SORTS.map(([v,l])=>opt(v,l,S.sort)).join('');
   $('#f-group').innerHTML  = GROUPS.map(([v,l])=>opt(v,l,S.group)).join('');
 }
 function sortItems(arr){
   const wIdx = i => i.wtp ? WTP_KEYS.indexOf(i.wtp) : -1;
+  const mIdx = i => i.money ? MONEY_KEYS.indexOf(i.money) : MONEY_KEYS.length;
   const cmp = {
     'createdAt-desc': (a,b)=> a.createdAt<b.createdAt?1:a.createdAt>b.createdAt?-1:0,
     'createdAt-asc' : (a,b)=> a.createdAt<b.createdAt?-1:a.createdAt>b.createdAt?1:0,
     'doneAt-desc'   : (a,b)=> (b.doneAt||'').localeCompare(a.doneAt||''),
     'wtp-desc'      : (a,b)=> wIdx(b)-wIdx(a),
     'wtp-asc'       : (a,b)=> wIdx(a)-wIdx(b),
+    'money-desc'    : (a,b)=> mIdx(a)-mIdx(b) || wIdx(b)-wIdx(a),
     'title-asc'     : (a,b)=> a.title.localeCompare(b.title,'ja'),
     'updatedAt-desc': (a,b)=> a.updatedAt<b.updatedAt?1:-1,
   }[S.sort] || ((a,b)=>0);
@@ -881,8 +933,10 @@ function visibleItems(){
   else if(S.f.status==='done') arr=arr.filter(i=>i.done);
   if(S.f.money==='null') arr=arr.filter(i=>i.money===null);
   else if(S.f.money) arr=arr.filter(i=>i.money===S.f.money);
-  if(S.f.cat==='__none') arr=arr.filter(i=>!i.category);
-  else if(S.f.cat) arr=arr.filter(i=>i.category===S.f.cat);
+  if(S.f.cat.length){
+    const want=new Set(S.f.cat);
+    arr=arr.filter(i=> i.category ? want.has(i.category) : want.has('__none'));
+  }
   if(q) arr=arr.filter(i=>[i.title,i.category,i.memo,i.when,i.nextStep,i.reflection]
     .join(' ').toLowerCase().includes(q));
   return sortItems(arr);
@@ -893,6 +947,21 @@ const ICON = {
   step :'<svg viewBox="0 0 24 24"><path d="M5 12h12M13 7l5 5-5 5"/></svg>',
   memo :'<svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg>',
 };
+/* カテゴリの色は「推移」の構成比グラフと同じ規則で決める（上位7色＋その他は無彩色）。
+   同じカテゴリが一覧でもグラフでも同じ色になる。 */
+let CAT_COLOR = new Map();
+function refreshCatColors(){
+  CAT_COLOR = new Map();
+  const { top } = topCategories(7);
+  top.forEach((c,n)=>CAT_COLOR.set(c, SERIES_VARS[n]));
+}
+function catChip(name){
+  if(!name) return '';
+  const v = CAT_COLOR.get(name);
+  if(!v) return `<span class="chip cat">${esc(name)}</span>`;
+  return `<span class="chip cat tint" style="background:color-mix(in srgb, var(${v}) 12%, var(--surface));`
+       + ` border-color:color-mix(in srgb, var(${v}) 30%, var(--hair))">${esc(name)}</span>`;
+}
 function moneyChip(i){
   if(!i.money) return `<span class="chip m-null"><i class="dot"></i>未設定</span>`;
   const m=MONEY[i.money];
@@ -901,7 +970,7 @@ function moneyChip(i){
 function stars(n){ return n ? `<span class="stars sens" aria-label="満足度${n}">${'★'.repeat(n)}${'☆'.repeat(5-n)}</span>` : ''; }
 function itemRow(i){
   const sub=[];
-  if(i.category) sub.push(`<span class="chip cat">${esc(i.category)}</span>`);
+  if(i.category) sub.push(catChip(i.category));
   if(i.done && i.doneAt) sub.push(`<span class="s">${ICON.check}${esc(i.doneAt)}</span>`);
   if(!i.done && i.when) sub.push(`<span class="s">${ICON.when}${esc(i.when)}</span>`);
   if(!i.done && i.nextStep) sub.push(`<span class="s sens">${ICON.step}${esc(i.nextStep)}</span>`);
@@ -925,14 +994,28 @@ function groupOf(i){
   if(S.group==='status')   return i.done ? '達成済み' : '未達成';
   return '';
 }
+function filtersActive(){
+  return S.f.status!=='all' || S.f.money!=='' || S.f.cat.length>0 ||
+         S.sort!=='createdAt-desc' || S.group!=='none';
+}
+function applyFilterUI(){
+  const open = S.filterOpen || filtersActive();
+  $('#f-more').hidden = !open;
+  $('#f-toggle').setAttribute('aria-expanded', String(open));
+  $('#f-toggle').querySelector('.fdot').hidden = !filtersActive();
+}
 function renderList(){
   fillSelects();
+  applyFilterUI();
   $('#f-q').value = S.f.q;
   const arr = visibleItems(), all = live();
   const nUnset = all.filter(i=>i.money===null).length;
-  $('#f-meta').innerHTML = `<span><b>${arr.length}</b> / ${all.length} 件</span>`
+  const filtered = arr.length!==all.length;
+  $('#f-meta').innerHTML =
+      `<span>${filtered?`<b>${arr.length}</b> / ${all.length} 件`:`<b>${all.length}</b> 件`}</span>`
     + `<span>達成 <b>${all.filter(i=>i.done).length}</b></span>`
-    + (nUnset?`<span>未設定 <b>${nUnset}</b>（<button class="btn ghost sm" data-go="triage" style="min-height:22px;padding:0 6px">仕分ける</button>）</span>`:'');
+    + `<span class="sp"></span>`
+    + (nUnset?`<button type="button" data-go="triage">やりたさ未設定 <b>${nUnset}</b> を仕分ける</button>`:'');
   const out=$('#list-out');
   if(!arr.length){
     out.innerHTML = `<div class="card pad empty"><b>まだ何もありません</b>上の欄にタイトルだけ書いて Enter。<br>詳しいことは後から埋められます。</div>`;
@@ -1023,7 +1106,7 @@ function openDetail(id, opt){
       <textarea id="d-title" rows="2" data-autofocus>${esc(i.title)}</textarea>
     </div>
     <div class="field">
-      <label class="fl">money区分</label>
+      <label class="fl">やりたさ</label>
       ${segHtml('money',[['','未設定'],...MONEY_KEYS.map(k=>[k,MONEY[k].short])], i.money||'')}
     </div>
     <div class="field sens" id="d-wtp-field" ${i.money==='pay'?'':'hidden'}>
@@ -1129,7 +1212,7 @@ function openDetail(id, opt){
   });
 }
 function histLabel(h){
-  const F={money:'money区分', category:'カテゴリ', done:'達成'};
+  const F={money:'やりたさ', category:'カテゴリ', done:'達成'};
   const V=v=> v===true?'達成': v===false?'未達成': (v==null||v==='')?'未設定' : (MONEY[v]?MONEY[v].short:String(v));
   return `${F[h.field]||h.field}: ${V(h.from)} → ${V(h.to)}`;
 }
@@ -1138,7 +1221,9 @@ function histLabel(h){
    今日なにする？
    ========================================================================== */
 function randomPick(){
-  const pool=live().filter(i=>!i.done);
+  const open=live().filter(i=>!i.done);
+  /* 「そこまででもない」は候補から外す（全部そうなら仕方なく戻す） */
+  const pool=open.filter(i=>i.money!=='paid').length ? open.filter(i=>i.money!=='paid') : open;
   if(!pool.length){ toast('未達成の項目がありません'); return; }
   const draw=()=>pool[Math.floor(Math.random()*pool.length)];
   let cur=draw();
@@ -1147,7 +1232,7 @@ function randomPick(){
     <div class="sheet-b" style="text-align:center; padding:26px 22px 22px">
       <div style="font-family:var(--serif); font-size:23px; line-height:1.55; letter-spacing:.03em">${esc(it.title)}</div>
       <div class="item-sub" style="justify-content:center; margin-top:12px">
-        ${it.category?`<span class="chip cat">${esc(it.category)}</span>`:''}${moneyChip(it)}
+        ${catChip(it.category)}${moneyChip(it)}
         ${it.nextStep?`<span class="s sens">${ICON.step}${esc(it.nextStep)}</span>`:''}
       </div>
     </div>
@@ -1186,7 +1271,7 @@ function renderTriage(){
   const cur = triageCurrent();
   if(!cur.item){
     out.innerHTML = `<div class="card pad empty"><b>仕分けは終わっています</b>
-      money区分が未設定の項目はありません。<br>新しく追加したものが未設定になると、ここに出てきます。</div>`;
+      やりたさが未設定の項目はありません。<br>新しく追加したものが未設定になると、ここに出てきます。</div>`;
     return;
   }
   const i = cur.item;
@@ -1201,7 +1286,7 @@ function renderTriage(){
     </div>
     <div class="card tri-card">
       <div class="t">${esc(i.title)}</div>
-      ${i.category?`<div><span class="chip cat">${esc(i.category)}</span></div>`:''}
+      ${i.category?`<div>${catChip(i.category)}</div>`:''}
     </div>
     ${pend ? `<div class="tri-btns">
         <div class="viz-note" style="margin:0 2px 2px">いくらまで払える？</div>
@@ -1467,7 +1552,7 @@ function renderTrend(){
   const kpi=[
     ['総数', all.length, `うち初期 ${initN}件`],
     ['達成', all.filter(i=>i.done).length, `達成率 ${all.length?Math.round(all.filter(i=>i.done).length/all.length*100):0}%`],
-    ['money未設定', all.filter(i=>i.money===null).length, '仕分けで埋められる'],
+    ['やりたさ未設定', all.filter(i=>i.money===null).length, '仕分けで埋められる'],
     ['今月の追加', appItems.filter(i=>monthOf(i.createdAt)===thisM).length, 'アプリからの追加のみ'],
   ];
   let html = `<div class="kpis">` + kpi.map(([l,v,d])=>
@@ -1485,7 +1570,7 @@ function renderTrend(){
     ${tableHtml(['月','追加','達成'], months.map((m,n)=>[fmtYM(m), String(added[n]), String(doneA[n])]))}
   </div>`;
 
-  /* 2) money区分の構成比 推移（その月末時点で存在する項目の内訳） */
+  /* 2) やりたさの構成比 推移（その月末時点で存在する項目の内訳） */
   const moneyCats = MONEY_STACK.map((k,n)=>({
     key:k, label:k?MONEY[k].short:'未設定',
     color: k ? cssVar(MONEY[k].varName) : cssVar(NEUTRAL_VAR) }));
@@ -1495,7 +1580,7 @@ function renderTrend(){
     return MONEY_STACK.map(k=> pool.filter(i=>(i.money||'')===k).length );
   });
   html += `<div class="viz">
-    <div class="viz-h"><h3>money区分の構成比</h3></div>
+    <div class="viz-h"><h3>やりたさの構成比</h3></div>
     <p class="viz-note">各月末時点で持っている項目の内訳。区分は後から変えられるので、いまの値で塗り直されます。</p>
     <div class="card viz-box"><div id="ch2"></div>${legendHtml(moneyCats)}</div>
     ${tableHtml(['月',...moneyCats.map(c=>c.label),'合計'],
@@ -1543,7 +1628,7 @@ function renderLog(){
       <div class="card pad"><ul class="tl">${list.map(i=>`<li>
         <span class="d mono">${fmtDay(i.doneAt)}</span>
         <span class="b"><span class="t">${esc(i.title)}</span>
-          <span class="item-sub">${i.category?`<span class="chip cat">${esc(i.category)}</span>`:''}${moneyChip(i)}${stars(i.satisfaction)}</span>
+          <span class="item-sub">${catChip(i.category)}${moneyChip(i)}${stars(i.satisfaction)}</span>
           ${i.reflection?`<div class="r sens">${esc(i.reflection)}</div>`:''}
         </span></li>`).join('')}</ul></div>`).join('');
   }else{
@@ -1724,7 +1809,7 @@ function renderData(){
     <div class="prev" style="font-size:13px">
       <span>項目</span><span class="n">${all.length}</span>
       <span>うち達成</span><span class="n">${all.filter(i=>i.done).length}</span>
-      <span>money未設定</span><span class="n">${all.filter(i=>i.money===null).length}</span>
+      <span>やりたさ未設定</span><span class="n">${all.filter(i=>i.money===null).length}</span>
       <span>金額帯まで入力済み</span><span class="n">${wtpN}</span>
       <span>論理削除ぶん（エクスポートに含む）</span><span class="n">${S.items.length-all.length}</span>
       <span>分析</span><span class="n">${S.analyses.length}</span>
@@ -1739,7 +1824,7 @@ function renderData(){
         <span class="kk"><kbd>/</kbd></span><span>検索</span>
         <span class="kk"><kbd>r</kbd></span><span>今日なにする？</span>
         <span class="kk"><kbd>l</kbd> <kbd>t</kbd> <kbd>c</kbd> <kbd>g</kbd> <kbd>d</kbd></span><span>一覧 / 仕分け / 推移 / 記録 / データ</span>
-        <span class="kk"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span><span>仕分け: 払ってでも / タダなら / もらえるなら</span>
+        <span class="kk"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span><span>仕分け: 払ってでも / タダなら / そこまで</span>
         <span class="kk"><kbd>1</kbd>–<kbd>4</kbd></span><span>仕分け: 金額帯（払ってでもを選んだ直後）</span>
         <span class="kk"><kbd>s</kbd></span><span>仕分け: スキップ</span>
         <span class="kk"><kbd>p</kbd></span><span>公開モード切替</span>
@@ -1810,6 +1895,7 @@ function go(view){
   renderCurrent();
 }
 function renderCurrent(){
+  refreshCatColors();
   if(S.view==='list')   renderList();
   if(S.view==='triage') renderTriage();
   if(S.view==='trend')  renderTrend();
@@ -1842,9 +1928,21 @@ function bindChrome(){
     renderAll();
     if(it) toast('追加しました', '詳しく書く', ()=>openDetail(it.id));
   });
+  $('#f-toggle').addEventListener('click', ()=>{
+    S.filterOpen = !($('#f-more').hidden===false);
+    savePrefs(); applyFilterUI();
+    if(!$('#f-more').hidden) $('#f-status').focus();
+  });
   const onF=()=>{ S.f.q=$('#f-q').value; S.f.status=$('#f-status').value; S.f.money=$('#f-money').value;
-    S.f.cat=$('#f-cat').value; S.sort=$('#f-sort').value; S.group=$('#f-group').value; savePrefs(); renderList(); };
-  ['f-q','f-status','f-money','f-cat','f-sort','f-group'].forEach(id=>{
+    S.sort=$('#f-sort').value; S.group=$('#f-group').value; savePrefs(); renderList(); };
+  $('#f-cat').addEventListener('click', e=>{
+    const b=e.target.closest('[data-cat]'); if(!b) return;
+    const v=b.dataset.cat;
+    if(v===''){ S.f.cat=[]; }
+    else { const i=S.f.cat.indexOf(v); if(i<0) S.f.cat.push(v); else S.f.cat.splice(i,1); }
+    savePrefs(); renderList();
+  });
+  ['f-q','f-status','f-money','f-sort','f-group'].forEach(id=>{
     const el=$('#'+id); el.addEventListener('change', onF);
     if(id==='f-q') el.addEventListener('input', onF);
   });
@@ -1895,10 +1993,12 @@ async function boot(){
   if(p.theme) S.theme=p.theme;
   if(typeof p.pub==='boolean') S.pub=p.pub;
   if(p.f) Object.assign(S.f, p.f);
+  if(!Array.isArray(S.f.cat)) S.f.cat = S.f.cat ? [S.f.cat] : [];   // 旧prefs（単一選択）からの移行
   if(p.sort) S.sort=p.sort;
   if(p.group) S.group=p.group;
   if(p.range) S.range=p.range;
   if(p.logTab) S.logTab=p.logTab;
+  if(typeof p.filterOpen==='boolean') S.filterOpen=p.filterOpen;
   /* URLでの上書き（共有リンク・検証用）: ?theme=dark / #trend */
   try{
     const sp=new URLSearchParams(location.search);

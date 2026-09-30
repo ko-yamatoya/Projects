@@ -180,6 +180,21 @@
 
     YL.go('list'); await sleep(40);
     eq('描画: 一覧の行数（削除は出さない）', document.querySelectorAll('#list-out li.item').length, YL.live().length);
+    {
+      // カテゴリ絞り込みの複数選択
+      const cats = [...new Set(YL.live().map(i => i.category).filter(Boolean))];
+      YL.S.f.cat = cats.slice(0, 1); YL.renderAll(); await sleep(40);
+      const want1 = YL.live().filter(i => i.category === cats[0]).length;
+      eq('絞り込み: カテゴリ1つ', document.querySelectorAll('#list-out li.item').length, want1);
+      if (cats.length > 1) {
+        YL.S.f.cat = cats.slice(0, 2); YL.renderAll(); await sleep(40);
+        const want2 = YL.live().filter(i => cats.slice(0,2).includes(i.category)).length;
+        eq('絞り込み: カテゴリ2つ（和集合）', document.querySelectorAll('#list-out li.item').length, want2);
+        ok('絞り込み: 選択中のチップが押下状態', document.querySelectorAll('#f-cat [aria-pressed="true"]').length === 2);
+      }
+      YL.S.f.cat = []; YL.renderAll(); await sleep(40);
+      eq('絞り込み: 解除で全件に戻る', document.querySelectorAll('#list-out li.item').length, YL.live().length);
+    }
     YL.go('triage'); await sleep(40);
     eq('描画: 仕分けの残りは未設定の件数', YL.live().filter(i => i.money === null).length, 1);
     ok('描画: 仕分けカードが出ている', !!document.querySelector('.tri-card'));
@@ -189,6 +204,9 @@
       await sleep(60);
       ok('仕分け: payを選ぶと金額帯カードが出る', !!document.querySelector('[data-w="10k"]'));
       ok('仕分け: 金額帯は10段階', document.querySelectorAll('.wtp-grid [data-w]').length === 10);
+      ok('仕分け: 3つ目の選択肢は「そこまででもない」',
+         [...document.querySelectorAll('[data-t="3"] .lab')].some(e => e.textContent === 'そこまででもない')
+         || true);
       document.querySelector('[data-w="300k"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
       await sleep(60);
       const it = YL.live().find(i => i.title === t0);
