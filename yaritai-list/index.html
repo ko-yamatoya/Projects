@@ -668,7 +668,7 @@ function normalizeAnalysis(raw){
      - id で突き合わせ、updatedAt が新しい方を採用（同値なら手元を残す）
      - history は両方を統合して重複排除
      - deletedAt がある項目は復活させない（両者のうち最も早い削除時刻を残す）
-     - analyses は id で和集合
+     - analyses は id で和集合（同じidで中身が違えば取り込む側で置き換える）
    ========================================================================== */
 const histKey = h => JSON.stringify([h.at, h.field, h.from, h.to]);
 function unionHistory(a,b){
@@ -686,7 +686,7 @@ function mergeItem(mine, theirs){
 }
 /** @returns {{items:Object[], analyses:Object[], stats:Object}} */
 function mergeData(localItems, localAnalyses, incoming){
-  const stats = { added:0, updated:0, same:0, keptDeleted:0, analysesAdded:0, skipped:0 };
+  const stats = { added:0, updated:0, same:0, keptDeleted:0, analysesAdded:0, analysesUpdated:0, skipped:0 };
   const map = new Map(localItems.map(i=>[i.id, i]));
   const rawItems = Array.isArray(incoming && incoming.items) ? incoming.items : [];
   for(const raw of rawItems){
@@ -705,7 +705,12 @@ function mergeData(localItems, localAnalyses, incoming){
   for(const raw of rawAn){
     const a = normalizeAnalysis(raw);
     if(!a) continue;
-    if(!amap.has(a.id)){ amap.set(a.id, a); stats.analysesAdded++; }
+    const mine = amap.get(a.id);
+    if(!mine){ amap.set(a.id, a); stats.analysesAdded++; }
+    else if(mine.summary!==a.summary || mine.periodFrom!==a.periodFrom || mine.periodTo!==a.periodTo){
+      /* 同じidで中身が違う＝分析の書き直し。取り込む側で置き換える */
+      amap.set(a.id, a); stats.analysesUpdated++;
+    }
   }
   return {
     items: Array.from(map.values()),
@@ -1728,6 +1733,7 @@ function previewImport(text){
         <span>変更なし</span><span class="n">${st.same}</span>
         <span>削除のまま維持</span><span class="n">${st.keptDeleted}</span>
         <span>追加される分析</span><span class="n">${st.analysesAdded}</span>
+        ${st.analysesUpdated?`<span>書き直された分析</span><span class="n">${st.analysesUpdated}</span>`:''}
         ${st.skipped?`<span class="warn">読めずに飛ばす行</span><span class="n warn">${st.skipped}</span>`:''}
       </div>
       ${warn}

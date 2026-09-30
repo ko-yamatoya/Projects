@@ -95,6 +95,12 @@
       eq('merge: analysesはidで和集合', r.analyses.length, 2);
       eq('merge: analysesは新しい順', r.analyses[0].id, 'an-2');
       eq('merge: stats.analysesAdded', r.stats.analysesAdded, 1);
+      const rewritten = Object.assign({}, a1, { summary: '# 8月（書き直し）' });
+      const r2 = YL.mergeData([], [a1, a2], { items: [], analyses: [rewritten] });
+      eq('merge: 同じidで中身が違えば置き換える', r2.analyses.find(x => x.id === 'an-1').summary, '# 8月（書き直し）');
+      eq('merge: stats.analysesUpdated', r2.stats.analysesUpdated, 1);
+      const r3 = YL.mergeData([], [a1, a2], { items: [], analyses: [a1] });
+      eq('merge: 同内容なら置き換えない', r3.stats.analysesUpdated, 0);
     }
     {
       const r = YL.mergeData([], [], { items: [{ title: '' }, null, { title: 'ok' }] });
@@ -253,7 +259,9 @@
         const stats = await YL.importJSON(text);
         ok('実データ: master.jsonを取り込める', stats.added > 0, JSON.stringify(stats));
         eq('実データ: 取り込み後の件数', YL.live().length, before + data.items.filter(i => !i.deletedAt).length);
-        ok('実データ: money未設定が仕分け対象になる', YL.live().filter(i => i.money === null).length > 0);
+        ok('実データ: 区分はすべて有効な値',
+           YL.live().every(i => i.money === null || ['pay', 'hold', 'none'].includes(i.money)));
+        ok('実データ: 分析も一緒に取り込める', YL.S.analyses.length > 0);
         // 追加 → エクスポート（往復の後半）
         const extra = YL.addItem('往復テスト: アプリから追加', { category: '体験' });
         YL.updateItem(extra.id, { money: 'free' });
