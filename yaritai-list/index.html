@@ -191,13 +191,12 @@ label.fl{display:block; font-size:12px; letter-spacing:.04em; color:var(--muted)
 }
 .chip .dot{width:8px; height:8px; border-radius:50%; background:var(--s-neutral); flex:none}
 .chip.m-pay   .dot{background:var(--s1)} .chip.m-pay  {background:color-mix(in srgb, var(--s1) 11%, var(--surface)); border-color:color-mix(in srgb, var(--s1) 26%, var(--hair))}
-.chip.m-free  .dot{background:var(--s2)} .chip.m-free {background:color-mix(in srgb, var(--s2) 11%, var(--surface)); border-color:color-mix(in srgb, var(--s2) 26%, var(--hair))}
-.chip.m-paid  .dot{background:var(--s3)} .chip.m-paid {background:color-mix(in srgb, var(--s3) 11%, var(--surface)); border-color:color-mix(in srgb, var(--s3) 26%, var(--hair))}
+.chip.m-hold  .dot{background:var(--s2)} .chip.m-hold {background:color-mix(in srgb, var(--s2) 11%, var(--surface)); border-color:color-mix(in srgb, var(--s2) 26%, var(--hair))}
+.chip.m-none  .dot{background:var(--s3)} .chip.m-none {background:color-mix(in srgb, var(--s3) 11%, var(--surface)); border-color:color-mix(in srgb, var(--s3) 26%, var(--hair))}
 .chip.m-null{border-style:dashed; background:transparent; color:var(--muted)}
 .chip.m-null .dot{background:transparent; border:1.5px dashed var(--s-neutral); width:9px; height:9px}
 .chip.cat{background:transparent; border-color:var(--hair-strong); color:var(--ink-2)}
 .chip.cat.tint{color:var(--ink-2)}
-.chip.wtp{background:transparent; border-color:transparent; color:var(--muted); padding-left:0; font-variant-numeric:tabular-nums}
 body[data-pub="1"] .sens{display:none !important}
 
 /* ============================================================ toast */
@@ -351,9 +350,6 @@ details.fold summary::marker{color:var(--hair-strong)}
 .tri-btns .big:hover{background:var(--surface-2)}
 .tri-btns .big .dot{width:11px; height:11px; border-radius:50%; flex:none}
 .tri-btns .big .lab{flex:1; font-size:15px}
-.wtp-grid{display:grid; grid-template-columns:1fr 1fr; gap:9px}
-.wtp-grid .big{min-height:52px; padding:0 13px; gap:9px}
-.wtp-grid .big .lab{font-size:14px}
 .tri-btns .big .key{font-size:11px; color:var(--muted); border:1px solid var(--hair); border-radius:5px; padding:1px 6px; font-variant-numeric:tabular-nums}
 
 /* ============================================================ charts */
@@ -489,7 +485,7 @@ kbd{
         <div id="f-more" hidden>
           <div class="row1">
             <select id="f-status" aria-label="達成状況"></select>
-            <select id="f-money" aria-label="やりたさ"></select>
+            <select id="f-money" aria-label="お金の区分"></select>
           </div>
           <div class="row1">
             <select id="f-sort" aria-label="並び順"></select>
@@ -506,7 +502,7 @@ kbd{
   <!-- ===== 仕分け ===== -->
   <section class="view" id="v-triage" hidden aria-label="仕分け">
     <div class="wrap">
-      <div class="vhead"><h2>仕分け</h2><p>やりたさが未設定のものを1件ずつ。3択をタップするだけ。</p></div>
+      <div class="vhead"><h2>仕分け</h2><p>お金の区分が未設定のものを1件ずつ。3択をタップするだけ。</p></div>
       <div id="triage-out" class="tri-wrap"></div>
     </div>
   </section>
@@ -557,16 +553,20 @@ kbd{
 
 /* ---------- 定数 ---------- */
 const SCHEMA_VERSION = 1;
-/* money: JSON上のフィールド名は仕様どおり money のまま。UIでは「やりたさ」と呼ぶ。
-   払ってでも > タダなら > そこまででもない、の強さの順に並ぶ */
+/* お金の区分は2択。「お金をかけてでもやりたいか、否か」だけを持つ。
+   JSON上のフィールド名は仕様どおり money。旧データの 'paid'（そこまででもない）は 'free' に寄せる */
 const MONEY = {
-  pay : { label:'払ってでもやりたい', short:'払ってでも', cls:'m-pay',  varName:'--s1' },
-  free: { label:'タダならやる',       short:'タダなら',   cls:'m-free', varName:'--s2' },
-  paid: { label:'そこまででもない',       short:'そこまで',   cls:'m-paid', varName:'--s3' },
+  pay : { label:'お金を出してでもやりたい', short:'出してでも', cls:'m-pay',  varName:'--s1' },
+  hold: { label:'そこまでは出さない',       short:'出さない',   cls:'m-hold', varName:'--s2' },
+  none: { label:'お金はかからない',         short:'かからない', cls:'m-none', varName:'--s3' },
 };
-const MONEY_KEYS  = ['pay','free','paid'];
+const MONEY_KEYS  = ['pay','hold','none'];
+/* 旧データの読み替え。'paid'（そこまででもない）は意味が近い hold へ。
+   'free'（タダならやる）は「かからない」と「そこまでは出さない」のどちらとも読めるので
+   読み替えずに未設定へ落とす（＝仕分けし直してもらう） */
+const MONEY_LEGACY = { paid:'hold' };
 /* 積み上げ順: 未設定(neutral) を端に置く。隣接ペアのCVD分離を検証済み（dataviz validator） */
-const MONEY_STACK = ['', 'pay', 'free', 'paid'];
+const MONEY_STACK = ['', 'pay', 'hold', 'none'];
 const WTP = [
   { v:'1k',   label:'〜1千円' },
   { v:'10k',  label:'〜1万円' },
@@ -616,7 +616,8 @@ function normalizeItem(raw){
   if(!raw || typeof raw!=='object') return null;
   const title = String(raw.title==null?'':raw.title).trim();
   if(!title) return null;
-  const money = MONEY_KEYS.includes(raw.money) ? raw.money : null;
+  const rawMoney = MONEY_LEGACY[raw.money] || raw.money;
+  const money = MONEY_KEYS.includes(rawMoney) ? rawMoney : null;
   const createdAt = isISO(raw.createdAt) ? raw.createdAt : nowISO();
   const done = raw.done===true;
   let doneAt = dayOf(raw.doneAt);
@@ -634,7 +635,8 @@ function normalizeItem(raw){
     category: String(raw.category==null?'':raw.category).trim(),
     memo: String(raw.memo==null?'':raw.memo),
     money,
-    wtp: (money==='pay' && WTP_KEYS.includes(wtpCode(raw.wtp))) ? wtpCode(raw.wtp) : null,
+    /* wtp は画面から外したが、入力済みの金額帯は消さずに持ち回す（往復でも失わない） */
+    wtp: WTP_KEYS.includes(wtpCode(raw.wtp)) ? wtpCode(raw.wtp) : null,
     when: String(raw.when==null?'':raw.when).trim(),
     nextStep: String(raw.nextStep==null?'':raw.nextStep).trim(),
     done,
@@ -885,12 +887,11 @@ function softDelete(id){
    ========================================================================== */
 const SORTS = [
   ['createdAt-desc','追加が新しい順'], ['createdAt-asc','追加が古い順'],
-  ['doneAt-desc','達成が新しい順'],   ['wtp-desc','払える額が高い順'],
-  ['wtp-asc','払える額が低い順'],     ['money-desc','やりたさが強い順'],
+  ['doneAt-desc','達成が新しい順'],   ['money-desc','お金を出してでも が先'],
   ['title-asc','タイトル順'],
   ['updatedAt-desc','更新が新しい順'],
 ];
-const GROUPS = [['none','グルーピングなし'],['category','カテゴリ別'],['money','やりたさ別'],['status','達成状況別']];
+const GROUPS = [['none','グルーピングなし'],['category','カテゴリ別'],['money','お金の区分別'],['status','達成状況別']];
 const STATUSES = [['all','すべて'],['open','未達成'],['done','達成済み']];
 
 function usedCategories(){
@@ -902,7 +903,7 @@ function usedCategories(){
 function fillSelects(){
   const opt=(v,l,sel)=>`<option value="${esc(v)}"${sel===v?' selected':''}>${esc(l)}</option>`;
   $('#f-status').innerHTML = STATUSES.map(([v,l])=>opt(v,l,S.f.status)).join('');
-  $('#f-money').innerHTML  = [['','やりたさ すべて'],['null','未設定'],...MONEY_KEYS.map(k=>[k,MONEY[k].label])]
+  $('#f-money').innerHTML  = [['','お金 すべて'],['null','未設定'],...MONEY_KEYS.map(k=>[k,MONEY[k].label])]
     .map(([v,l])=>opt(v,l,S.f.money)).join('');
   const cats = usedCategories(), sel = new Set(S.f.cat);
   const hasNoCat = live().some(i=>!i.category);
@@ -919,15 +920,12 @@ function fillSelects(){
   $('#f-group').innerHTML  = GROUPS.map(([v,l])=>opt(v,l,S.group)).join('');
 }
 function sortItems(arr){
-  const wIdx = i => i.wtp ? WTP_KEYS.indexOf(i.wtp) : -1;
   const mIdx = i => i.money ? MONEY_KEYS.indexOf(i.money) : MONEY_KEYS.length;
   const cmp = {
     'createdAt-desc': (a,b)=> a.createdAt<b.createdAt?1:a.createdAt>b.createdAt?-1:0,
     'createdAt-asc' : (a,b)=> a.createdAt<b.createdAt?-1:a.createdAt>b.createdAt?1:0,
     'doneAt-desc'   : (a,b)=> (b.doneAt||'').localeCompare(a.doneAt||''),
-    'wtp-desc'      : (a,b)=> wIdx(b)-wIdx(a),
-    'wtp-asc'       : (a,b)=> wIdx(a)-wIdx(b),
-    'money-desc'    : (a,b)=> mIdx(a)-mIdx(b) || wIdx(b)-wIdx(a),
+    'money-desc'    : (a,b)=> mIdx(a)-mIdx(b),
     'title-asc'     : (a,b)=> a.title.localeCompare(b.title,'ja'),
     'updatedAt-desc': (a,b)=> a.updatedAt<b.updatedAt?1:-1,
   }[S.sort] || ((a,b)=>0);
@@ -982,7 +980,7 @@ function itemRow(i){
   if(!i.done && i.when) sub.push(`<span class="s">${ICON.when}${esc(i.when)}</span>`);
   if(!i.done && i.nextStep) sub.push(`<span class="s sens">${ICON.step}${esc(i.nextStep)}</span>`);
   if(i.memo) sub.push(`<span class="s sens">${ICON.memo}メモ</span>`);
-  const wtp = (i.money==='pay' && i.wtp) ? `<span class="chip wtp sens">${esc(WTP_LABEL[i.wtp])}</span>` : '';
+
   return `<li class="item${i.done?' done':''}" data-id="${esc(i.id)}">
     <div class="swipe-bg">${ICON.check}<span>${i.done?'未達成に戻す':'達成にする'}</span></div>
     <div class="item-in">
@@ -991,7 +989,7 @@ function itemRow(i){
         <div class="item-t">${esc(i.title)}</div>
         ${sub.length?`<div class="item-sub">${sub.join('')}</div>`:''}
       </div>
-      <div class="item-right">${moneyChip(i)}${wtp}${stars(i.satisfaction)}</div>
+      <div class="item-right">${moneyChip(i)}${stars(i.satisfaction)}</div>
     </div>
   </li>`;
 }
@@ -1033,7 +1031,7 @@ function renderList(){
   for(const i of arr){ const g=groupOf(i); if(!groups.has(g)) groups.set(g,[]); groups.get(g).push(i); }
   let keys=Array.from(groups.keys());
   if(S.group==='money') keys.sort((a,b)=>{
-    const ord=[MONEY.pay.label,MONEY.free.label,MONEY.paid.label,'未設定'];
+    const ord=[MONEY.pay.label,MONEY.hold.label,MONEY.none.label,'未設定'];
     return ord.indexOf(a)-ord.indexOf(b); });
   else if(S.group==='category') keys.sort((a,b)=>{
     const ci=c=>{ const k=CATEGORIES.indexOf(c); return k<0?99:k; };
@@ -1113,12 +1111,8 @@ function openDetail(id, opt){
       <textarea id="d-title" rows="2" data-autofocus>${esc(i.title)}</textarea>
     </div>
     <div class="field">
-      <label class="fl">やりたさ</label>
-      ${segHtml('money',[['','未設定'],...MONEY_KEYS.map(k=>[k,MONEY[k].short])], i.money||'')}
-    </div>
-    <div class="field sens" id="d-wtp-field" ${i.money==='pay'?'':'hidden'}>
-      <label class="fl">払ってもいい金額帯</label>
-      ${segHtml('wtp',[['','未設定'],...WTP.map(w=>[w.v,w.label])], i.wtp||'')}
+      <label class="fl">お金</label>
+      ${segHtml('money',[['','未設定'],...MONEY_KEYS.map(k=>[k,MONEY[k].label])], i.money||'')}
     </div>
     <div class="field">
       <label class="fl" for="d-cat">カテゴリ</label>
@@ -1173,14 +1167,13 @@ function openDetail(id, opt){
   </div>`;
 
   openSheet(html, sh=>{
-    const state = { money:i.money||'', wtp:i.wtp||'', done:i.done?'1':'0', sat:i.satisfaction?String(i.satisfaction):'' };
+    const state = { money:i.money||'', done:i.done?'1':'0', sat:i.satisfaction?String(i.satisfaction):'' };
     sh.querySelectorAll('[data-seg]').forEach(seg=>{
       seg.addEventListener('click', e=>{
         const b=e.target.closest('button[data-v]'); if(!b) return;
         const name=seg.dataset.seg;
         state[name]=b.dataset.v;
         seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
-        if(name==='money'){ const f=sh.querySelector('#d-wtp-field'); f.hidden = state.money!=='pay'; if(state.money!=='pay') state.wtp=''; }
         if(name==='done'){ sh.querySelector('#d-done-fields').hidden = state.done!=='1'; }
       });
     });
@@ -1194,7 +1187,6 @@ function openDetail(id, opt){
         nextStep: sh.querySelector('#d-next').value.trim(),
         memo: sh.querySelector('#d-memo').value,
         money: state.money || null,
-        wtp: state.money==='pay' ? (state.wtp||null) : null,
         done: state.done==='1',
         doneAt: state.done==='1' ? (sh.querySelector('#d-doneat').value || todayStr()) : null,
         satisfaction: state.done==='1' && state.sat ? +state.sat : null,
@@ -1219,7 +1211,7 @@ function openDetail(id, opt){
   });
 }
 function histLabel(h){
-  const F={money:'やりたさ', category:'カテゴリ', done:'達成'};
+  const F={money:'お金', category:'カテゴリ', done:'達成'};
   const V=v=> v===true?'達成': v===false?'未達成': (v==null||v==='')?'未設定' : (MONEY[v]?MONEY[v].short:String(v));
   return `${F[h.field]||h.field}: ${V(h.from)} → ${V(h.to)}`;
 }
@@ -1228,9 +1220,7 @@ function histLabel(h){
    今日なにする？
    ========================================================================== */
 function randomPick(){
-  const open=live().filter(i=>!i.done);
-  /* 「そこまででもない」は候補から外す（全部そうなら仕方なく戻す） */
-  const pool=open.filter(i=>i.money!=='paid').length ? open.filter(i=>i.money!=='paid') : open;
+  const pool=live().filter(i=>!i.done);
   if(!pool.length){ toast('未達成の項目がありません'); return; }
   const draw=()=>pool[Math.floor(Math.random()*pool.length)];
   let cur=draw();
@@ -1265,11 +1255,8 @@ function randomPick(){
    仕分けモード
    ========================================================================== */
 function triageCurrent(){
-  const pend = S.triagePending ? byId(S.triagePending) : null;
-  if(pend && !pend.deletedAt) return { item:pend, pending:true };
-  S.triagePending = null;
   const q = live().filter(i=>i.money===null);
-  return { item:q[0]||null, pending:false };
+  return { item:q[0]||null };
 }
 function renderTriage(){
   const out=$('#triage-out');
@@ -1278,11 +1265,10 @@ function renderTriage(){
   const cur = triageCurrent();
   if(!cur.item){
     out.innerHTML = `<div class="card pad empty"><b>仕分けは終わっています</b>
-      やりたさが未設定の項目はありません。<br>新しく追加したものが未設定になると、ここに出てきます。</div>`;
+お金の区分が未設定の項目はありません。<br>新しく追加したものが未設定になると、ここに出てきます。</div>`;
     return;
   }
   const i = cur.item;
-  const pend = cur.pending;
   const btn = (key,label,v)=>`<button class="big" data-t="${key}">
       <span class="dot" style="background:var(${v})"></span><span class="lab">${esc(label)}</span><span class="key">${key}</span></button>`;
   out.innerHTML = `
@@ -1295,17 +1281,10 @@ function renderTriage(){
       <div class="t">${esc(i.title)}</div>
       ${i.category?`<div>${catChip(i.category)}</div>`:''}
     </div>
-    ${pend ? `<div class="tri-btns">
-        <div class="viz-note" style="margin:0 2px 2px">いくらまで払える？</div>
-        <div class="wtp-grid">
-          ${WTP.map((w,n)=>`<button class="big" data-w="${w.v}"><span class="dot" style="background:var(--s1)"></span><span class="lab">${esc(w.label)}</span><span class="key">${n===9?'0':n+1}</span></button>`).join('')}
-        </div>
-        <button class="btn ghost sm" data-t="skipwtp">金額はあとで</button>
-      </div>`
-      : `<div class="tri-btns">
+    ${`<div class="tri-btns">
         ${btn('1', MONEY.pay.label,  '--s1')}
-        ${btn('2', MONEY.free.label, '--s2')}
-        ${btn('3', MONEY.paid.label, '--s3')}
+        ${btn('2', MONEY.hold.label, '--s2')}
+        ${btn('3', MONEY.none.label, '--s3')}
       </div>
       <div style="display:flex; gap:9px; align-items:center">
         <button class="btn sm" data-t="skip">スキップ <span class="key" style="margin-left:4px">s</span></button>
@@ -1318,30 +1297,22 @@ function renderTriage(){
 function triageAct(key){
   const cur = triageCurrent();
   if(!cur.item) return;
-  if(cur.pending){
-    const w = WTP[+key-1];
-    if(w) updateItem(cur.item.id, { wtp:w.v }, {silent:true});
-    S.triagePending=null; renderAll(); return;
-  }
-  const map={'1':'pay','2':'free','3':'paid'};
+  const map={'1':'pay','2':'hold','3':'none'};
   if(!map[key]) return;
-  S.lastTriage = { id:cur.item.id, money:cur.item.money, wtp:cur.item.wtp };
+  S.lastTriage = { id:cur.item.id, money:cur.item.money };
   updateItem(cur.item.id, { money:map[key] }, {silent:true});
-  S.triagePending = (map[key]==='pay') ? cur.item.id : null;
   renderAll();
 }
 function bindTriage(){
   $('#triage-out').addEventListener('click', e=>{
     const b=e.target.closest('[data-t],[data-w]'); if(!b) return;
-    if(b.dataset.w){ triageAct(String(WTP_KEYS.indexOf(b.dataset.w)+1)); return; }
     const t=b.dataset.t;
     const queue = live().filter(i=>i.money===null);
     if(t==='1'||t==='2'||t==='3') return triageAct(t);
     if(t==='skip'){ const i=queue[0]; if(i){ S.items=S.items.filter(x=>x!==i).concat([i]); renderTriage(); } return; }
-    if(t==='skipwtp'){ S.triagePending=null; renderAll(); return; }
     if(t==='undo' && S.lastTriage){
-      const l=S.lastTriage; S.triagePending=null;
-      updateItem(l.id, { money:l.money, wtp:l.wtp }, {silent:true});
+      const l=S.lastTriage;
+      updateItem(l.id, { money:l.money }, {silent:true});
       S.lastTriage=null; renderAll(); return;
     }
     if(t==='detail'){ const i=queue[0]; if(i) openDetail(i.id); }
@@ -1559,7 +1530,7 @@ function renderTrend(){
   const kpi=[
     ['総数', all.length, `うち初期 ${initN}件`],
     ['達成', all.filter(i=>i.done).length, `達成率 ${all.length?Math.round(all.filter(i=>i.done).length/all.length*100):0}%`],
-    ['やりたさ未設定', all.filter(i=>i.money===null).length, '仕分けで埋められる'],
+    ['お金 未設定', all.filter(i=>i.money===null).length, '仕分けで埋められる'],
     ['今月の追加', appItems.filter(i=>monthOf(i.createdAt)===thisM).length, 'アプリからの追加のみ'],
   ];
   let html = `<div class="kpis">` + kpi.map(([l,v,d])=>
@@ -1577,7 +1548,7 @@ function renderTrend(){
     ${tableHtml(['月','追加','達成'], months.map((m,n)=>[fmtYM(m), String(added[n]), String(doneA[n])]))}
   </div>`;
 
-  /* 2) やりたさの構成比 推移（その月末時点で存在する項目の内訳） */
+  /* 2) お金の区分の構成比 推移（その月末時点で存在する項目の内訳） */
   const moneyCats = MONEY_STACK.map((k,n)=>({
     key:k, label:k?MONEY[k].short:'未設定',
     color: k ? cssVar(MONEY[k].varName) : cssVar(NEUTRAL_VAR) }));
@@ -1587,7 +1558,7 @@ function renderTrend(){
     return MONEY_STACK.map(k=> pool.filter(i=>(i.money||'')===k).length );
   });
   html += `<div class="viz">
-    <div class="viz-h"><h3>やりたさの構成比</h3></div>
+    <div class="viz-h"><h3>お金の区分の構成比</h3></div>
     <p class="viz-note">各月末時点で持っている項目の内訳。区分は後から変えられるので、いまの値で塗り直されます。</p>
     <div class="card viz-box"><div id="ch2"></div>${legendHtml(moneyCats)}</div>
     ${tableHtml(['月',...moneyCats.map(c=>c.label),'合計'],
@@ -1792,7 +1763,7 @@ async function applyImport(){
 }
 function renderData(){
   const all=live();
-  const wtpN=all.filter(i=>i.money==='pay'&&i.wtp).length;
+
   const last=S.items.reduce((a,i)=> i.updatedAt>a?i.updatedAt:a, '');
   $('#data-out').innerHTML = `
   <div class="card" style="margin-bottom:16px">
@@ -1816,8 +1787,10 @@ function renderData(){
     <div class="prev" style="font-size:13px">
       <span>項目</span><span class="n">${all.length}</span>
       <span>うち達成</span><span class="n">${all.filter(i=>i.done).length}</span>
-      <span>やりたさ未設定</span><span class="n">${all.filter(i=>i.money===null).length}</span>
-      <span>金額帯まで入力済み</span><span class="n">${wtpN}</span>
+      <span>お金を出してでも</span><span class="n">${all.filter(i=>i.money==='pay').length}</span>
+      <span>そこまでは出さない</span><span class="n">${all.filter(i=>i.money==='hold').length}</span>
+      <span>お金はかからない</span><span class="n">${all.filter(i=>i.money==='none').length}</span>
+      <span>お金 未設定</span><span class="n">${all.filter(i=>i.money===null).length}</span>
       <span>論理削除ぶん（エクスポートに含む）</span><span class="n">${S.items.length-all.length}</span>
       <span>分析</span><span class="n">${S.analyses.length}</span>
       <span>最終更新</span><span class="n">${esc(last?String(last).slice(0,16).replace('T',' '):'—')}</span>
@@ -1831,8 +1804,7 @@ function renderData(){
         <span class="kk"><kbd>/</kbd></span><span>検索</span>
         <span class="kk"><kbd>r</kbd></span><span>今日なにする？</span>
         <span class="kk"><kbd>l</kbd> <kbd>t</kbd> <kbd>c</kbd> <kbd>g</kbd> <kbd>d</kbd></span><span>一覧 / 仕分け / 推移 / 記録 / データ</span>
-        <span class="kk"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span><span>仕分け: 払ってでも / タダなら / そこまで</span>
-        <span class="kk"><kbd>1</kbd>–<kbd>4</kbd></span><span>仕分け: 金額帯（払ってでもを選んだ直後）</span>
+        <span class="kk"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span><span>仕分け: 出してでも / そこまでは出さない / かからない</span>
         <span class="kk"><kbd>s</kbd></span><span>仕分け: スキップ</span>
         <span class="kk"><kbd>p</kbd></span><span>公開モード切替</span>
         <span class="kk"><kbd>⌘</kbd>+<kbd>Enter</kbd></span><span>詳細シートを保存</span>
@@ -1981,13 +1953,13 @@ function bindKeys(){
     if(k==='g'){ go('log'); return; }
     if(k==='d'){ go('data'); return; }
     if(S.view==='triage'){
-      if(k>='0' && k<='9'){ e.preventDefault(); triageAct(k==='0'?'10':k); return; }
+      if(k==='1'||k==='2'||k==='3'){ e.preventDefault(); triageAct(k); return; }
       if(k==='s'){ e.preventDefault();
         const q=live().filter(i=>i.money===null); const i=q[0];
         if(i){ S.items=S.items.filter(x=>x!==i).concat([i]); renderTriage(); } return; }
       if(k==='u'){ e.preventDefault();
-        if(S.lastTriage){ const l=S.lastTriage; S.triagePending=null;
-          updateItem(l.id,{money:l.money, wtp:l.wtp},{silent:true}); S.lastTriage=null; renderAll(); } return; }
+        if(S.lastTriage){ const l=S.lastTriage;
+          updateItem(l.id,{money:l.money},{silent:true}); S.lastTriage=null; renderAll(); } return; }
     }
   });
 }
