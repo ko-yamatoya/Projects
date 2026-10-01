@@ -13,7 +13,9 @@
 |---|---|
 | クイック追加 | タイトルだけ書いて Enter。詳しいことは後から |
 | 一覧 | お金の区分とカテゴリをチップ表示（未設定も識別できる）。検索・絞り込み（カテゴリは複数選択）・並べ替え・グルーピング |
-| 達成チェック | 丸をタップ、または**右スワイプ**。達成日は自動、振り返りと満足度（1〜5）も残せる |
+| 進み具合 | **未着手 / 着手中 / 完了** の3段階。進捗バーで完了率が出る |
+| ボード | GitHub Projects のような3列のカンバン。カードの `‹ ›` で列を移動 |
+| 達成チェック | 丸をタップ、または**右スワイプで完了**／**左スワイプで着手中**。完了日は自動、振り返りと満足度（1〜5）も残せる |
 | 仕分けモード | お金の区分が未設定のものを1件ずつカード表示。3択をタップして1タップで次へ |
 | 推移 | 月別の追加・達成、お金の区分とカテゴリの構成比の移り変わり。どのグラフにも「表で見る」つき |
 | 分析 | 取り込んだ分析（Markdown）を新しい順に表示 |
@@ -29,7 +31,7 @@
 仕分け中の `1` `2` `3`（お金の区分）・`s` スキップ・`u` 戻す ／
 `p` 公開モード ／ `⌘+Enter` 保存 ／ `Esc` 閉じる
 
-URLで開き方を指定できる: `?theme=dark` `?pub=1` `?log=analyses` `#trend`
+URLで開き方を指定できる: `?theme=dark` `?pub=1` `?mode=board` `?log=analyses` `#trend`
 
 ## データの形
 
@@ -42,10 +44,11 @@ URLで開き方を指定できる: `?theme=dark` `?pub=1` `?log=analyses` `#tren
     "money": "pay|hold|none|null",      // 出してでも / そこまでは出さない / かからない。null=未設定
     "wtp": "1k|10k|…|1m+|null",         // 旧データ。画面では使わないが消さずに持つ
     "when": "", "nextStep": "",
-    "done": false, "doneAt": null, "reflection": "", "satisfaction": null,
+    "status": "todo|doing|done", "done": false,   // done は status==="done" の派生値
+    "startedAt": null, "doneAt": null, "reflection": "", "satisfaction": null,
     "source": "initial|app",
     "createdAt": "…", "updatedAt": "…", "deletedAt": null,
-    "history": [{ "at": "…", "field": "money|category|done", "from": null, "to": "pay" }]
+    "history": [{ "at": "…", "field": "money|category|status", "from": null, "to": "pay" }]
   }],
   "analyses": [{ "id": "…", "createdAt": "…", "periodFrom": "…", "periodTo": "…", "summary": "# Markdown" }]
 }
@@ -64,7 +67,7 @@ URLで開き方を指定できる: `?theme=dark` `?pub=1` `?log=analyses` `#tren
 ## 検証
 
 `?selftest=1` を付けて開くと、スキーマ正規化・マージ規則・集計・描画・IndexedDB永続化・
-仕分けUI・公開モードを本物のブラウザで通す（82項目）。結果はページ末尾と `document.title` に出る。
+仕分けUI・公開モード・ボード・表示切替を本物のブラウザで通す（103項目）。結果はページ末尾と `document.title` に出る。
 実行前に手元のデータを退避し、終了時に書き戻すので壊さない。
 
 ```bash

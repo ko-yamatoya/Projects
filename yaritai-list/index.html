@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>やりたいことリスト</title>
-<meta name="description" content="やりたいことを書き留めて、区分けして、達成を記録する。">
+<meta name="description" content="やりたいことを書き留めて、区分けして、進み具合を記録する。">
 <meta name="theme-color" content="#f7f5f1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -68,6 +68,7 @@
 
 /* ============================================================ base */
 *{box-sizing:border-box}
+[hidden]{display:none !important}   /* display を指定した要素でも hidden が必ず効くように */
 html,body{margin:0;padding:0}
 body{
   background:var(--plane); color:var(--ink);
@@ -209,7 +210,6 @@ body[data-pub="1"] .sens{display:none !important}
   transition:transform .26s cubic-bezier(.2,.9,.2,1); max-width:calc(100vw - 32px);
 }
 #toast.on{transform:translateX(-50%) translateY(0)}
-#toast[hidden]{display:none}
 #toast button{border:1px solid color-mix(in srgb, var(--on-ink) 40%, transparent); border-radius:999px; padding:4px 12px; font-size:12.5px; color:inherit}
 @media (min-width:720px){#toast{bottom:24px}}
 
@@ -256,6 +256,46 @@ body[data-pub="1"] .sens{display:none !important}
 .fmeta button{color:var(--ink-2); font-size:12px; border-bottom:1px solid var(--hair-strong); padding-bottom:1px}
 .fmeta button:hover{color:var(--ink); border-bottom-color:var(--ink)}
 
+/* ============================================================ 進捗バー */
+.prog{margin:12px 0 2px}
+.prog .bar{display:flex; height:6px; border-radius:3px; overflow:hidden; background:var(--surface-3)}
+.prog .bar i{display:block; height:100%; transition:width .4s cubic-bezier(.2,.9,.2,1)}
+.prog .bar i.d{background:var(--good)}
+.prog .bar i.p{background:var(--s1)}
+.prog .meta{display:flex; align-items:center; gap:12px; margin-top:7px; font-size:11.5px; color:var(--muted); flex-wrap:wrap}
+.prog .meta span{display:inline-flex; align-items:center; gap:5px}
+.prog .meta i{width:8px; height:8px; border-radius:2px; flex:none}
+.prog .meta b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+.prog .meta .sp{flex:1}
+.prog .rate{font-family:var(--serif); font-size:15px; color:var(--ink); letter-spacing:.03em}
+.modesw{display:flex; gap:4px; background:var(--surface-2); border-radius:999px; padding:3px}
+.modesw button{font-size:11.5px; padding:4px 11px; border-radius:999px; color:var(--muted)}
+.modesw button[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow)}
+
+/* ============================================================ ボード（カンバン） */
+.board{display:flex; gap:12px; overflow-x:auto; padding:4px 16px 8px; scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none}
+.board::-webkit-scrollbar{display:none}
+.board .col{flex:0 0 84%; scroll-snap-align:start; display:flex; flex-direction:column; min-width:0}
+@media (min-width:720px){ .board{padding:4px 0 8px; max-width:780px; margin:0 auto} .board .col{flex:1 1 0} }
+.col-h{display:flex; align-items:center; gap:8px; padding:0 4px 8px; font-size:12.5px; letter-spacing:.04em}
+.col-h i{width:9px; height:9px; border-radius:50%; flex:none}
+.col-h b{font-weight:600}
+.col-h span{color:var(--muted); font-variant-numeric:tabular-nums}
+.col-body{background:var(--surface-2); border:1px solid var(--hair); border-radius:var(--r); padding:9px;
+  display:flex; flex-direction:column; gap:8px; min-height:120px; max-height:62vh; overflow-y:auto}
+.bcard{background:var(--surface); border:1px solid var(--hair); border-radius:var(--r-sm); padding:10px 11px;
+  box-shadow:var(--shadow); display:flex; flex-direction:column; gap:7px}
+.bcard .t{font-size:13.5px; line-height:1.5; word-break:break-word; text-align:left; width:100%}
+.bcard .row{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.bcard .mv{margin-left:auto; display:flex; gap:4px}
+.bcard .mv button{width:28px; height:28px; border:1px solid var(--hair-strong); border-radius:7px;
+  display:grid; place-items:center; color:var(--ink-2); background:var(--surface)}
+.bcard .mv button:hover{background:var(--surface-2); color:var(--ink)}
+.bcard .mv button[disabled]{opacity:.3}
+.bcard .mv svg{width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.col-empty{color:var(--muted); font-size:12px; text-align:center; padding:18px 6px}
+
 /* ============================================================ list */
 .group-h{
   display:flex; align-items:baseline; gap:9px; margin:22px 2px 8px;
@@ -277,12 +317,19 @@ li.item.swiping .item-in{transition:none}
   position:absolute; inset:0; display:flex; align-items:center; padding:0 18px;
   background:color-mix(in srgb, var(--good) 16%, var(--surface)); color:var(--ink-2); font-size:12.5px; gap:7px;
 }
+.swipe-bg.left{justify-content:flex-end; background:color-mix(in srgb, var(--s1) 14%, var(--surface)); display:none}
+li.item.sw-left .swipe-bg{display:none}
+li.item.sw-left .swipe-bg.left{display:flex}
 .swipe-bg svg{width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round}
 .tick{
-  flex:none; width:23px; height:23px; margin-top:1px; border-radius:50%;
+  flex:none; width:23px; height:23px; margin-top:1px; border-radius:50%; position:relative;
   border:1.5px solid var(--hair-strong); display:grid; place-items:center; color:transparent;
   transition:background .14s, border-color .14s, color .14s;
 }
+.item.st-doing .tick{border-color:var(--s1); border-width:2px}
+.item.st-doing .tick::after{content:''; width:9px; height:9px; border-radius:50%; background:var(--s1)}
+.badge-doing{display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--s1); flex:none}
+.badge-doing i{width:6px; height:6px; border-radius:50%; background:var(--s1)}
 .tick svg{width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round}
 .tick:hover{border-color:var(--ink-2)}
 .item.done .tick{background:var(--good); border-color:var(--good); color:#fff}
@@ -494,9 +541,11 @@ kbd{
           <div class="catfil" id="f-cat" role="group" aria-label="カテゴリで絞り込み（複数選べます）"></div>
         </div>
       </div>
+      <div class="prog" id="prog"></div>
       <div class="fmeta" id="f-meta"></div>
     </div>
     <div class="wrap" id="list-out"></div>
+    <div id="board-out" class="board" hidden></div>
   </section>
 
   <!-- ===== 仕分け ===== -->
@@ -510,7 +559,7 @@ kbd{
   <!-- ===== 推移 ===== -->
   <section class="view" id="v-trend" hidden aria-label="推移">
     <div class="wrap">
-      <div class="vhead"><h2>推移</h2><p>月別の追加・達成と、構成比の移り変わり。</p></div>
+      <div class="vhead"><h2>推移</h2><p>月別の追加・完了と、構成比の移り変わり。</p></div>
       <div class="filters" style="margin-bottom:14px">
         <div class="row1"><div class="seg" id="t-range" role="group" aria-label="期間"></div></div>
       </div>
@@ -521,7 +570,7 @@ kbd{
   <!-- ===== 記録 ===== -->
   <section class="view" id="v-log" hidden aria-label="記録">
     <div class="wrap">
-      <div class="vhead"><h2>記録</h2><p>達成の足あとと、取り込んだ分析。</p></div>
+      <div class="vhead"><h2>記録</h2><p>完了の足あとと、取り込んだ分析。</p></div>
       <div class="seg" id="log-tab" role="group" aria-label="記録の切替" style="margin-bottom:16px"></div>
       <div id="log-out"></div>
     </div>
@@ -585,6 +634,13 @@ const WTP_LEGACY = { '100k+':'200k' };
 const WTP_KEYS = WTP.map(w=>w.v);
 const wtpCode = v => (WTP_LEGACY[v] || v);
 const WTP_LABEL = Object.fromEntries(WTP.map(w=>[w.v,w.label]));
+/* 進み具合。done は status から導く派生値として JSON に残す（旧データとの互換） */
+const STATUS = {
+  todo : { label:'未着手', short:'未着手', varName:'--s-neutral' },
+  doing: { label:'着手中', short:'着手中', varName:'--s1' },
+  done : { label:'完了',   short:'完了',   varName:'--good' },
+};
+const STATUS_KEYS = ['todo','doing','done'];
 const CATEGORIES = ['旅（国内）','旅（海外）','学び・教養','資格・仕事','カメラ・写真','芸術・音楽',
   '食・酒','からだ','モノ・道具','暮らし・住まい','人・関係','表現・伝える','体験','お金・投資'];
 const SERIES_VARS = ['--s1','--s2','--s3','--s4','--s5','--s6','--s7'];
@@ -619,10 +675,15 @@ function normalizeItem(raw){
   const rawMoney = MONEY_LEGACY[raw.money] || raw.money;
   const money = MONEY_KEYS.includes(rawMoney) ? rawMoney : null;
   const createdAt = isISO(raw.createdAt) ? raw.createdAt : nowISO();
-  const done = raw.done===true;
+  /* status が正。無ければ done から起こす（旧データ） */
+  let status = STATUS_KEYS.includes(raw.status) ? raw.status : (raw.done===true ? 'done' : 'todo');
+  const done = status==='done';
   let doneAt = dayOf(raw.doneAt);
   if(done && !doneAt) doneAt = todayStr();
   if(!done) doneAt = null;
+  let startedAt = dayOf(raw.startedAt);
+  if(status==='todo') startedAt = null;
+  if(status!=='todo' && !startedAt) startedAt = doneAt || todayStr();
   let sat = Number.isFinite(+raw.satisfaction) ? Math.round(+raw.satisfaction) : null;
   if(sat!=null) sat = (sat>=1 && sat<=5) ? sat : null;
   const history = Array.isArray(raw.history) ? raw.history
@@ -639,8 +700,10 @@ function normalizeItem(raw){
     wtp: WTP_KEYS.includes(wtpCode(raw.wtp)) ? wtpCode(raw.wtp) : null,
     when: String(raw.when==null?'':raw.when).trim(),
     nextStep: String(raw.nextStep==null?'':raw.nextStep).trim(),
-    done,
+    status,
+    done,          // status==='done' と同値。読む側の互換のために残す
     doneAt,
+    startedAt,
     reflection: String(raw.reflection==null?'':raw.reflection),
     satisfaction: sat,
     source: raw.source==='initial' ? 'initial' : 'app',
@@ -768,7 +831,7 @@ function loadPrefs(){
 function savePrefs(){
   try{ localStorage.setItem(PREF_KEY, JSON.stringify({
     theme:S.theme, pub:S.pub, f:S.f, sort:S.sort, group:S.group, range:S.range,
-    logTab:S.logTab, filterOpen:S.filterOpen
+    logTab:S.logTab, filterOpen:S.filterOpen, mode:S.mode
   })); }catch(e){}
 }
 
@@ -778,7 +841,7 @@ const S = {
   view:'list', logTab:'timeline',
   theme:'auto', pub:false,
   f:{ q:'', status:'all', money:'', cat:[] },
-  sort:'createdAt-desc', group:'none', range:'12', filterOpen:false,
+  sort:'createdAt-desc', group:'none', range:'12', filterOpen:false, mode:'list',
   triageQueue:[], triagePending:null, lastTriage:null,
   pendingImport:null,
 };
@@ -852,7 +915,7 @@ function addItem(title, extra){
   idbPut('items',[it]).catch(dbErr);
   return it;
 }
-const TRACKED = ['money','category','done'];
+const TRACKED = ['money','category','status'];
 function updateItem(id, patch, opts){
   opts = opts||{};
   const it = byId(id); if(!it) return null;
@@ -872,11 +935,19 @@ function updateItem(id, patch, opts){
   if(!opts.silent) renderAll();
   return it;
 }
-function setDone(id, done, opts){
-  const it = byId(id); if(!it) return;
-  updateItem(id, done ? { done:true, doneAt: it.doneAt || todayStr() }
-                      : { done:false, doneAt:null, satisfaction:null }, opts);
+/* 状態を変える唯一の入口。done / doneAt / startedAt はここで辻褄を合わせる */
+function setStatus(id, status, opts){
+  const it = byId(id); if(!it || !STATUS_KEYS.includes(status)) return;
+  const patch = { status };
+  if(status==='done'){ patch.done=true; patch.doneAt = it.doneAt || todayStr();
+                       patch.startedAt = it.startedAt || patch.doneAt; }
+  else {
+    patch.done=false; patch.doneAt=null; patch.satisfaction=null;
+    patch.startedAt = status==='doing' ? (it.startedAt || todayStr()) : null;
+  }
+  updateItem(id, patch, opts);
 }
+function setDone(id, done, opts){ setStatus(id, done ? 'done' : 'todo', opts); }
 function softDelete(id){
   const it=byId(id); if(!it) return;
   it.deletedAt = nowISO(); it.updatedAt = it.deletedAt;
@@ -892,12 +963,12 @@ function softDelete(id){
    ========================================================================== */
 const SORTS = [
   ['createdAt-desc','追加が新しい順'], ['createdAt-asc','追加が古い順'],
-  ['doneAt-desc','達成が新しい順'],   ['money-desc','お金を出してでも が先'],
+  ['doneAt-desc','完了が新しい順'],   ['money-desc','お金を出してでも が先'],
   ['title-asc','タイトル順'],
   ['updatedAt-desc','更新が新しい順'],
 ];
-const GROUPS = [['none','グルーピングなし'],['category','カテゴリ別'],['money','お金の区分別'],['status','達成状況別']];
-const STATUSES = [['all','すべて'],['open','未達成'],['done','達成済み']];
+const GROUPS = [['none','グルーピングなし'],['category','カテゴリ別'],['money','お金の区分別'],['status','進み具合別']];
+const STATUSES = [['all','すべて'],['todo','未着手'],['doing','着手中'],['done','完了']];
 
 function usedCategories(){
   const set = new Set(live().map(i=>i.category).filter(Boolean));
@@ -939,8 +1010,7 @@ function sortItems(arr){
 function visibleItems(){
   const q=S.f.q.trim().toLowerCase();
   let arr=live();
-  if(S.f.status==='open') arr=arr.filter(i=>!i.done);
-  else if(S.f.status==='done') arr=arr.filter(i=>i.done);
+  if(STATUS_KEYS.includes(S.f.status)) arr=arr.filter(i=>i.status===S.f.status);
   if(S.f.money==='null') arr=arr.filter(i=>i.money===null);
   else if(S.f.money) arr=arr.filter(i=>i.money===S.f.money);
   if(S.f.cat.length){
@@ -981,15 +1051,17 @@ function stars(n){ return n ? `<span class="stars sens" aria-label="満足度${n
 function itemRow(i){
   const sub=[];
   if(i.category) sub.push(catChip(i.category));
+  if(i.status==='doing') sub.push(`<span class="badge-doing"><i></i>着手中</span>`);
   if(i.done && i.doneAt) sub.push(`<span class="s">${ICON.check}${esc(i.doneAt)}</span>`);
   if(!i.done && i.when) sub.push(`<span class="s">${ICON.when}${esc(i.when)}</span>`);
   if(!i.done && i.nextStep) sub.push(`<span class="s sens">${ICON.step}${esc(i.nextStep)}</span>`);
   if(i.memo) sub.push(`<span class="s sens">${ICON.memo}メモ</span>`);
 
-  return `<li class="item${i.done?' done':''}" data-id="${esc(i.id)}">
-    <div class="swipe-bg">${ICON.check}<span>${i.done?'未達成に戻す':'達成にする'}</span></div>
+  return `<li class="item st-${i.status}${i.done?' done':''}" data-id="${esc(i.id)}">
+    <div class="swipe-bg">${ICON.check}<span>${i.done?'未着手に戻す':'完了にする'}</span></div>
+    <div class="swipe-bg left"><span>${i.status==='doing'?'未着手に戻す':'着手中にする'}</span>${ICON.step}</div>
     <div class="item-in">
-      <button class="tick" data-act="tick" aria-pressed="${i.done}" aria-label="${i.done?'未達成に戻す':'達成にする'}">${ICON.check}</button>
+      <button class="tick" data-act="tick" aria-pressed="${i.done}" aria-label="${i.done?'未着手に戻す':'完了にする'}">${ICON.check}</button>
       <div class="item-body" data-act="open" role="button" tabindex="0" aria-label="${esc(i.title)} の詳細">
         <div class="item-t">${esc(i.title)}</div>
         ${sub.length?`<div class="item-sub">${sub.join('')}</div>`:''}
@@ -1001,7 +1073,7 @@ function itemRow(i){
 function groupOf(i){
   if(S.group==='category') return i.category || '（カテゴリなし）';
   if(S.group==='money')    return i.money ? MONEY[i.money].label : '未設定';
-  if(S.group==='status')   return i.done ? '達成済み' : '未達成';
+  if(S.group==='status')   return STATUS[i.status].label;
   return '';
 }
 function filtersActive(){
@@ -1014,19 +1086,51 @@ function applyFilterUI(){
   $('#f-toggle').setAttribute('aria-expanded', String(open));
   $('#f-toggle').querySelector('.fdot').hidden = !filtersActive();
 }
+function progress(){
+  const all=live();
+  const n={todo:0,doing:0,done:0};
+  for(const i of all) n[i.status]++;
+  const t=all.length||1;
+  return { ...n, total:all.length, pDone:n.done/t*100, pDoing:n.doing/t*100,
+           rate: Math.round(n.done/t*100) };
+}
+function renderProgress(){
+  const p=progress();
+  $('#prog').innerHTML = `
+    <div class="bar" role="img" aria-label="完了${p.done}件 着手中${p.doing}件 未着手${p.todo}件">
+      <i class="d" style="width:${p.pDone.toFixed(1)}%"></i><i class="p" style="width:${p.pDoing.toFixed(1)}%"></i>
+    </div>
+    <div class="meta">
+      <span class="rate">${p.rate}%</span>
+      <span><i style="background:var(--good)"></i>完了 <b>${p.done}</b></span>
+      <span><i style="background:var(--s1)"></i>着手中 <b>${p.doing}</b></span>
+      <span><i style="background:var(--surface-3)"></i>未着手 <b>${p.todo}</b></span>
+      <span class="sp"></span>
+      <span class="modesw" role="group" aria-label="表示切替">
+        <button type="button" data-mode="list" aria-pressed="${S.mode!=='board'}">リスト</button>
+        <button type="button" data-mode="board" aria-pressed="${S.mode==='board'}">ボード</button>
+      </span>
+    </div>`;
+}
 function renderList(){
   fillSelects();
   applyFilterUI();
+  renderProgress();
+  const boardMode = S.mode==='board';
+  $('#board-out').hidden = !boardMode;
+  $('#list-out').hidden = boardMode;
+  if(boardMode){ renderBoard(); }
   $('#f-q').value = S.f.q;
   const arr = visibleItems(), all = live();
   const nUnset = all.filter(i=>i.money===null).length;
   const filtered = arr.length!==all.length;
   $('#f-meta').innerHTML =
       `<span>${filtered?`<b>${arr.length}</b> / ${all.length} 件`:`<b>${all.length}</b> 件`}</span>`
-    + `<span>達成 <b>${all.filter(i=>i.done).length}</b></span>`
+    + `<span>完了 <b>${all.filter(i=>i.done).length}</b></span>`
     + `<span class="sp"></span>`
-    + (nUnset?`<button type="button" data-go="triage">やりたさ未設定 <b>${nUnset}</b> を仕分ける</button>`:'');
+    + (nUnset?`<button type="button" data-go="triage">お金の区分 未設定 <b>${nUnset}</b> を仕分ける</button>`:'');
   const out=$('#list-out');
+  if(boardMode) return;
   if(!arr.length){
     out.innerHTML = `<div class="card pad empty"><b>まだ何もありません</b>上の欄にタイトルだけ書いて Enter。<br>詳しいことは後から埋められます。</div>`;
     return;
@@ -1041,12 +1145,56 @@ function renderList(){
   else if(S.group==='category') keys.sort((a,b)=>{
     const ci=c=>{ const k=CATEGORIES.indexOf(c); return k<0?99:k; };
     return ci(a)-ci(b) || a.localeCompare(b,'ja'); });
+  else if(S.group==='status') keys.sort((a,b)=>{
+    const ord=STATUS_KEYS.map(k=>STATUS[k].label); return ord.indexOf(a)-ord.indexOf(b); });
   else keys.sort();
   out.innerHTML = keys.map(k=>`<div class="group-h">${esc(k)}<span>${groups.get(k).length}</span></div>
     <ul class="items">${groups.get(k).map(itemRow).join('')}</ul>`).join('');
 }
 
-/* ---------- 行の操作: タップ / スワイプで達成 ---------- */
+/* ---------- ボード（カンバン） ---------- */
+const MVI = { left:'<svg viewBox="0 0 24 24"><path d="M14 6l-6 6 6 6"/></svg>',
+              right:'<svg viewBox="0 0 24 24"><path d="M10 6l6 6-6 6"/></svg>' };
+function renderBoard(){
+  const arr = visibleItems();
+  $('#board-out').innerHTML = STATUS_KEYS.map(k=>{
+    const list = arr.filter(i=>i.status===k);
+    const n = STATUS_KEYS.indexOf(k);
+    return `<section class="col" data-s="${k}">
+      <div class="col-h"><i style="background:var(${STATUS[k].varName})"></i><b>${STATUS[k].label}</b><span>${list.length}</span></div>
+      <div class="col-body">
+        ${list.length ? list.map(i=>`
+          <div class="bcard" data-id="${esc(i.id)}">
+            <button class="t" data-act="open">${esc(i.title)}</button>
+            <div class="row">
+              ${catChip(i.category)}${moneyChip(i)}
+              <span class="mv">
+                <button data-mv="-1" ${n===0?'disabled':''} aria-label="左の列へ">${MVI.left}</button>
+                <button data-mv="1" ${n===2?'disabled':''} aria-label="右の列へ">${MVI.right}</button>
+              </span>
+            </div>
+          </div>`).join('') : `<div class="col-empty">なし</div>`}
+      </div>
+    </section>`;
+  }).join('');
+}
+function bindBoard(){
+  $('#board-out').addEventListener('click', e=>{
+    const card=e.target.closest('.bcard'); if(!card) return;
+    const mv=e.target.closest('[data-mv]');
+    if(mv){
+      const it=byId(card.dataset.id); if(!it) return;
+      const n=STATUS_KEYS.indexOf(it.status)+(+mv.dataset.mv);
+      if(n<0||n>2) return;
+      setStatus(it.id, STATUS_KEYS[n]);
+      toast(`${STATUS[STATUS_KEYS[n]].label}: ${it.title.slice(0,14)}${it.title.length>14?'…':''}`);
+      return;
+    }
+    if(e.target.closest('[data-act="open"]')) openDetail(card.dataset.id);
+  });
+}
+
+/* ---------- 行の操作: タップ / スワイプ ---------- */
 function bindListGestures(){
   const out=$('#list-out');
   out.addEventListener('click', e=>{
@@ -1072,26 +1220,34 @@ function bindListGestures(){
     if(!active||!li) return;
     const dx=e.clientX-sx, dy=e.clientY-sy;
     if(Math.abs(dy)>22 && Math.abs(dy)>Math.abs(dx)){ reset(); return; }
-    if(dx>6){
+    if(Math.abs(dx)>6){
       moved=true; li.classList.add('swiping');
-      inn.style.transform=`translateX(${Math.min(dx,130)}px)`;
+      li.classList.toggle('sw-left', dx<0);
+      inn.style.transform=`translateX(${dx>0?Math.min(dx,130):Math.max(dx,-130)}px)`;
     }
   }, {passive:true});
-  const reset=()=>{ if(inn){ li.classList.remove('swiping'); inn.style.transform=''; } active=false; li=null; inn=null; };
+  const reset=()=>{ if(inn){ li.classList.remove('swiping','sw-left'); inn.style.transform=''; } active=false; li=null; inn=null; };
   out.addEventListener('pointerup', e=>{
     if(!active||!li) return;
     const dx=e.clientX-sx, id=li.dataset.id, el=li;
     if(moved && dx>72){ el.dataset.swiped='1'; reset(); toggleDoneFlow(id); return; }
+    if(moved && dx<-72){ el.dataset.swiped='1'; reset(); toggleDoingFlow(id); return; }
     reset();
   });
   out.addEventListener('pointercancel', reset);
+}
+function toggleDoingFlow(id){
+  const it=byId(id); if(!it) return;
+  const next = it.status==='doing' ? 'todo' : 'doing';
+  setStatus(id, next);
+  toast(next==='doing' ? `着手中: ${it.title.slice(0,14)}${it.title.length>14?'…':''}` : '未着手に戻しました');
 }
 function toggleDoneFlow(id){
   const it=byId(id); if(!it) return;
   const next=!it.done;
   setDone(id, next);
-  if(next) toast(`達成: ${it.title.slice(0,14)}${it.title.length>14?'…':''}`, 'ひとこと残す', ()=>openDetail(id,{focus:'reflection'}));
-  else toast('未達成に戻しました');
+  if(next) toast(`完了: ${it.title.slice(0,14)}${it.title.length>14?'…':''}`, 'ひとこと残す', ()=>openDetail(id,{focus:'reflection'}));
+  else toast('未着手に戻しました');
 }
 
 /* ============================================================================
@@ -1138,11 +1294,11 @@ function openDetail(id, opt){
     </div>
     <hr class="hr" style="margin:18px 0 14px">
     <div class="field">
-      <label class="fl">達成</label>
-      ${segHtml('done',[['0','未達成'],['1','達成']], i.done?'1':'0')}
+      <label class="fl">進み具合</label>
+      ${segHtml('status', STATUS_KEYS.map(k=>[k,STATUS[k].label]), i.status)}
     </div>
-    <div class="field" id="d-done-fields" ${i.done?'':'hidden'}>
-      <label class="fl" for="d-doneat">達成日</label>
+    <div class="field" id="d-done-fields" ${i.status==='done'?'':'hidden'}>
+      <label class="fl" for="d-doneat">完了日</label>
       <input type="date" id="d-doneat" value="${esc(i.doneAt||todayStr())}">
       <div style="height:12px"></div>
       <label class="fl">満足度</label>
@@ -1172,14 +1328,14 @@ function openDetail(id, opt){
   </div>`;
 
   openSheet(html, sh=>{
-    const state = { money:i.money||'', done:i.done?'1':'0', sat:i.satisfaction?String(i.satisfaction):'' };
+    const state = { money:i.money||'', status:i.status, sat:i.satisfaction?String(i.satisfaction):'' };
     sh.querySelectorAll('[data-seg]').forEach(seg=>{
       seg.addEventListener('click', e=>{
         const b=e.target.closest('button[data-v]'); if(!b) return;
         const name=seg.dataset.seg;
         state[name]=b.dataset.v;
         seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
-        if(name==='done'){ sh.querySelector('#d-done-fields').hidden = state.done!=='1'; }
+        if(name==='status'){ sh.querySelector('#d-done-fields').hidden = state.status!=='done'; }
       });
     });
     const save=()=>{
@@ -1192,9 +1348,12 @@ function openDetail(id, opt){
         nextStep: sh.querySelector('#d-next').value.trim(),
         memo: sh.querySelector('#d-memo').value,
         money: state.money || null,
-        done: state.done==='1',
-        doneAt: state.done==='1' ? (sh.querySelector('#d-doneat').value || todayStr()) : null,
-        satisfaction: state.done==='1' && state.sat ? +state.sat : null,
+        status: state.status,
+        done: state.status==='done',
+        doneAt: state.status==='done' ? (sh.querySelector('#d-doneat').value || todayStr()) : null,
+        startedAt: state.status==='todo' ? null
+                 : (i.startedAt || (state.status==='done' ? (sh.querySelector('#d-doneat').value || todayStr()) : todayStr())),
+        satisfaction: state.status==='done' && state.sat ? +state.sat : null,
         reflection: sh.querySelector('#d-ref') ? sh.querySelector('#d-ref').value : i.reflection,
       });
       closeSheet(); toast('保存しました');
@@ -1216,8 +1375,9 @@ function openDetail(id, opt){
   });
 }
 function histLabel(h){
-  const F={money:'お金', category:'カテゴリ', done:'達成'};
-  const V=v=> v===true?'達成': v===false?'未達成': (v==null||v==='')?'未設定' : (MONEY[v]?MONEY[v].short:String(v));
+  const F={money:'お金', category:'カテゴリ', status:'進み具合', done:'完了'};
+  const V=v=> v===true?'完了': v===false?'未完了': (v==null||v==='')?'未設定'
+            : MONEY[v]?MONEY[v].short : STATUS[v]?STATUS[v].label : String(v);
   return `${F[h.field]||h.field}: ${V(h.from)} → ${V(h.to)}`;
 }
 
@@ -1226,7 +1386,7 @@ function histLabel(h){
    ========================================================================== */
 function randomPick(){
   const pool=live().filter(i=>!i.done);
-  if(!pool.length){ toast('未達成の項目がありません'); return; }
+  if(!pool.length){ toast('未完了の項目がありません'); return; }
   const draw=()=>pool[Math.floor(Math.random()*pool.length)];
   let cur=draw();
   const body=it=>`
@@ -1242,7 +1402,7 @@ function randomPick(){
       <button class="btn" data-x="again">別の候補</button>
       <span style="flex:1"></span>
       <button class="btn" data-x="detail">詳しく</button>
-      <button class="btn primary" data-x="done">達成にする</button>
+      <button class="btn primary" data-x="done">完了にする</button>
     </div>`;
   openSheet(body(cur), sh=>{
     sh.addEventListener('click', e=>{
@@ -1378,7 +1538,7 @@ function showTip(ev, title, rows){
 }
 function hideTip(){ clearTimeout(tipHideT); tipHideT=setTimeout(()=>$('#tip').classList.remove('on'), 60); }
 
-/* ---------- 月別: 追加数・達成数（グループ化した縦棒） ---------- */
+/* ---------- 月別: 追加数・完了数（グループ化した縦棒） ---------- */
 function drawColumns(host, months, series){
   const W = Math.max(280, host.clientWidth || 320), H = 176;
   const pad = { l:28, r:10, t:14, b:26 };
@@ -1534,23 +1694,23 @@ function renderTrend(){
   const thisM=monthOf(nowISO());
   const kpi=[
     ['総数', all.length, `うち初期 ${initN}件`],
-    ['達成', all.filter(i=>i.done).length, `達成率 ${all.length?Math.round(all.filter(i=>i.done).length/all.length*100):0}%`],
-    ['お金 未設定', all.filter(i=>i.money===null).length, '仕分けで埋められる'],
+    ['完了', all.filter(i=>i.done).length, `完了率 ${all.length?Math.round(all.filter(i=>i.done).length/all.length*100):0}%`],
+    ['着手中', all.filter(i=>i.status==='doing').length, '動き出しているもの'],
     ['今月の追加', appItems.filter(i=>monthOf(i.createdAt)===thisM).length, 'アプリからの追加のみ'],
   ];
   let html = `<div class="kpis">` + kpi.map(([l,v,d])=>
     `<div class="card kpi"><div class="l">${esc(l)}</div><div class="v">${v}</div><div class="d">${esc(d)}</div></div>`).join('') + `</div>`;
 
-  /* 1) 月別 追加数・達成数 */
+  /* 1) 月別 追加数・完了数 */
   const added = months.map(m=>appItems.filter(i=>monthOf(i.createdAt)===m).length);
   const doneA = months.map(m=>all.filter(i=>i.done && monthOf(i.doneAt)===m).length);
   const s1 = { key:'added', label:'追加', color:cssVar('--s1'), values:added };
-  const s2 = { key:'done',  label:'達成', color:cssVar('--s2'), values:doneA };
+  const s2 = { key:'done',  label:'完了', color:cssVar('--s2'), values:doneA };
   html += `<div class="viz">
-    <div class="viz-h"><h3>月別の追加数・達成数</h3></div>
+    <div class="viz-h"><h3>月別の追加数・完了数</h3></div>
     <p class="viz-note">初期一括登録の <b>${initN}件</b>（${initM?fmtYM(initM):'—'}）は追加数の推移から除外。スタート時点の基準線として上の「総数」に含めています。</p>
     <div class="card viz-box"><div id="ch1"></div>${legendHtml([s1,s2])}</div>
-    ${tableHtml(['月','追加','達成'], months.map((m,n)=>[fmtYM(m), String(added[n]), String(doneA[n])]))}
+    ${tableHtml(['月','追加','完了'], months.map((m,n)=>[fmtYM(m), String(added[n]), String(doneA[n])]))}
   </div>`;
 
   /* 2) お金の区分の構成比 推移（その月末時点で存在する項目の内訳） */
@@ -1595,15 +1755,15 @@ function renderTrend(){
 }
 
 /* ============================================================================
-   記録ビュー: 達成タイムライン / 分析
+   記録ビュー: 完了タイムライン / 分析
    ========================================================================== */
 function renderLog(){
-  $('#log-tab').innerHTML = [['timeline','達成タイムライン'],['analyses',`分析 ${S.analyses.length?`(${S.analyses.length})`:''}`]]
+  $('#log-tab').innerHTML = [['timeline','完了タイムライン'],['analyses',`分析 ${S.analyses.length?`(${S.analyses.length})`:''}`]]
     .map(([v,l])=>`<button type="button" data-lt="${v}" aria-pressed="${S.logTab===v}">${esc(l)}</button>`).join('');
   const out=$('#log-out');
   if(S.logTab==='timeline'){
     const done=live().filter(i=>i.done&&i.doneAt).sort((a,b)=>b.doneAt.localeCompare(a.doneAt));
-    if(!done.length){ out.innerHTML=`<div class="card pad empty"><b>まだ達成の記録はありません</b>一覧で丸をタップ、または右スワイプで達成にできます。</div>`; return; }
+    if(!done.length){ out.innerHTML=`<div class="card pad empty"><b>まだ完了の記録はありません</b>一覧で丸をタップ、または右スワイプで完了にできます。左スワイプで着手中。</div>`; return; }
     const byM=new Map();
     for(const i of done){ const m=monthOf(i.doneAt); if(!byM.has(m)) byM.set(m,[]); byM.get(m).push(i); }
     out.innerHTML = Array.from(byM.entries()).map(([m,list])=>`
@@ -1792,7 +1952,8 @@ function renderData(){
   <div class="card pad" style="margin-bottom:16px">
     <div class="prev" style="font-size:13px">
       <span>項目</span><span class="n">${all.length}</span>
-      <span>うち達成</span><span class="n">${all.filter(i=>i.done).length}</span>
+      <span>うち完了</span><span class="n">${all.filter(i=>i.done).length}</span>
+      <span>うち着手中</span><span class="n">${all.filter(i=>i.status==='doing').length}</span>
       <span>お金を出してでも</span><span class="n">${all.filter(i=>i.money==='pay').length}</span>
       <span>そこまでは出さない</span><span class="n">${all.filter(i=>i.money==='hold').length}</span>
       <span>お金はかからない</span><span class="n">${all.filter(i=>i.money==='none').length}</span>
@@ -1812,6 +1973,7 @@ function renderData(){
         <span class="kk"><kbd>l</kbd> <kbd>t</kbd> <kbd>c</kbd> <kbd>g</kbd> <kbd>d</kbd></span><span>一覧 / 仕分け / 推移 / 記録 / データ</span>
         <span class="kk"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span><span>仕分け: 出してでも / そこまでは出さない / かからない</span>
         <span class="kk"><kbd>s</kbd></span><span>仕分け: スキップ</span>
+        <span class="kk">スワイプ</span><span>右で完了 / 左で着手中（一覧）</span>
         <span class="kk"><kbd>p</kbd></span><span>公開モード切替</span>
         <span class="kk"><kbd>⌘</kbd>+<kbd>Enter</kbd></span><span>詳細シートを保存</span>
         <span class="kk"><kbd>Esc</kbd></span><span>閉じる</span>
@@ -1895,6 +2057,7 @@ function bindChrome(){
     const g=e.target.closest('[data-go]'); if(g){ go(g.dataset.go); return; }
     const lt=e.target.closest('[data-lt]'); if(lt){ S.logTab=lt.dataset.lt; savePrefs(); renderLog(); return; }
     const tr=e.target.closest('#t-range [data-r]'); if(tr){ S.range=tr.dataset.r; savePrefs(); renderTrend(); return; }
+    const md=e.target.closest('[data-mode]'); if(md){ S.mode=md.dataset.mode; savePrefs(); renderList(); return; }
   });
   $('#scrim').addEventListener('click', ()=>closeSheet());
   $('#btn-random').addEventListener('click', randomPick);
@@ -1984,6 +2147,8 @@ async function boot(){
   if(p.range) S.range=p.range;
   if(p.logTab) S.logTab=p.logTab;
   if(typeof p.filterOpen==='boolean') S.filterOpen=p.filterOpen;
+  if(p.mode==='board'||p.mode==='list') S.mode=p.mode;
+  if(!STATUS_KEYS.includes(S.f.status) && S.f.status!=='all') S.f.status='all';  // 旧prefs（open）から
   /* URLでの上書き（共有リンク・検証用）: ?theme=dark / #trend */
   try{
     const sp=new URLSearchParams(location.search);
@@ -1991,12 +2156,13 @@ async function boot(){
     if(th==='auto'||th==='light'||th==='dark') S.theme=th;
     if(sp.get('pub')==='1') S.pub=true;
     const lg=sp.get('log'); if(lg==='timeline'||lg==='analyses') S.logTab=lg;
+    const md=sp.get('mode'); if(md==='list'||md==='board') S.mode=md;
     const h=decodeURIComponent(location.hash).replace('#','');
     if(VIEWS.includes(h)) S.view=h;
   }catch(e){}
   applyTheme();
   /* 先に画面を出す。データ読み込みが詰まっても白紙にしない */
-  bindChrome(); bindListGestures(); bindTriage(); bindData(); bindKeys();
+  bindChrome(); bindListGestures(); bindBoard(); bindTriage(); bindData(); bindKeys();
   go(S.view);
   const withTimeout = (p, ms) => Promise.race([p,
     new Promise((_,rej)=>setTimeout(()=>rej(new Error('IndexedDB timeout')), ms))]);
@@ -2015,7 +2181,7 @@ async function boot(){
   }
   /* テスト用フック（?selftest=1 のときだけ読み込む） */
   window.YL = { S, normalizeItem, normalizeAnalysis, mergeData, mergeItem, unionHistory, buildExport,
-    addItem, updateItem, setDone, softDelete, live, byId, renderAll, go, idbReplaceAll,
+    addItem, updateItem, setDone, setStatus, progress, softDelete, live, byId, renderAll, go, idbReplaceAll,
     allMonths, rangeMonths, topCategories, mdToHtml, applyImport,
     importJSON: async text => { const data=JSON.parse(text);
       const res=mergeData(S.items,S.analyses,data); S.items=res.items; S.analyses=res.analyses;
