@@ -227,7 +227,12 @@ body[data-pub="1"] .sens{display:none !important}
 .filters{display:flex; flex-direction:column; gap:9px; margin:0 0 6px}
 .filters .row1{display:flex; gap:8px; align-items:center}
 .filters input[type=search]{flex:1 1 auto; min-width:0}
-#f-more{display:flex; flex-direction:column; gap:9px}
+#f-more{display:flex; flex-direction:column; gap:12px; padding:12px 13px; margin-top:2px;
+  background:var(--surface); border:1px solid var(--hair); border-radius:var(--r); box-shadow:var(--shadow)}
+.fgrp{display:flex; flex-direction:column; gap:7px}
+.fl2{font-size:11px; letter-spacing:.08em; color:var(--muted)}
+.fsort{gap:8px}
+.fsort select{flex:1 1 0; min-width:0; border-radius:var(--r-sm); font-size:12.5px; min-height:34px}
 .catfil{display:flex; flex-wrap:wrap; gap:6px; padding:2px 0 0}
 .catfil button{
   font-size:12px; line-height:1; padding:7px 11px; border-radius:999px;
@@ -250,11 +255,6 @@ body[data-pub="1"] .sens{display:none !important}
   background:var(--s1); border:2px solid var(--plane)}
 .filters select{min-height:36px; padding:5px 9px; font-size:13px; width:auto; flex:1 1 0; min-width:0; border-radius:999px; text-overflow:ellipsis}
 .filters input[type=search]{min-height:36px; padding:6px 13px; font-size:13.5px; border-radius:999px}
-.fmeta{display:flex; align-items:baseline; gap:12px; color:var(--muted); font-size:12px; margin:12px 0 8px; padding:0 3px}
-.fmeta b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
-.fmeta .sp{flex:1}
-.fmeta button{color:var(--ink-2); font-size:12px; border-bottom:1px solid var(--hair-strong); padding-bottom:1px}
-.fmeta button:hover{color:var(--ink); border-bottom-color:var(--ink)}
 
 /* ============================================================ 進捗バー */
 .prog{margin:12px 0 2px}
@@ -267,6 +267,10 @@ body[data-pub="1"] .sens{display:none !important}
 .prog .meta i{width:8px; height:8px; border-radius:2px; flex:none}
 .prog .meta b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
 .prog .meta .sp{flex:1}
+.prog-note{margin-top:7px; font-size:11.5px; color:var(--muted)}
+.prog-note button{color:var(--ink-2); border-bottom:1px solid var(--hair-strong); padding-bottom:1px; font-size:11.5px}
+.prog-note button:hover{color:var(--ink); border-bottom-color:var(--ink)}
+.prog-note b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
 .prog .rate{font-family:var(--serif); font-size:15px; color:var(--ink); letter-spacing:.03em}
 .modesw{display:flex; gap:4px; background:var(--surface-2); border-radius:999px; padding:3px}
 .modesw button{font-size:11.5px; padding:4px 11px; border-radius:999px; color:var(--muted)}
@@ -451,12 +455,55 @@ table.dt thead th{color:var(--muted); font-weight:500; border-top:0; font-size:1
 .tl .b .t{font-size:14.5px}
 .tl .b .r{font-size:12.5px; color:var(--ink-2); margin-top:4px; padding-left:10px; border-left:2px solid var(--hair-strong); line-height:1.65}
 
+/* ============================================================ 分析（読み物） */
+.paper{
+  background:var(--surface); border:1px solid var(--hair); border-radius:var(--r);
+  box-shadow:var(--shadow); padding:22px 20px 18px; margin:0 0 18px; position:relative;
+}
+@media (min-width:720px){ .paper{padding:32px 36px 26px} }
+.paper-h{display:flex; align-items:flex-start; gap:16px; padding-bottom:16px; border-bottom:1px solid var(--hair)}
+.paper-h .pd{
+  flex:none; display:flex; align-items:baseline; gap:1px; font-family:var(--serif);
+  color:var(--ink); letter-spacing:0; line-height:1;
+}
+.paper-h .pd b{font-size:27px; font-weight:400}
+.paper-h .pd span{font-size:12px; color:var(--muted); margin-right:3px}
+.paper-h .pt{min-width:0}
+.paper-h h3{font-family:var(--serif); font-size:18px; font-weight:400; letter-spacing:.04em; line-height:1.5}
+.paper-h p{margin:5px 0 0; font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums}
+.paper-b{padding-top:4px}
+.paper-b.clipped{max-height:168px; overflow:hidden;
+  -webkit-mask-image:linear-gradient(180deg,#000 60%,transparent); mask-image:linear-gradient(180deg,#000 60%,transparent)}
+.paper .more{
+  display:block; width:100%; margin-top:10px; padding:9px; border:1px solid var(--hair-strong);
+  border-radius:var(--r-sm); font-size:12.5px; color:var(--ink-2); background:var(--surface);
+}
+.paper .more:hover{background:var(--surface-2); color:var(--ink)}
+.toc{margin:14px 0 18px; border:1px solid var(--hair); border-radius:var(--r-sm); background:var(--surface-2)}
+.toc > summary{cursor:pointer; list-style:none; padding:9px 13px; font-size:11.5px; letter-spacing:.06em;
+  color:var(--muted); display:flex; align-items:center; gap:7px}
+.toc > summary::-webkit-details-marker{display:none}
+.toc > summary::after{content:'▾'; margin-left:auto; font-size:10px}
+.toc[open] > summary::after{content:'▴'}
+.toc ol{margin:0; padding:2px 13px 12px 30px; counter-reset:toc}
+.toc li{margin:4px 0; font-size:12.5px}
+.toc a{color:var(--ink-2); text-decoration:none; border-bottom:1px solid transparent}
+.toc a:hover{color:var(--ink); border-bottom-color:var(--hair-strong)}
+
 /* ============================================================ markdown (analyses) */
-.md{font-size:14px; line-height:1.85; color:var(--ink)}
+.md{font-size:14.5px; line-height:1.95; color:var(--ink); max-width:34em}
+.md > p:first-of-type{font-size:15px; color:var(--ink-2)}
+.md h2{scroll-margin-top:72px}
+.md h2::before{content:''; display:block; width:26px; height:2px; background:var(--s1); margin-bottom:10px; border-radius:1px}
+.md strong{background:linear-gradient(transparent 62%, color-mix(in srgb, var(--s4) 32%, transparent) 62%)}
+.md table{font-variant-numeric:tabular-nums}
+.md tbody tr:nth-child(even){background:color-mix(in srgb, var(--surface-2) 55%, transparent)}
+.md blockquote{position:relative; padding:4px 0 4px 16px; border-left:2px solid var(--s1);
+  font-family:var(--serif); font-size:15px; line-height:1.9; color:var(--ink)}
 .md h1,.md h2,.md h3{font-family:var(--serif); font-weight:400; letter-spacing:.04em; line-height:1.5}
 .md h1{font-size:19px; margin:20px 0 8px}
-.md h2{font-size:17px; margin:22px 0 8px; padding-bottom:5px; border-bottom:1px solid var(--hair)}
-.md h3{font-size:15px; margin:18px 0 6px}
+.md h2{font-size:17.5px; margin:32px 0 10px}
+.md h3{font-size:15px; margin:22px 0 6px; color:var(--ink-2)}
 .md p{margin:9px 0}
 .md ul,.md ol{margin:9px 0; padding-left:1.35em}
 .md li{margin:3px 0}
@@ -465,8 +512,11 @@ table.dt thead th{color:var(--muted); font-weight:500; border-top:0; font-size:1
 .md pre code{background:none; padding:0}
 .md blockquote{margin:12px 0; padding:2px 0 2px 13px; border-left:2px solid var(--hair-strong); color:var(--ink-2)}
 .md hr{border:0; border-top:1px solid var(--hair); margin:18px 0}
-.md table{border-collapse:collapse; font-size:13px; margin:12px 0; width:100%}
-.md th,.md td{border:1px solid var(--hair); padding:6px 9px; text-align:left}
+.mdtable{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:14px 0; border-radius:var(--r-sm)}
+.mdtable::-webkit-scrollbar{height:4px}
+.mdtable::-webkit-scrollbar-thumb{background:var(--hair-strong); border-radius:2px}
+.md table{border-collapse:collapse; font-size:13px; margin:0; width:100%; min-width:26em}
+.md th,.md td{border:1px solid var(--hair); padding:7px 10px; text-align:left}
 .md th{background:var(--surface-2); font-weight:600}
 .md strong{font-weight:600}
 .an-h{display:flex; align-items:baseline; gap:10px; margin:0 0 4px}
@@ -530,19 +580,16 @@ kbd{
           </button>
         </div>
         <div id="f-more" hidden>
-          <div class="row1">
-            <select id="f-status" aria-label="達成状況"></select>
-            <select id="f-money" aria-label="お金の区分"></select>
-          </div>
-          <div class="row1">
+          <div class="fgrp"><span class="fl2">進み具合</span><div class="catfil" id="f-status" role="group" aria-label="進み具合で絞り込み"></div></div>
+          <div class="fgrp"><span class="fl2">お金</span><div class="catfil" id="f-money" role="group" aria-label="お金の区分で絞り込み"></div></div>
+          <div class="fgrp"><span class="fl2">カテゴリ</span><div class="catfil" id="f-cat" role="group" aria-label="カテゴリで絞り込み（複数選べます）"></div></div>
+          <div class="row1 fsort">
             <select id="f-sort" aria-label="並び順"></select>
             <select id="f-group" aria-label="グルーピング"></select>
           </div>
-          <div class="catfil" id="f-cat" role="group" aria-label="カテゴリで絞り込み（複数選べます）"></div>
         </div>
       </div>
       <div class="prog" id="prog"></div>
-      <div class="fmeta" id="f-meta"></div>
     </div>
     <div class="wrap" id="list-out"></div>
     <div id="board-out" class="board" hidden></div>
@@ -978,9 +1025,17 @@ function usedCategories(){
 }
 function fillSelects(){
   const opt=(v,l,sel)=>`<option value="${esc(v)}"${sel===v?' selected':''}>${esc(l)}</option>`;
-  $('#f-status').innerHTML = STATUSES.map(([v,l])=>opt(v,l,S.f.status)).join('');
-  $('#f-money').innerHTML  = [['','お金 すべて'],['null','未設定'],...MONEY_KEYS.map(k=>[k,MONEY[k].label])]
-    .map(([v,l])=>opt(v,l,S.f.money)).join('');
+  const chip=(v,l,cur,tint)=>{
+    const on = cur===v;
+    const style = (tint && on) ? ` style="background:color-mix(in srgb, var(${tint}) 14%, var(--surface)); border-color:color-mix(in srgb, var(${tint}) 45%, var(--hair))"` : '';
+    const dot = tint ? `<i style="background:var(${tint})"></i>` : '';
+    return `<button type="button" data-v="${esc(v)}" aria-pressed="${on}" class="${v===''?'all':''}"${style}>${dot}${esc(l)}</button>`;
+  };
+  $('#f-status').innerHTML = [chip('all','すべて',S.f.status,null)]
+    .concat(STATUS_KEYS.map(k=>chip(k, STATUS[k].label, S.f.status, STATUS[k].varName))).join('');
+  $('#f-money').innerHTML = [chip('','すべて',S.f.money,null)]
+    .concat(MONEY_KEYS.map(k=>chip(k, MONEY[k].short, S.f.money, MONEY[k].varName)))
+    .concat([chip('null','未設定',S.f.money,null)]).join('');
   const cats = usedCategories(), sel = new Set(S.f.cat);
   const hasNoCat = live().some(i=>!i.category);
   const catBtn = (v,l,tintVar)=>{
@@ -1096,6 +1151,7 @@ function progress(){
 }
 function renderProgress(){
   const p=progress();
+  const all=live(), nUnset=all.filter(i=>i.money===null).length;
   $('#prog').innerHTML = `
     <div class="bar" role="img" aria-label="完了${p.done}件 着手中${p.doing}件 未着手${p.todo}件">
       <i class="d" style="width:${p.pDone.toFixed(1)}%"></i><i class="p" style="width:${p.pDoing.toFixed(1)}%"></i>
@@ -1110,7 +1166,10 @@ function renderProgress(){
         <button type="button" data-mode="list" aria-pressed="${S.mode!=='board'}">リスト</button>
         <button type="button" data-mode="board" aria-pressed="${S.mode==='board'}">ボード</button>
       </span>
-    </div>`;
+    </div>
+    ${nUnset?`<div class="prog-note"><button type="button" data-go="triage">お金の区分が未設定の <b>${nUnset}</b> 件を仕分ける</button></div>`:''}
+    ${(()=>{ const a=visibleItems().length; return a!==p.total
+        ? `<div class="prog-note"><span>絞り込み中: <b>${a}</b> / ${p.total} 件</span></div>` : ''; })()}`;
 }
 function renderList(){
   fillSelects();
@@ -1121,14 +1180,7 @@ function renderList(){
   $('#list-out').hidden = boardMode;
   if(boardMode){ renderBoard(); }
   $('#f-q').value = S.f.q;
-  const arr = visibleItems(), all = live();
-  const nUnset = all.filter(i=>i.money===null).length;
-  const filtered = arr.length!==all.length;
-  $('#f-meta').innerHTML =
-      `<span>${filtered?`<b>${arr.length}</b> / ${all.length} 件`:`<b>${all.length}</b> 件`}</span>`
-    + `<span>完了 <b>${all.filter(i=>i.done).length}</b></span>`
-    + `<span class="sp"></span>`
-    + (nUnset?`<button type="button" data-go="triage">お金の区分 未設定 <b>${nUnset}</b> を仕分ける</button>`:'');
+  const arr = visibleItems();
   const out=$('#list-out');
   if(boardMode) return;
   if(!arr.length){
@@ -1780,17 +1832,48 @@ function renderLog(){
         ローカルの bucket-list で「分析して」と頼み、<br>できた master.json をデータ画面からインポートすると、ここに並びます。</div>`;
       return;
     }
-    out.innerHTML = S.analyses.slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).map((a,n)=>`
-      <div class="card pad" style="margin-bottom:14px">
-        <div class="an-h">
-          <span class="dt">${esc(String(a.createdAt).slice(0,10))}</span>
-          <span class="rg">${a.periodFrom||a.periodTo?`${esc(a.periodFrom||'')} 〜 ${esc(a.periodTo||'')}`:''}</span>
+    const list = S.analyses.slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+    out.innerHTML = list.map((a,n)=>{
+      const d = String(a.createdAt).slice(0,10);
+      const title = (a.summary.match(/^#\s+(.+)$/m)||[])[1] || '分析';
+      return `<article class="paper" data-aid="${esc(a.id)}">
+        <header class="paper-h">
+          <div class="pd"><b>${+d.slice(5,7)}</b><span>月</span><b>${+d.slice(8,10)}</b><span>日</span></div>
+          <div class="pt">
+            <h3>${esc(title.replace(/^\d{4}-\d{2}-\d{2}\s*/,''))}</h3>
+            <p>${d.slice(0,4)}年 ・ 対象 ${esc(a.periodFrom||'—')} 〜 ${esc(a.periodTo||'—')}</p>
+          </div>
+        </header>
+        <div class="paper-b${n===0?'':' clipped'}">
+          <div class="md">${mdToHtml(a.summary.replace(/^#\s+.+\n/,''))}</div>
         </div>
-        <details class="fold" ${n===0?'open':''}>
-          <summary>${n===0?'内容を閉じる':'内容を開く'}</summary>
-          <div class="md">${mdToHtml(a.summary)}</div>
-        </details>
-      </div>`).join('');
+        ${n===0?'':'<button class="more" type="button">つづきを読む</button>'}
+      </article>`;
+    }).join('');
+    $$('#log-out article.paper').forEach(art=>{
+      const body=art.querySelector('.paper-b');
+      const heads=Array.from(art.querySelectorAll('.md h2'));
+      if(heads.length>=3){
+        const nav=document.createElement('details'); nav.className='toc';
+        const sum=document.createElement('summary'); sum.textContent=`目次（${heads.length}）`;
+        nav.appendChild(sum);
+        const ol=document.createElement('ol');
+        heads.forEach((h,n)=>{
+          h.id = art.dataset.aid+'-h'+n;
+          const li=document.createElement('li');
+          const a=document.createElement('a');
+          a.href='#'+h.id;
+          /* 見出しは長いので、通し番号と「—」より前だけを出す */
+          a.textContent = h.textContent.replace(/^\d+\.\s*/,'').split(/\s*—\s*/)[0];
+          a.addEventListener('click', e=>{ e.preventDefault(); nav.open=false; h.scrollIntoView({behavior:'smooth', block:'start'}); });
+          li.appendChild(a); ol.appendChild(li);
+        });
+        nav.appendChild(ol);
+        body.insertBefore(nav, body.firstChild);
+      }
+      const more=art.querySelector('.more');
+      if(more) more.addEventListener('click', ()=>{ body.classList.remove('clipped'); more.remove(); });
+    });
   }
 }
 
@@ -1828,8 +1911,8 @@ function mdToHtml(src){
       const cells=s=>s.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
       const head=cells(lines[i]); i+=2; const rows=[];
       while(i<lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) rows.push(cells(lines[i++]));
-      out.push('<table><thead><tr>'+head.map(h=>`<th>${mdInline(h)}</th>`).join('')+'</tr></thead><tbody>'
-        + rows.map(r=>'<tr>'+r.map(c=>`<td>${mdInline(c)}</td>`).join('')+'</tr>').join('')+'</tbody></table>');
+      out.push('<div class="mdtable"><table><thead><tr>'+head.map(h=>`<th>${mdInline(h)}</th>`).join('')+'</tr></thead><tbody>'
+        + rows.map(r=>'<tr>'+r.map(c=>`<td>${mdInline(c)}</td>`).join('')+'</tr>').join('')+'</tbody></table></div>');
       continue;
     }
     if(/^\s*([-*+])\s+/.test(L) || /^\s*\d+[.)]\s+/.test(L)){
@@ -2081,7 +2164,7 @@ function bindChrome(){
     savePrefs(); applyFilterUI();
     if(!$('#f-more').hidden) $('#f-status').focus();
   });
-  const onF=()=>{ S.f.q=$('#f-q').value; S.f.status=$('#f-status').value; S.f.money=$('#f-money').value;
+  const onF=()=>{ S.f.q=$('#f-q').value;
     S.sort=$('#f-sort').value; S.group=$('#f-group').value; savePrefs(); renderList(); };
   $('#f-cat').addEventListener('click', e=>{
     const b=e.target.closest('[data-cat]'); if(!b) return;
@@ -2090,7 +2173,13 @@ function bindChrome(){
     else { const i=S.f.cat.indexOf(v); if(i<0) S.f.cat.push(v); else S.f.cat.splice(i,1); }
     savePrefs(); renderList();
   });
-  ['f-q','f-status','f-money','f-sort','f-group'].forEach(id=>{
+  $('#f-status').addEventListener('click', e=>{
+    const b=e.target.closest('[data-v]'); if(!b) return;
+    S.f.status=b.dataset.v; savePrefs(); renderList(); });
+  $('#f-money').addEventListener('click', e=>{
+    const b=e.target.closest('[data-v]'); if(!b) return;
+    S.f.money=b.dataset.v; savePrefs(); renderList(); });
+  ['f-q','f-sort','f-group'].forEach(id=>{
     const el=$('#'+id); el.addEventListener('change', onF);
     if(id==='f-q') el.addEventListener('input', onF);
   });
