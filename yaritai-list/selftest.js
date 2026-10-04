@@ -303,10 +303,47 @@
 
     /* ============================ 6. 公開モード ======================== */
     {
-      YL.S.pub = true; document.body.dataset.pub = '1';
+      YL.go('list'); await sleep(40);
+      const target = YL.live()[0];
+      YL.updateItem(target.id, { private: true });
+      await sleep(40);
+      eq('非公開: 既定は公開（false）', YL.normalizeItem({ title: 'x' }).private, false);
+      eq('非公開: ふつうモードでは出る',
+         document.querySelectorAll('#list-out li.item').length, YL.allLive().length);
+      ok('非公開: ふつうモードでは印が付く', !!document.querySelector('.badge-priv'));
+
+      YL.S.pub = true; document.body.dataset.pub = '1'; YL.renderAll(); await sleep(50);
       const el = document.querySelector('.sens');
       ok('公開モード: sens要素が隠れる', !el || getComputedStyle(el).display === 'none');
-      YL.S.pub = false; document.body.dataset.pub = '0';
+      eq('公開モード: 件数は変わらない',
+         document.querySelectorAll('#list-out li.item').length, YL.live().length);
+      eq('公開モード: 進捗の母数も変わらない', YL.progress().total, YL.live().length);
+      ok('公開モード: 対象行がマスクされる', !!document.querySelector('#list-out li.item.masked'));
+      ok('公開モード: タイトルが出ない',
+         !document.querySelector('#list-out').textContent.includes(target.title));
+      ok('公開モード: マスクした行は開けない', (() => {
+        const li = document.querySelector('#list-out li.item.masked');
+        li.querySelector('[data-act="open"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        return document.querySelector('#sheet').hidden !== false; })());
+
+      // 公開モード中は詳細に設定欄を出さない
+      const row = document.querySelector('#list-out li.item:not(.masked) [data-act="open"]');
+      row.dispatchEvent(new MouseEvent('click', { bubbles: true })); await sleep(120);
+      ok('公開モード: 公開/非公開の設定欄を出さない', !document.querySelector('#sheet [data-seg="private"]'));
+      document.querySelector('#sheet [data-x="close"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await sleep(340);
+
+      YL.S.pub = false; document.body.dataset.pub = '0'; YL.renderAll(); await sleep(40);
+      ok('ふつうモード: 設定欄が戻る', (() => {
+        const r = document.querySelector('#list-out li.item [data-act="open"]');
+        r.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        return true; })());
+      await sleep(120);
+      ok('ふつうモード: 公開/非公開の設定欄がある', !!document.querySelector('#sheet [data-seg="private"]'));
+      document.querySelector('#sheet [data-x="close"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await sleep(340);
+      ok('書き出しには非公開の項目も残る', YL.buildExport().items.some(i => i.id === target.id));
+      YL.updateItem(target.id, { private: false });
     }
 
     /* ============================ 7. 実データの取り込み（あれば） ====== */

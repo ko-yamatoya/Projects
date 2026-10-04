@@ -335,6 +335,12 @@ li.item.sw-left .swipe-bg.left{display:flex}
 .item.st-doing .tick::after{content:''; width:9px; height:9px; border-radius:50%; background:var(--s1)}
 .badge-doing{display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--s1); flex:none}
 .badge-doing i{width:6px; height:6px; border-radius:50%; background:var(--s1)}
+.badge-priv{color:var(--muted)}
+.item.masked .item-t{display:flex; align-items:center; gap:7px; color:var(--muted); font-size:14px}
+.item.masked .item-t svg{width:14px; height:14px; flex:none; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round}
+.item.masked .item-in{cursor:default}
+.bcard.masked .t{color:var(--muted); display:flex; align-items:center; gap:7px}
+.bcard.masked .t svg{width:13px; height:13px; flex:none; fill:none; stroke:currentColor; stroke-width:1.6}
 .tick svg{width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round}
 .tick:hover{border-color:var(--ink-2)}
 .item.done .tick{background:var(--good); border-color:var(--good); color:#fff}
@@ -738,6 +744,7 @@ const SCHEMA_DOC = {
   "items[].satisfaction": "満足度 1〜5",
   "items[].when": "いつやるか（自由記述）",
   "items[].nextStep": "次の一歩",
+  "items[].private": "true なら「公開モード」で非表示にする項目。分析では扱って構いませんが、他人に見せる想定の文章では項目名を出さないでください",
   "items[].source": "initial=最初に一括で入れたもの（追加時期の傾向には使わないでください） / app=アプリから追加",
   "items[].createdAt": "作成日時 / items[].updatedAt: 更新日時 / items[].deletedAt: 削除済みなら日時（集計から除く）",
   "items[].history": "money / category / status の変更履歴 [{at, field, from, to}]",
@@ -861,6 +868,7 @@ function normalizeItem(raw){
     startedAt,
     reflection: String(raw.reflection==null?'':raw.reflection),
     satisfaction: sat,
+    private: raw.private===true,   // 公開モードのときに隠す（データとしては残る）
     source: raw.source==='initial' ? 'initial' : 'app',
     createdAt,
     updatedAt: isISO(raw.updatedAt) ? raw.updatedAt : createdAt,
@@ -1001,6 +1009,10 @@ const S = {
   pendingImport:null,
 };
 const live = () => S.items.filter(i=>!i.deletedAt);
+const allLive = live;
+/* 公開モードのあいだ、非公開の項目は中身を伏せる（件数・グラフは変えない） */
+const masked = i => S.pub && i.private;
+const dispTitle = i => masked(i) ? '非公開の項目' : i.title;
 const byId = id => S.items.find(i=>i.id===id);
 
 /* ============================================================================
@@ -1180,8 +1192,8 @@ function visibleItems(){
     const want=new Set(S.f.cat);
     arr=arr.filter(i=> i.category ? want.has(i.category) : want.has('__none'));
   }
-  if(q) arr=arr.filter(i=>[i.title,i.category,i.memo,i.when,i.nextStep,i.reflection]
-    .join(' ').toLowerCase().includes(q));
+  if(q) arr=arr.filter(i=> masked(i) ? false
+    : [i.title,i.category,i.memo,i.when,i.nextStep,i.reflection].join(' ').toLowerCase().includes(q));
   return sortItems(arr);
 }
 const ICON = {
@@ -1189,6 +1201,7 @@ const ICON = {
   when :'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.5 2"/></svg>',
   step :'<svg viewBox="0 0 24 24"><path d="M5 12h12M13 7l5 5-5 5"/></svg>',
   memo :'<svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 11h8M8 15h5"/></svg>',
+  eye  :'<svg viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 20L20 4"/></svg>',
 };
 /* カテゴリの色は「推移」の構成比グラフと同じ規則で決める（上位7色＋その他は無彩色）。
    同じカテゴリが一覧でもグラフでも同じ色になる。 */
@@ -1212,8 +1225,15 @@ function moneyChip(i){
 }
 function stars(n){ return n ? `<span class="stars sens" aria-label="満足度${n}">${'★'.repeat(n)}${'☆'.repeat(5-n)}</span>` : ''; }
 function itemRow(i){
+  if(masked(i)) return `<li class="item st-${i.status}${i.done?' done':''} masked" data-id="${esc(i.id)}">
+    <div class="item-in">
+      <button class="tick" data-act="tick" aria-pressed="${i.done}" aria-label="${i.done?'未着手に戻す':'完了にする'}">${ICON.check}</button>
+      <div class="item-body"><div class="item-t">${ICON.eye}<span>非公開の項目</span></div></div>
+      <div class="item-right">${moneyChip(i)}</div>
+    </div></li>`;
   const sub=[];
   if(i.category) sub.push(catChip(i.category));
+  if(i.private) sub.push(`<span class="s badge-priv">${ICON.eye}非公開</span>`);
   if(i.status==='doing') sub.push(`<span class="badge-doing"><i></i>着手中</span>`);
   if(i.done && i.doneAt) sub.push(`<span class="s">${ICON.check}${esc(i.doneAt)}</span>`);
   if(!i.done && i.when) sub.push(`<span class="s">${ICON.when}${esc(i.when)}</span>`);
@@ -1276,6 +1296,9 @@ function renderProgress(){
       </span>
     </div>
     ${nUnset?`<div class="prog-note"><button type="button" data-go="triage">お金の区分が未設定の <b>${nUnset}</b> 件を仕分ける</button></div>`:''}
+    ${(()=>{ if(S.pub) return '';
+       const n=live().filter(i=>i.private).length;
+       return n?`<div class="prog-note"><span>公開モードで中身を伏せる項目 <b>${n}</b> 件</span></div>`:''; })()}
     ${(()=>{ const a=visibleItems().length; return a!==p.total
         ? `<div class="prog-note"><span>絞り込み中: <b>${a}</b> / ${p.total} 件</span></div>` : ''; })()}`;
 }
@@ -1324,10 +1347,10 @@ function renderBoard(){
       <div class="col-h"><i style="background:var(${STATUS[k].varName})"></i><b>${STATUS[k].label}</b><span>${list.length}</span></div>
       <div class="col-body">
         ${list.length ? list.map(i=>`
-          <div class="bcard" data-id="${esc(i.id)}">
-            <button class="t" data-act="open">${esc(i.title)}</button>
+          <div class="bcard${masked(i)?' masked':''}" data-id="${esc(i.id)}">
+            <button class="t" data-act="open">${masked(i)?ICON.eye+'<span>非公開の項目</span>':esc(i.title)}</button>
             <div class="row">
-              ${catChip(i.category)}${moneyChip(i)}
+              ${masked(i)?'':catChip(i.category)}${moneyChip(i)}
               <span class="mv">
                 <button data-mv="-1" ${n===0?'disabled':''} aria-label="左の列へ">${MVI.left}</button>
                 <button data-mv="1" ${n===2?'disabled':''} aria-label="右の列へ">${MVI.right}</button>
@@ -1420,6 +1443,7 @@ function segHtml(name, opts, cur){
 function openDetail(id, opt){
   opt=opt||{};
   const i=byId(id); if(!i) return;
+  if(masked(i)){ toast('公開モードでは開けません'); return; }
   const cats = Array.from(new Set([...CATEGORIES, ...usedCategories(), i.category].filter(Boolean)));
   const html = `
   <div class="sheet-h">
@@ -1475,6 +1499,13 @@ function openDetail(id, opt){
       <label class="fl sens" for="d-ref">振り返りのひとこと</label>
       <textarea id="d-ref" class="sens" rows="2" placeholder="やってみてどうだった？">${esc(i.reflection)}</textarea>
     </div>
+    ${S.pub ? '' : `<div class="field">
+      <label class="fl">人に見せるとき</label>
+      ${segHtml('private',[['0','そのまま見せる'],['1','公開モードでは伏せる']], i.private?'1':'0')}
+      <p style="margin:7px 0 0; font-size:11px; color:var(--muted); line-height:1.7">
+        「伏せる」にすると、公開モードのあいだタイトルが「非公開の項目」になります。
+        件数やグラフは変わらないので、合計が合わなくなることはありません。書き出すJSONには残ります。</p>
+    </div>`}
     <details class="fold" style="margin-top:6px">
       <summary>変更の記録 ${i.history.length}件・メタ情報</summary>
       <ul class="hist" style="margin-top:8px">
@@ -1496,7 +1527,8 @@ function openDetail(id, opt){
   </div>`;
 
   openSheet(html, sh=>{
-    const state = { money:i.money||'', wtp:i.wtp||'', status:i.status, sat:i.satisfaction?String(i.satisfaction):'' };
+    const state = { money:i.money||'', wtp:i.wtp||'', status:i.status,
+                    sat:i.satisfaction?String(i.satisfaction):'', private:i.private?'1':'0' };
     sh.querySelector('#d-cat').addEventListener('change', e=>{
       const isNew = e.target.value==='__new';
       const inp=sh.querySelector('#d-cat-new');
@@ -1524,6 +1556,7 @@ function openDetail(id, opt){
         when: sh.querySelector('#d-when').value.trim(),
         nextStep: sh.querySelector('#d-next').value.trim(),
         memo: sh.querySelector('#d-memo').value,
+        private: S.pub ? i.private : state.private==='1',
         money: state.money || null,
         wtp: state.money==='pay' ? (state.wtp || null) : i.wtp,
         status: state.status,
@@ -1563,7 +1596,7 @@ function histLabel(h){
    今日なにする？
    ========================================================================== */
 function randomPick(){
-  const pool=live().filter(i=>!i.done);
+  const pool=live().filter(i=>!i.done && !masked(i));
   if(!pool.length){ toast('未完了の項目がありません'); return; }
   const draw=()=>pool[Math.floor(Math.random()*pool.length)];
   let cur=draw();
@@ -1625,7 +1658,7 @@ function renderTriage(){
       <span>のこり ${queue.length}</span>
     </div>
     <div class="card tri-card">
-      <div class="t">${esc(i.title)}</div>
+      <div class="t">${esc(dispTitle(i))}</div>
       ${i.category?`<div>${catChip(i.category)}</div>`:''}
     </div>
     ${pend ? `<div class="tri-btns">
@@ -1967,9 +2000,9 @@ function renderLog(){
       <div class="tl-m">${fmtYM(m)}　<span style="font-family:var(--sans); font-size:11.5px">${list.length}件</span></div>
       <div class="card pad"><ul class="tl">${list.map(i=>`<li>
         <span class="d mono">${fmtDay(i.doneAt)}</span>
-        <span class="b"><span class="t">${esc(i.title)}</span>
-          <span class="item-sub">${catChip(i.category)}${moneyChip(i)}${stars(i.satisfaction)}</span>
-          ${i.reflection?`<div class="r sens">${esc(i.reflection)}</div>`:''}
+        <span class="b"><span class="t"${masked(i)?' style="color:var(--muted)"':''}>${masked(i)?'非公開の項目':esc(i.title)}</span>
+          <span class="item-sub">${masked(i)?'':catChip(i.category)}${moneyChip(i)}${masked(i)?'':stars(i.satisfaction)}</span>
+          ${(i.reflection && !masked(i))?`<div class="r sens">${esc(i.reflection)}</div>`:''}
         </span></li>`).join('')}</ul></div>`).join('');
   }else{
     if(!S.analyses.length){
@@ -2216,7 +2249,7 @@ function renderData(){
   </div>
 
   <div class="card" style="margin-bottom:16px">
-    <div class="drow"><div class="dl"><b>公開モード</b><span>メモ・金額・振り返りを隠します。スクショを人に見せるとき用。</span></div>
+    <div class="drow"><div class="dl"><b>公開モード</b><span>メモ・金額・振り返りを隠します。項目ごとに「公開モードでは伏せる」を指定すると、その項目はタイトルが伏せられます（件数とグラフは変わりません）。指定は各項目の詳細から。公開モード中は指定できません。</span></div>
       <div class="seg"><button type="button" data-p="0" aria-pressed="${!S.pub}">ふつう</button><button type="button" data-p="1" aria-pressed="${S.pub}">公開</button></div></div>
     <div class="drow"><div class="dl"><b>テーマ</b><span>端末ごとの設定。データには入りません。</span></div>
       <div class="seg">${[['auto','自動'],['light','ライト'],['dark','ダーク']].map(([v,l])=>
@@ -2267,7 +2300,7 @@ function renderData(){
 function bindData(){
   $('#data-out').addEventListener('click', async e=>{
     const b=e.target.closest('[data-d],[data-p],[data-th]'); if(!b) return;
-    if(b.dataset.p!=null){ S.pub=b.dataset.p==='1'; applyTheme(); savePrefs(); renderData(); return; }
+    if(b.dataset.p!=null){ S.pub=b.dataset.p==='1'; applyTheme(); savePrefs(); renderAll(); return; }
     if(b.dataset.th){ S.theme=b.dataset.th; applyTheme(); savePrefs(); renderData();
       if(S.view==='trend') renderTrend(); return; }
     const d=b.dataset.d;
@@ -2400,7 +2433,9 @@ function bindKeys(){
     if(k==='n'){ e.preventDefault(); go('list'); $('#q-title').focus(); return; }
     if(k==='/'){ e.preventDefault(); go('list'); $('#f-q').focus(); return; }
     if(k==='r'){ e.preventDefault(); randomPick(); return; }
-    if(k==='p'){ S.pub=!S.pub; applyTheme(); savePrefs(); renderCurrent(); toast(S.pub?'公開モード: オン':'公開モード: オフ'); return; }
+    if(k==='p'){ S.pub=!S.pub; applyTheme(); savePrefs(); renderAll();
+      const n=allLive().filter(i=>i.private).length;
+      toast(S.pub?`公開モード: オン${n?`（${n}件を隠しています）`:''}`:'公開モード: オフ'); return; }
     if(k==='l'){ go('list'); return; }
     if(k==='t'){ go('triage'); return; }
     if(k==='c'){ go('trend'); return; }
@@ -2466,7 +2501,7 @@ async function boot(){
   }
   /* テスト用フック（?selftest=1 のときだけ読み込む） */
   window.YL = { S, normalizeItem, normalizeAnalysis, mergeData, mergeItem, unionHistory, buildExport,
-    addItem, updateItem, setDone, setStatus, progress, softDelete, live, byId, renderAll, go, idbReplaceAll,
+    addItem, updateItem, setDone, setStatus, progress, softDelete, live, allLive, byId, renderAll, go, idbReplaceAll,
     allMonths, rangeMonths, topCategories, mdToHtml, applyImport,
     importJSON: async text => { const data=JSON.parse(text);
       const res=mergeData(S.items,S.analyses,data); S.items=res.items; S.analyses=res.analyses;
