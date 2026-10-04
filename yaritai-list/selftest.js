@@ -162,6 +162,13 @@
 
     const exp = YL.buildExport();
     eq('書き出し: schemaVersion', exp.schemaVersion, 1);
+    ok('書き出し: スキーマ説明を同梱している', !!exp.schema && !!exp.schema['items[].money']);
+    ok('書き出し: AIへの依頼文を同梱している', typeof exp.aiPrompt === 'string' && exp.aiPrompt.length > 500);
+    ok('書き出し: 依頼文に年収シミュレーションが入っている', /年収/.test(exp.aiPrompt));
+    ok('書き出し: 依頼文が返却フォーマットを指定している', /analyses/.test(exp.aiPrompt) && /analysis-/.test(exp.aiPrompt));
+    ok('書き出し: 説明書を同梱している', Array.isArray(exp.readme) && exp.readme.length > 0);
+    ok('書き出し: 同梱物があってもマージは items/analyses だけ見る',
+       YL.mergeData([], [], exp).items.length === exp.items.length);
     ok('書き出し: exportedAtはISO', !isNaN(new Date(exp.exportedAt).getTime()));
     eq('書き出し: 論理削除ぶんも含む（3件）', exp.items.length, 3);
     ok('書き出し: JSONとして再読込できる', (() => { try { return !!JSON.parse(JSON.stringify(exp)); } catch (e) { return false; } })());
@@ -228,7 +235,14 @@
         const rows2 = [...document.querySelectorAll('#list-out li.item')];
         click(rows2[1].querySelector('[data-act="open"]')); await sleep(120);
         document.querySelector('#d-title').value = 'シート回帰テストで書き換えたタイトル';
-        document.querySelector('#d-cat').value = 'テスト用カテゴリ';
+        eq('詳細: カテゴリはプルダウン', document.querySelector('#d-cat').tagName, 'SELECT');
+        const sel = document.querySelector('#d-cat');
+        ok('詳細: プルダウンに新規作成の選択肢がある', !!sel.querySelector('option[value="__new"]'));
+        sel.value = '__new';
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+        await sleep(40);
+        ok('詳細: 新規を選ぶと入力欄が出る', !document.querySelector('#d-cat-new').hidden);
+        document.querySelector('#d-cat-new').value = 'テスト用カテゴリ';
         click(document.querySelector('#sheet [data-x="save"]')); await sleep(160);
         eq('シート: 保存したのは開いている項目だけ（タイトル）', YL.byId(idB).title, 'シート回帰テストで書き換えたタイトル');
         eq('シート: 開いている項目のカテゴリは保存される', YL.byId(idB).category, 'テスト用カテゴリ');
@@ -275,6 +289,10 @@
       await sleep(80);
       const it = YL.live().find(i => i.title === t0);
       eq('仕分け: 1タップで money=pay が入る', it && it.money, 'pay');
+      ok('仕分け: payを選ぶと金額感を聞いてくる', document.querySelectorAll('.wtp-grid [data-w]').length === 10);
+      document.querySelector('[data-w="30k"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await sleep(80);
+      eq('仕分け: 金額感が入る', YL.live().find(i => i.title === t0).wtp, '30k');
       ok('仕分け: historyにmoney変更が残る', it.history.some(h => h.field === 'money' && h.to === 'pay'));
       eq('仕分け: 残りが0件になる', YL.live().filter(i => i.money === null).length, 0);
     }

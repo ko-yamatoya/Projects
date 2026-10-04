@@ -196,6 +196,7 @@ label.fl{display:block; font-size:12px; letter-spacing:.04em; color:var(--muted)
 .chip.m-none  .dot{background:var(--s3)} .chip.m-none {background:color-mix(in srgb, var(--s3) 11%, var(--surface)); border-color:color-mix(in srgb, var(--s3) 26%, var(--hair))}
 .chip.m-null{border-style:dashed; background:transparent; color:var(--muted)}
 .chip.m-null .dot{background:transparent; border:1.5px dashed var(--s-neutral); width:9px; height:9px}
+.chip.wtp{background:transparent; border-color:transparent; color:var(--muted); padding:0 2px; font-variant-numeric:tabular-nums}
 .chip.cat{background:transparent; border-color:var(--hair-strong); color:var(--ink-2)}
 .chip.cat.tint{color:var(--ink-2)}
 body[data-pub="1"] .sens{display:none !important}
@@ -401,6 +402,9 @@ details.fold summary::marker{color:var(--hair-strong)}
 .tri-btns .big:hover{background:var(--surface-2)}
 .tri-btns .big .dot{width:11px; height:11px; border-radius:50%; flex:none}
 .tri-btns .big .lab{flex:1; font-size:15px}
+.wtp-grid{display:grid; grid-template-columns:1fr 1fr; gap:9px}
+.wtp-grid .big{min-height:52px; padding:0 13px; gap:9px}
+.wtp-grid .big .lab{font-size:14px}
 .tri-btns .big .key{font-size:11px; color:var(--muted); border:1px solid var(--hair); border-radius:5px; padding:1px 6px; font-variant-numeric:tabular-nums}
 
 /* ============================================================ charts */
@@ -532,6 +536,29 @@ table.dt thead th{color:var(--muted); font-weight:500; border-top:0; font-size:1
 .prev{display:grid; grid-template-columns:1fr auto; gap:3px 14px; font-size:13.5px; margin:4px 0 0}
 .prev .n{font-variant-numeric:tabular-nums; font-weight:600; text-align:right}
 .prev .warn{color:var(--critical)}
+ol.steps{list-style:none; margin:0; padding:0; counter-reset:step}
+ol.steps li{display:grid; grid-template-columns:22px 1fr auto; gap:4px 12px; align-items:start;
+  padding:12px 0; border-top:1px solid var(--hair)}
+ol.steps li:first-child{border-top:0; padding-top:4px}
+@media (max-width:539px){
+  ol.steps li{grid-template-columns:22px 1fr}
+  ol.steps .btn{grid-column:2; justify-self:stretch; margin-top:9px}
+}
+ol.steps li::before{
+  counter-increment:step; content:counter(step);
+  flex:none; width:22px; height:22px; border-radius:50%; background:var(--ink); color:var(--on-ink);
+  font-size:11.5px; display:grid; place-items:center; margin-top:2px; font-variant-numeric:tabular-nums;
+}
+ol.steps li > div{flex:1; min-width:0}
+ol.steps b{display:block; font-size:14px; font-weight:600}
+ol.steps span{display:block; font-size:11.5px; color:var(--muted); margin-top:3px; line-height:1.6}
+ol.steps .btn{flex:none; margin-top:1px}
+pre.prompt{
+  margin:10px 0 0; padding:12px 13px; background:var(--surface-2); border-radius:var(--r-sm);
+  font-size:11px; line-height:1.75; white-space:pre-wrap; word-break:break-word;
+  max-height:300px; overflow-y:auto; color:var(--ink-2);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
 kbd{
   font-family:var(--sans); font-size:11px; border:1px solid var(--hair-strong);
   border-bottom-width:2px; border-radius:5px; padding:1px 6px; color:var(--ink-2); background:var(--surface-2);
@@ -642,9 +669,8 @@ kbd{
 "use strict";
 /* ============================================================================
    やりたいことリスト — 単一HTMLアプリ（ビルド不要 / 外部依存ゼロ）
-   データの正本はローカルの ~/Life/bucket-list/data/master.json。
-   このアプリは IndexedDB を作業コピーとして持ち、JSONで往復する。
-   スキーマとマージ規則は bucket-list/CLAUDE.md と同一仕様。
+   データはブラウザ（IndexedDB）に持ち、JSONで書き出し／取り込みする。
+   書き出したJSONには、スキーマとAIへの依頼文を同梱している（単体で読める形）。
    ========================================================================== */
 
 /* ---------- 定数 ---------- */
@@ -692,6 +718,88 @@ const CATEGORIES = ['旅（国内）','旅（海外）','学び・教養','資�
   '食・酒','からだ','モノ・道具','暮らし・住まい','人・関係','表現・伝える','体験','お金・投資'];
 const SERIES_VARS = ['--s1','--s2','--s3','--s4','--s5','--s6','--s7'];
 const NEUTRAL_VAR = '--s-neutral';
+
+/* ============================================================================
+   書き出しJSONに同梱する説明書とAIへの依頼文
+   これを入れておくと、JSONを単体でAIに渡しても、何のデータで何を返せばいいかが伝わる
+   ========================================================================== */
+const SCHEMA_DOC = {
+  "_について": "やりたいことリストのアプリが書き出したJSON。items が本体で、analyses は過去の分析。",
+  "items[].id": "項目のID。変えないでください（突き合わせのキー）",
+  "items[].title": "やりたいこと",
+  "items[].category": "カテゴリ（旅・からだ・モノ など自由）",
+  "items[].memo": "メモ",
+  "items[].money": "お金との関係。pay=お金を出してでもやりたい / hold=そこまでは出さない / none=お金はかからない / null=未設定",
+  "items[].wtp": "money=pay のときの金額感。1k=〜1千円 / 10k=〜1万 / 30k=〜3万 / 50k=〜5万 / 100k=〜10万 / 200k=〜20万 / 300k=〜30万 / 500k=〜50万 / 1m=〜100万 / 1m+=100万円以上 / null=わからない",
+  "items[].status": "進み具合。todo=未着手 / doing=着手中 / done=完了",
+  "items[].startedAt": "着手した日 (YYYY-MM-DD)",
+  "items[].doneAt": "完了した日 (YYYY-MM-DD)",
+  "items[].reflection": "やってみた感想",
+  "items[].satisfaction": "満足度 1〜5",
+  "items[].when": "いつやるか（自由記述）",
+  "items[].nextStep": "次の一歩",
+  "items[].source": "initial=最初に一括で入れたもの（追加時期の傾向には使わないでください） / app=アプリから追加",
+  "items[].createdAt": "作成日時 / items[].updatedAt: 更新日時 / items[].deletedAt: 削除済みなら日時（集計から除く）",
+  "items[].history": "money / category / status の変更履歴 [{at, field, from, to}]",
+  "analyses[]": "過去の分析。{id, createdAt, periodFrom, periodTo, summary(Markdown)}",
+};
+
+const AI_PROMPT = [
+'# やりたいことリストの分析をお願いします',
+'',
+'添付（または貼り付け）のJSONは、やりたいことリストのアプリから書き出したものです。',
+'各フィールドの意味は JSON の "schema" キーに書いてあります。deletedAt が入っている項目は集計から外してください。',
+'',
+'## 1. 中身の分析',
+'整理や重複の話は不要です。リストの内容そのものを読んでください。',
+'- 何が多いか（「〜できるようになる」「〜に行く・見る」「〜を買う」の比率）',
+'- お金を出す／出さないの線引きから読める価値観。wtp（金額感）が入っているものは、',
+'  支出が「日常の質を上げること」と「非日常の体験」のどちらに向いているかを見る',
+'- 繰り返し現れるモチーフ、カテゴリの偏り、噛み合っていないところ',
+'- status（未着手/着手中/完了）から、動くものと止まるものの共通点',
+'- 根拠には必ず具体的な項目名を挙げ、件数は実際に数えて書く',
+'',
+'## 2. 必要年収のシミュレーション（必ず相談しながら）',
+'リストの金額をそのまま合計しても意味のある数字になりません。',
+'**先に次を質問して、前提を一緒に決めてから計算してください**（まとめて聞いてOK）。',
+'- 何年かけて実現したいか',
+'- 海外旅行は年に何回、国内旅行は年に何回が現実的か',
+'- モノや道具は年にいくつ買うペースか',
+'- いまの生活費・固定費と、貯蓄に回せている額',
+'- 「絶対にやる」と「余裕があれば」の線引き',
+'',
+'前提が決まったら、この順で出してください。',
+'1. 項目を「毎年かかるもの（習慣・更新）」と「一度きりの大物（旅・高額品）」に分ける',
+'2. 一度きりのものは実現年を散らし、年あたりの負担に均す',
+'3. 年間の必要額を出す。**どの項目をいくらで見積もったかを表で示す**',
+'4. 生活費を足して、手取り→額面に逆算する。手取りはおおよそ額面の75〜80%',
+'   （所得税・住民税・社会保険料）として、その根拠も書く',
+'5. 必要年収を幅で示す（最低ライン／余裕ライン）',
+'6. 非現実的な額になったら、「どれを削るか」「何年に伸ばすか」の選択肢を出す',
+'',
+'断定しすぎず、前提が変われば数字が変わることを明記してください。',
+'',
+'## 返し方',
+'会話で結論を伝えたあと、**最後に次の形式のJSONだけをコードブロックで**出力してください。',
+'アプリの「データ → インポート（貼り付け）」にそのまま貼れます。',
+'',
+'```json',
+'{"analyses":[{"id":"analysis-2026-10-04","createdAt":"2026-10-04T00:00:00.000Z",',
+' "periodFrom":"2026-09-01","periodTo":"2026-10-04",',
+' "summary":"# 見出し\\n\\n本文をMarkdownで。## の見出し・表・箇条書きが使えます"}]}',
+'```',
+'',
+'- id は `analysis-日付` の形に。既存と同じidにすると、その分析が差し替わります',
+'- summary は Markdown の文字列。改行は \\n でエスケープしてください',
+'- items は返さないでください（アプリ側の項目は変更しません）',
+].join('\n');
+
+const EXPORT_README = [
+  'このファイルは「やりたいことリスト」アプリの書き出しです。',
+  'items が本体、analyses が過去の分析です。フィールドの意味は schema を見てください。',
+  'AIに渡すときは aiPrompt をそのままプロンプトとして使えます。',
+  'AIが返したJSON（analyses を含むもの）は、アプリの「データ → インポート」で取り込めます。',
+];
 
 /* ---------- 小道具 ---------- */
 const $  = (s,r=document)=>r.querySelector(s);
@@ -1121,7 +1229,7 @@ function itemRow(i){
         <div class="item-t">${esc(i.title)}</div>
         ${sub.length?`<div class="item-sub">${sub.join('')}</div>`:''}
       </div>
-      <div class="item-right">${moneyChip(i)}${stars(i.satisfaction)}</div>
+      <div class="item-right">${moneyChip(i)}${i.money==='pay'&&i.wtp?`<span class="chip wtp sens">${esc(WTP_LABEL[i.wtp])}</span>`:''}${stars(i.satisfaction)}</div>
     </div>
   </li>`;
 }
@@ -1327,10 +1435,18 @@ function openDetail(id, opt){
       <label class="fl">お金</label>
       ${segHtml('money',[['','未設定'],...MONEY_KEYS.map(k=>[k,MONEY[k].label])], i.money||'')}
     </div>
+    <div class="field" id="d-wtp-field" ${i.money==='pay'?'':'hidden'}>
+      <label class="fl">だいたいいくらかかりそう？</label>
+      ${segHtml('wtp',[['','わからない'],...WTP.map(w=>[w.v,w.label])], i.wtp||'')}
+    </div>
     <div class="field">
       <label class="fl" for="d-cat">カテゴリ</label>
-      <input type="text" id="d-cat" list="d-cat-list" value="${esc(i.category)}" placeholder="未設定">
-      <datalist id="d-cat-list">${cats.map(c=>`<option value="${esc(c)}"></option>`).join('')}</datalist>
+      <select id="d-cat">
+        <option value=""${i.category?'':' selected'}>未設定</option>
+        ${cats.map(c=>`<option value="${esc(c)}"${i.category===c?' selected':''}>${esc(c)}</option>`).join('')}
+        <option value="__new">＋ 新しいカテゴリを作る…</option>
+      </select>
+      <input type="text" id="d-cat-new" placeholder="新しいカテゴリ名" hidden style="margin-top:8px">
     </div>
     <div class="field">
       <label class="fl" for="d-when">いつ</label>
@@ -1380,7 +1496,13 @@ function openDetail(id, opt){
   </div>`;
 
   openSheet(html, sh=>{
-    const state = { money:i.money||'', status:i.status, sat:i.satisfaction?String(i.satisfaction):'' };
+    const state = { money:i.money||'', wtp:i.wtp||'', status:i.status, sat:i.satisfaction?String(i.satisfaction):'' };
+    sh.querySelector('#d-cat').addEventListener('change', e=>{
+      const isNew = e.target.value==='__new';
+      const inp=sh.querySelector('#d-cat-new');
+      inp.hidden = !isNew;
+      if(isNew) inp.focus();
+    });
     sh.querySelectorAll('[data-seg]').forEach(seg=>{
       seg.addEventListener('click', e=>{
         const b=e.target.closest('button[data-v]'); if(!b) return;
@@ -1388,6 +1510,7 @@ function openDetail(id, opt){
         state[name]=b.dataset.v;
         seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
         if(name==='status'){ sh.querySelector('#d-done-fields').hidden = state.status!=='done'; }
+        if(name==='money'){ sh.querySelector('#d-wtp-field').hidden = state.money!=='pay'; }
       });
     });
     const save=()=>{
@@ -1395,11 +1518,14 @@ function openDetail(id, opt){
       if(!title){ toast('タイトルは空にできません'); return; }
       updateItem(i.id, {
         title,
-        category: sh.querySelector('#d-cat').value.trim(),
+        category: (sh.querySelector('#d-cat').value==='__new'
+                    ? sh.querySelector('#d-cat-new').value.trim()
+                    : sh.querySelector('#d-cat').value),
         when: sh.querySelector('#d-when').value.trim(),
         nextStep: sh.querySelector('#d-next').value.trim(),
         memo: sh.querySelector('#d-memo').value,
         money: state.money || null,
+        wtp: state.money==='pay' ? (state.wtp || null) : i.wtp,
         status: state.status,
         done: state.status==='done',
         doneAt: state.status==='done' ? (sh.querySelector('#d-doneat').value || todayStr()) : null,
@@ -1472,8 +1598,11 @@ function randomPick(){
    仕分けモード
    ========================================================================== */
 function triageCurrent(){
+  const pend = S.triagePending ? byId(S.triagePending) : null;
+  if(pend && !pend.deletedAt) return { item:pend, pending:true };
+  S.triagePending = null;
   const q = live().filter(i=>i.money===null);
-  return { item:q[0]||null };
+  return { item:q[0]||null, pending:false };
 }
 function renderTriage(){
   const out=$('#triage-out');
@@ -1486,6 +1615,7 @@ function renderTriage(){
     return;
   }
   const i = cur.item;
+  const pend = cur.pending;
   const btn = (key,label,v)=>`<button class="big" data-t="${key}">
       <span class="dot" style="background:var(${v})"></span><span class="lab">${esc(label)}</span><span class="key">${key}</span></button>`;
   out.innerHTML = `
@@ -1498,7 +1628,14 @@ function renderTriage(){
       <div class="t">${esc(i.title)}</div>
       ${i.category?`<div>${catChip(i.category)}</div>`:''}
     </div>
-    ${`<div class="tri-btns">
+    ${pend ? `<div class="tri-btns">
+        <div class="viz-note" style="margin:0 2px 2px">だいたいいくらかかりそう？（あとで変えられます）</div>
+        <div class="wtp-grid">
+          ${WTP.map((w,n)=>`<button class="big" data-w="${w.v}"><span class="dot" style="background:var(--s1)"></span><span class="lab">${esc(w.label)}</span><span class="key">${n===9?'0':n+1}</span></button>`).join('')}
+        </div>
+        <button class="btn ghost sm" data-t="skipwtp">わからない / あとで</button>
+      </div>`
+      : `<div class="tri-btns">
         ${btn('1', MONEY.pay.label,  '--s1')}
         ${btn('2', MONEY.hold.label, '--s2')}
         ${btn('3', MONEY.none.label, '--s3')}
@@ -1514,22 +1651,30 @@ function renderTriage(){
 function triageAct(key){
   const cur = triageCurrent();
   if(!cur.item) return;
+  if(cur.pending){
+    const w = WTP[+key-1];
+    if(w) updateItem(cur.item.id, { wtp:w.v }, {silent:true});
+    S.triagePending=null; renderAll(); return;
+  }
   const map={'1':'pay','2':'hold','3':'none'};
   if(!map[key]) return;
-  S.lastTriage = { id:cur.item.id, money:cur.item.money };
+  S.lastTriage = { id:cur.item.id, money:cur.item.money, wtp:cur.item.wtp };
   updateItem(cur.item.id, { money:map[key] }, {silent:true});
+  S.triagePending = (map[key]==='pay') ? cur.item.id : null;   // 払う気があるものだけ金額を聞く
   renderAll();
 }
 function bindTriage(){
   $('#triage-out').addEventListener('click', e=>{
     const b=e.target.closest('[data-t],[data-w]'); if(!b) return;
+    if(b.dataset.w){ triageAct(String(WTP_KEYS.indexOf(b.dataset.w)+1)); return; }
     const t=b.dataset.t;
     const queue = live().filter(i=>i.money===null);
     if(t==='1'||t==='2'||t==='3') return triageAct(t);
+    if(t==='skipwtp'){ S.triagePending=null; renderAll(); return; }
     if(t==='skip'){ const i=queue[0]; if(i){ S.items=S.items.filter(x=>x!==i).concat([i]); renderTriage(); } return; }
     if(t==='undo' && S.lastTriage){
-      const l=S.lastTriage;
-      updateItem(l.id, { money:l.money }, {silent:true});
+      const l=S.lastTriage; S.triagePending=null;
+      updateItem(l.id, { money:l.money, wtp:l.wtp }, {silent:true});
       S.lastTriage=null; renderAll(); return;
     }
     if(t==='detail'){ const i=queue[0]; if(i) openDetail(i.id); }
@@ -1829,7 +1974,7 @@ function renderLog(){
   }else{
     if(!S.analyses.length){
       out.innerHTML=`<div class="card pad empty"><b>まだ分析はありません</b>
-        ローカルの bucket-list で「分析して」と頼み、<br>できた master.json をデータ画面からインポートすると、ここに並びます。</div>`;
+        データ画面の手順でAIに分析してもらい、<br>返ってきたJSONを取り込むと、ここに並びます。</div>`;
       return;
     }
     const list = S.analyses.slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
@@ -1937,6 +2082,10 @@ function buildExport(){
   return {
     schemaVersion: SCHEMA_VERSION,
     exportedAt: nowISO(),
+    app: { name:'やりたいことリスト', url: location.origin + location.pathname.replace(/[^/]*$/,'') },
+    readme: EXPORT_README,
+    schema: SCHEMA_DOC,
+    aiPrompt: AI_PROMPT,
     items: S.items.slice().sort((a,b)=>a.createdAt.localeCompare(b.createdAt)),
     analyses: S.analyses.slice().sort((a,b)=>a.createdAt.localeCompare(b.createdAt)),
   };
@@ -2010,15 +2159,57 @@ async function applyImport(){
   closeSheet(); renderAll();
   toast(`取り込み完了（${live().length}件・分析${S.analyses.length}件）`);
 }
+function copyText(t){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(t).then(()=>true).catch(()=>fallbackCopy(t));
+  }
+  return Promise.resolve(fallbackCopy(t));
+}
+function fallbackCopy(t){
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=t; ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;top:-1000px';
+    document.body.appendChild(ta); ta.select(); const ok=document.execCommand('copy'); ta.remove();
+    return ok;
+  }catch(e){ return false; }
+}
 function renderData(){
   const all=live();
 
   const last=S.items.reduce((a,i)=> i.updatedAt>a?i.updatedAt:a, '');
   $('#data-out').innerHTML = `
+  <div class="card pad" style="margin-bottom:16px">
+    <h3 style="font-family:var(--serif); font-size:17px; font-weight:400; letter-spacing:.04em">AIで分析する</h3>
+    <p style="margin:6px 0 14px; font-size:12.5px; color:var(--muted); line-height:1.8">
+      書き出したJSONをAIに渡すと、リストの中身の分析と、<br>
+      「これを実現するにはどのくらいの年収が要るか」の相談ができます。</p>
+    <ol class="steps">
+      <li>
+        <div><b>書き出す</b><span>JSONには項目の説明書とプロンプトが同梱されます</span></div>
+        <button class="btn sm primary" data-d="export">書き出す</button>
+      </li>
+      <li>
+        <div><b>AIに渡す</b><span>ChatGPT・Claude・Geminiなどにファイルを添付して、プロンプトを貼る</span></div>
+        <button class="btn sm" data-d="copyprompt">プロンプトをコピー</button>
+      </li>
+      <li>
+        <div><b>返ってきたJSONを取り込む</b><span>最後に出てくるJSONをコピーして、ここに貼り付け</span></div>
+        <button class="btn sm" data-d="paste">貼り付けて取り込む</button>
+      </li>
+    </ol>
+    <details class="fold" style="margin-top:12px">
+      <summary>プロンプトの中身を見る</summary>
+      <pre class="prompt">${esc(AI_PROMPT)}</pre>
+    </details>
+    <p style="margin:12px 0 0; font-size:11.5px; color:var(--muted); line-height:1.8">
+      年収の計算は、AIが先に「年に何回旅行するか」「何年かけて実現するか」などを聞いてから出す作りにしてあります。
+      リストの金額をそのまま合計しても意味のある数字にならないためです。</p>
+  </div>
+
   <div class="card" style="margin-bottom:16px">
-    <div class="drow"><div class="dl"><b>エクスポート</b><span>JSONで書き出す。ファイル名に日時が入ります。ローカルの bucket-list/inbox/ に置いて「取り込んで」と頼む用。</span></div>
+    <div class="drow"><div class="dl"><b>エクスポート</b><span>JSONで書き出す。スキーマとAIへの依頼文が同梱されるので、そのままAIに渡せます。</span></div>
       <button class="btn primary sm" data-d="export">書き出す</button></div>
-    <div class="drow"><div class="dl"><b>インポート（ファイル）</b><span>master.json でも、書き出したJSONでも。件数をプレビューしてから確定します。</span></div>
+    <div class="drow"><div class="dl"><b>インポート（ファイル）</b><span>書き出したJSON、またはAIが返したJSON。件数をプレビューしてから確定します。</span></div>
       <button class="btn sm" data-d="import">選ぶ</button></div>
     <div class="drow"><div class="dl"><b>インポート（貼り付け）</b><span>iPhoneでファイルを扱いにくいときは、JSONをそのまま貼り付け。</span></div>
       <button class="btn sm" data-d="paste">貼り付け</button></div>
@@ -2055,6 +2246,7 @@ function renderData(){
         <span class="kk"><kbd>r</kbd></span><span>今日なにする？</span>
         <span class="kk"><kbd>l</kbd> <kbd>t</kbd> <kbd>c</kbd> <kbd>g</kbd> <kbd>d</kbd></span><span>一覧 / 仕分け / 推移 / 記録 / データ</span>
         <span class="kk"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span><span>仕分け: 出してでも / そこまでは出さない / かからない</span>
+        <span class="kk"><kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd></span><span>仕分け: 金額感（出してでもを選んだ直後）</span>
         <span class="kk"><kbd>s</kbd></span><span>仕分け: スキップ</span>
         <span class="kk">スワイプ</span><span>右で完了 / 左で着手中（一覧）</span>
         <span class="kk"><kbd>p</kbd></span><span>公開モード切替</span>
@@ -2067,7 +2259,7 @@ function renderData(){
   <div class="card pad">
     <details class="fold"><summary>この端末のデータを全部消す</summary>
       <p style="font-size:12.5px; color:var(--muted); margin:8px 0 10px">
-        消えるのはこの端末のブラウザ内（IndexedDB）だけです。正本はローカルの master.json 側にあります。先にエクスポートを。</p>
+        このアプリのデータはこの端末のブラウザの中にしかありません。消す前に必ずエクスポートしてください。</p>
       <button class="btn danger sm" data-d="wipe">全部消す</button>
     </details>
   </div>`;
@@ -2080,6 +2272,10 @@ function bindData(){
       if(S.view==='trend') renderTrend(); return; }
     const d=b.dataset.d;
     if(d==='export') doExport();
+    if(d==='copyprompt'){
+      const ok = await copyText(AI_PROMPT);
+      toast(ok ? 'プロンプトをコピーしました' : 'コピーできませんでした（中身を開いて選択してください）');
+    }
     if(d==='import') $('#file-in').click();
     if(d==='paste') pasteImport();
     if(d==='wipe'){
@@ -2211,7 +2407,7 @@ function bindKeys(){
     if(k==='g'){ go('log'); return; }
     if(k==='d'){ go('data'); return; }
     if(S.view==='triage'){
-      if(k==='1'||k==='2'||k==='3'){ e.preventDefault(); triageAct(k); return; }
+      if(k>='0' && k<='9'){ e.preventDefault(); triageAct(k==='0'?'10':k); return; }
       if(k==='s'){ e.preventDefault();
         const q=live().filter(i=>i.money===null); const i=q[0];
         if(i){ S.items=S.items.filter(x=>x!==i).concat([i]); renderTriage(); } return; }
