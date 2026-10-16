@@ -8,10 +8,10 @@
  * 未踏(0)県のみ tier(A/B/C)・access・wish を持つ（行き先提案に使う）。
  */
 window.KEIKENCHI = {
-  updated: "2026-08-11",
-  total: 119,
+  updated: "2026-10-13",
+  total: 127,
   max: 235,
-  mikkou: 16,
+  mikkou: 14,
   levels: [
     { score: 5, icon: "🏠", label: "居住" },
     { score: 4, icon: "🛏️", label: "宿泊" },
@@ -36,8 +36,8 @@ window.KEIKENCHI = {
     "13": { name: "東京",   score: 5 },
     "14": { name: "神奈川", score: 3 },
     "15": { name: "新潟",   score: 0, tier: "A", access: "上越新幹線 約2h" },
-    "16": { name: "富山",   score: 0, tier: "B", access: "北陸新幹線 約2h" },
-    "17": { name: "石川",   score: 0, tier: "B", access: "北陸新幹線（金沢）約2.5h", wish: true },
+    "16": { name: "富山",   score: 4, tier: "B", access: "北陸新幹線 約2h" },
+    "17": { name: "石川",   score: 4, tier: "B", access: "北陸新幹線（金沢）約2.5h", wish: true },
     "18": { name: "福井",   score: 0, tier: "B", access: "北陸新幹線（敦賀）約3h" },
     "19": { name: "山梨",   score: 4 },
     "20": { name: "長野",   score: 4 },
