@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="幹事ノート">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3393ff"/>
+      <stop offset="1" stop-color="#0a5cd6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect x="128" y="100" width="248" height="320" rx="42" fill="#ffffff"/>
+  <rect x="198" y="78" width="108" height="50" rx="18" fill="#d6e6ff"/>
+  <g fill="none" stroke="#30b94d" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M172 200l22 22 40-44"/>
+    <path d="M172 290l22 22 40-44"/>
+  </g>
+  <g fill="#c4d4ee">
+    <rect x="258" y="188" width="82" height="22" rx="11"/>
+    <rect x="258" y="278" width="62" height="22" rx="11"/>
+    <rect x="172" y="362" width="112" height="22" rx="11"/>
+  </g>
+  <g transform="translate(372 386)">
+    <circle r="70" fill="#ff9500" stroke="#ffffff" stroke-width="12"/>
+    <g fill="none" stroke="#a04c00" stroke-width="7" stroke-linecap="round">
+      <path d="M-64 0H64"/>
+      <path d="M0-64V64"/>
+      <path d="M-40-52Q-8 0-40 52"/>
+      <path d="M40-52Q8 0 40 52"/>
+    </g>
+  </g>
+</svg>

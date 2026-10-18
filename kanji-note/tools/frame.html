@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><title>frame</title>
+<!-- 検証用: ヘッドレスChromeは窓の最小幅が500pxなので、スマホ幅のiframeの中でアプリを開く。
+     例) tools/frame.html?w=360&h=800&q=selftest%3D1   （中のページのタイトルを、このページのタイトルに写す） -->
+<style>html,body{margin:0;background:#777}iframe{border:0;display:block;background:#fff}</style></head>
+<body><iframe id="f" title="app"></iframe>
+<script>
+const q = new URLSearchParams(location.search);
+const f = document.getElementById('f');
+f.style.width = (+(q.get('w') || 390)) + 'px';
+f.style.height = (+(q.get('h') || 844)) + 'px';
+f.src = '../?' + (q.get('q') || 'demo=1') + (q.get('hash') ? '#' + q.get('hash') : '');
+setInterval(() => { try { const t = f.contentDocument.title; if (t && t !== document.title) document.title = t; } catch (e) {} }, 150);
+</script></body></html>
