@@ -1,94 +1,126 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>私とONE OK ROCK</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>私とONE OK ROCK</title>
 <style>
-/* Layout: 縦長の1カラム。巨大な「Change」で始まり、下に好きな曲を並べるセットリスト形式 */
+/* Layout: 黒いステージ。巨大ロゴ→流れる曲名帯→Change(Now Playing)→曲カードのグリッド */
 :root{
-  --bg:#f3f1ee; --fg:#15130f; --muted:#6b645a; --line:#d9d4cb; --card:#fffdf9;
-  --accent:#c4301c; --accent-fg:#fff;
-  --display:'Impact','Arial Narrow',sans-serif;
-  --body:'Noto Sans JP',system-ui,sans-serif;
+  --bg:#09090b; --fg:#f4f1ec; --muted:#8d8981; --line:#26252a; --card:#131216; --card2:#1b1a20;
+  --a:#ff3b1f; --b:#ff9a3c;
+  --display:"Arial Black","Helvetica Neue",Impact,sans-serif;
+  --body:"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0f0e0c; --fg:#f1ede6; --muted:#9a9388; --line:#2c2924; --card:#181612;
-  --accent:#ee5a3f; --accent-fg:#0f0e0c; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0f0e0c; --fg:#f1ede6; --muted:#9a9388; --line:#2c2924; --card:#181612;
-  --accent:#ee5a3f; --accent-fg:#0f0e0c; color-scheme:dark}
-body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.8;
-  padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
-.eyebrow{font-size:12px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
-h1{font-family:var(--display);font-weight:400;font-size:clamp(56px,16vw,120px);line-height:.9;letter-spacing:.01em;margin:8px 0 0;text-wrap:balance}
-h1 em{font-style:normal;color:var(--accent)}
-.lead{margin:16px 0 0;max-width:34em;font-size:15px}
-.me{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0;padding:0;list-style:none}
-.me li{border-top:2px solid var(--fg);padding-top:8px}
-.me b{display:block;font-size:11px;letter-spacing:.15em;color:var(--muted);font-weight:500}
-.me span{font-size:15px}
-.feature{background:var(--fg);color:var(--bg);padding:28px 22px;display:flex;flex-direction:column;gap:12px}
-.feature .tag{font-size:12px;letter-spacing:.2em;color:var(--accent)}
-.feature h2{font-family:var(--display);font-weight:400;font-size:clamp(64px,20vw,140px);line-height:.85;margin:0}
-.feature p{margin:0;font-size:14px;max-width:32em;opacity:.9}
-.row{display:flex;flex-wrap:wrap;gap:8px}
-button,a.btn{font:inherit;font-size:13px;cursor:pointer;border:1px solid currentColor;background:transparent;color:inherit;padding:6px 14px;text-decoration:none;display:inline-block}
-button:hover,a.btn:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
-.tools h2{font-family:var(--display);font-weight:400;font-size:36px;margin:0;letter-spacing:.03em}
-.chips button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.list{display:flex;flex-direction:column;border-top:2px solid var(--fg)}
-.song{border-bottom:1px solid var(--line);padding:14px 0;display:grid;grid-template-columns:auto 1fr auto;gap:4px 14px;align-items:start}
-.song .n{font-family:var(--display);font-size:28px;color:var(--muted);line-height:1.1;font-variant-numeric:tabular-nums;min-width:1.6em}
-.song h3{margin:0;font-size:18px;font-weight:700;line-height:1.4;min-width:0;overflow-wrap:anywhere}
-.song .sub{font-size:12px;color:var(--muted)}
-.heart{font-size:20px;line-height:1;padding:4px 8px;border:none;color:var(--muted)}
-.heart[aria-pressed="true"]{color:var(--accent)}
-.heart:hover{background:transparent;color:var(--accent)}
-.body{grid-column:2/4;display:flex;flex-direction:column;gap:8px;min-width:0}
-textarea{font:inherit;font-size:14px;width:100%;box-sizing:border-box;background:var(--card);color:var(--fg);border:1px solid var(--line);padding:8px 10px;resize:vertical;min-height:56px}
-.links{display:flex;gap:8px;flex-wrap:wrap}
-.links a{font-size:12px;color:var(--fg);text-decoration-color:var(--accent);text-underline-offset:3px}
-.note{font-size:12px;color:var(--muted);margin:0}
-.dim .song:not(.fav){opacity:.35}
-footer{font-size:12px;color:var(--muted)}
-@media (max-width:480px){.song{grid-template-columns:auto 1fr auto}.body{grid-column:1/4}}
-</style></head><body>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.8;overflow-x:hidden}
+.glow{position:fixed;inset:-20% -10% auto -10%;height:80vh;pointer-events:none;z-index:0;
+  background:radial-gradient(40% 50% at 25% 30%,rgba(255,59,31,.28),transparent 70%),radial-gradient(35% 45% at 80% 20%,rgba(255,154,60,.16),transparent 70%)}
+.in{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+nav{display:flex;justify-content:space-between;align-items:center;padding-block:20px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted)}
+nav b{color:var(--fg)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--a);margin-right:8px;box-shadow:0 0 12px var(--a)}
 
-<div class="wrap">
-  <header>
-    <div class="eyebrow">My favorite band / ずっと聴いてる</div>
-    <h1>私と<br><em>ONE OK ROCK</em></h1>
-    <p class="lead">ワンオクが好きです。しんどい時も、気合を入れたい時も、気づくとイヤホンから流れてる。このページには、好きな曲と、その曲のどこが好きかを残しています。</p>
+.hero{padding-block:48px 56px}
+.kicker{font-size:12px;letter-spacing:.3em;color:var(--b)}
+h1{margin:14px 0 0;font-family:var(--display);font-weight:900;line-height:.86;letter-spacing:-.045em;text-transform:uppercase;
+  font-size:clamp(60px,15.5vw,168px);text-wrap:balance}
+h1 .o{color:transparent;-webkit-text-stroke:2px var(--fg)}
+h1 .g{background:linear-gradient(100deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:28px 0 0;max-width:30em;color:#cfcac2;font-size:15px}
+.facts{display:flex;flex-wrap:wrap;gap:10px;margin:28px 0 0;padding:0;list-style:none}
+.facts li{border:1px solid var(--line);border-radius:999px;padding:6px 16px;font-size:13px;background:rgba(255,255,255,.03)}
+.facts b{color:var(--muted);font-weight:500;margin-right:8px;font-size:11px;letter-spacing:.12em}
+
+.belt{border-block:1px solid var(--line);overflow:hidden;white-space:nowrap;position:relative;z-index:1;background:rgba(255,255,255,.02)}
+.belt div{display:inline-block;padding-block:14px;animation:slide 38s linear infinite;
+  font-family:var(--display);font-size:22px;text-transform:uppercase;color:transparent;-webkit-text-stroke:1px #6b675f}
+.belt span{margin-inline:22px}.belt i{color:var(--a);font-style:normal;-webkit-text-stroke:0}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+.np{margin-block:56px;border-radius:28px;padding:clamp(22px,5vw,48px);position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#ff3b1f 0%,#ff7a2f 55%,#ffb347 100%);color:#16100c}
+.np::after{content:"";position:absolute;right:-60px;bottom:-90px;width:320px;height:320px;border-radius:50%;
+  background:repeating-radial-gradient(circle,rgba(0,0,0,.22) 0 2px,transparent 2px 10px);opacity:.5}
+.np .t{display:flex;align-items:center;gap:12px;font-size:12px;letter-spacing:.28em;text-transform:uppercase;font-weight:700}
+.eq{display:inline-flex;gap:3px;align-items:flex-end;height:18px}
+.eq i{width:4px;background:#16100c;border-radius:2px;animation:eq 1s ease-in-out infinite;transform-origin:bottom}
+.eq i:nth-child(1){height:60%}.eq i:nth-child(2){height:100%;animation-delay:.2s}.eq i:nth-child(3){height:40%;animation-delay:.4s}.eq i:nth-child(4){height:80%;animation-delay:.1s}
+@keyframes eq{50%{transform:scaleY(.35)}}
+.np h2{margin:10px 0 6px;font-family:var(--display);font-weight:900;font-size:clamp(70px,22vw,210px);line-height:.82;letter-spacing:-.05em;text-transform:uppercase;position:relative;z-index:1}
+.np p{margin:0 0 22px;max-width:30em;font-weight:500;position:relative;z-index:1}
+.btns{display:flex;flex-wrap:wrap;gap:10px;position:relative;z-index:1}
+.btn{font:inherit;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;border-radius:999px;padding:10px 22px;
+  border:1.5px solid currentColor;background:transparent;color:inherit;transition:transform .15s,background .15s,color .15s}
+.btn:hover{transform:translateY(-2px)}
+.btn.solid{background:#16100c;color:#fff;border-color:#16100c}
+.np .btn:hover:not(.solid){background:#16100c;color:#fff;border-color:#16100c}
+.btn:focus-visible,textarea:focus-visible,.heart:focus-visible,.tog:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:3px}
+
+.head{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:end;margin-bottom:22px}
+.head h3{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(34px,7vw,64px);line-height:.95;letter-spacing:-.04em;text-transform:uppercase}
+.tog{font:inherit;font-size:13px;color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 18px;cursor:pointer;transition:.15s}
+.tog[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.note{color:var(--muted);font-size:12px;margin:0 0 22px;max-width:44em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;padding:0 0 72px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px;min-width:0;
+  transition:transform .2s,border-color .2s,background .2s}
+.card:hover{transform:translateY(-4px);border-color:#4a4650;background:var(--card2)}
+.card.fav{border-color:rgba(255,59,31,.55);box-shadow:0 0 0 1px rgba(255,59,31,.25),0 12px 40px -18px rgba(255,59,31,.5)}
+.top{display:flex;justify-content:space-between;align-items:start;gap:10px}
+.n{font-family:var(--display);font-weight:900;font-size:13px;color:var(--muted);letter-spacing:.1em}
+.card h4{margin:2px 0 0;font-family:var(--display);font-weight:900;font-size:25px;line-height:1.05;letter-spacing:-.025em;text-transform:uppercase;overflow-wrap:anywhere}
+.al{font-size:11px;color:var(--muted);letter-spacing:.06em;min-height:1.4em}
+.heart{border:1px solid var(--line);background:transparent;color:var(--muted);width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:16px;flex:none;transition:.15s}
+.heart:hover{color:var(--a);border-color:var(--a)}
+.heart[aria-pressed="true"]{background:var(--a);color:#fff;border-color:var(--a);transform:scale(1.08)}
+textarea{font:inherit;font-size:13px;width:100%;min-height:62px;resize:vertical;background:rgba(255,255,255,.04);color:var(--fg);
+  border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+textarea::placeholder{color:#7a766e}
+.lk{display:flex;gap:16px;font-size:12px}
+.lk a{color:var(--fg);text-decoration:none;border-bottom:1px solid var(--a);padding-bottom:1px}
+.lk a:hover{color:var(--b)}
+.dim .card:not(.fav){opacity:.3}
+footer{border-top:1px solid var(--line);padding-block:26px 40px;font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.belt div,.eq i{animation:none}html{scroll-behavior:auto}.btn,.card{transition:none}}
+</style></head>
+<body>
+<div class="glow" aria-hidden="true"></div>
+<div class="in">
+  <nav><span><span class="dot"></span><b>My Favorites</b></span><span>Fan page</span></nav>
+  <header class="hero">
+    <div class="kicker">私が好きなバンド</div>
+    <h1>I <span class="g">love</span><br><span class="o">One Ok</span><br>Rock</h1>
+    <p class="sub">しんどい時も、気合を入れたい時も、気づくとイヤホンから流れてる。好きな曲と、好きな理由をここに残していきます。</p>
+    <ul class="facts">
+      <li><b>FAVORITE</b>Change</li>
+      <li><b>ALBUM</b>Ambitions</li>
+      <li><b>聴く時</b>朝・移動中・勝負の前</li>
+    </ul>
   </header>
+</div>
 
-  <ul class="me" aria-label="自己紹介">
-    <li><b>好きなバンド</b><span>ONE OK ROCK</span></li>
-    <li><b>いちばん好きな曲</b><span>Change</span></li>
-    <li><b>聴くタイミング</b><span>朝・移動中・勝負の前</span></li>
-  </ul>
+<div class="belt" aria-hidden="true"><div id="belt"></div></div>
 
-  <section class="feature" aria-labelledby="feat">
-    <div class="tag">NO.1 FAVORITE</div>
-    <h2 id="feat">Change</h2>
-    <p>アルバム『Ambitions』に入っている一曲。自分が変わる側に立つ、という空気が好きで、迷った時に戻ってくる曲です。</p>
-    <div class="row">
-      <a class="btn" target="_blank" rel="noopener" href="https://www.google.com/search?q=ONE+OK+ROCK+Change+%E6%AD%8C%E8%A9%9E">歌詞を見る</a>
+<div class="in">
+  <section class="np" aria-labelledby="np">
+    <div class="t"><span class="eq"><i></i><i></i><i></i><i></i></span>Now playing · No.1</div>
+    <h2 id="np">Change</h2>
+    <p>『Ambitions』収録。自分が変わる側に立つ、という空気が好きで、迷った時に戻ってくる曲です。</p>
+    <div class="btns">
+      <a class="btn solid" target="_blank" rel="noopener" href="https://www.google.com/search?q=ONE+OK+ROCK+Change+%E6%AD%8C%E8%A9%9E">歌詞を見る</a>
       <a class="btn" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=ONE+OK+ROCK+Change">聴く</a>
     </div>
   </section>
 
   <section aria-labelledby="ls">
-    <div class="tools">
-      <h2 id="ls">Favorite Songs</h2>
-      <div class="row chips">
-        <button id="onlyFav" aria-pressed="false" type="button">♥ だけ目立たせる</button>
-      </div>
+    <div class="head">
+      <h3 id="ls">Favorite<br>Songs</h3>
+      <button class="tog" id="onlyFav" type="button" aria-pressed="false">♥ だけ目立たせる</button>
     </div>
-    <p class="note">♥で「特に好き」をマーク。コメント欄に好きなフレーズや思い出を書くと、このブラウザに保存されます。歌詞は著作権のため載せず、検索リンクで開きます。</p>
-    <div class="list" id="list"></div>
+    <p class="note">♥で「特に好き」をマーク。コメント欄に好きなフレーズや思い出を書くと、このブラウザに保存されます。歌詞は著作権のためページ内には載せず、検索リンクで開きます。</p>
+    <div class="grid" id="grid"></div>
   </section>
-
   <footer>ONE OK ROCK ファンによる個人ページ。公式とは関係ありません。</footer>
 </div>
 
@@ -101,32 +133,32 @@ const songs=[
 const KEY="oor-v1";
 let st={};
 try{st=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
-if(!st.fav&&!st.note){st={fav:{"Change":1},note:{}};}
+if(!st.fav&&!st.note){st={fav:{"Change":1},note:{}}}
 st.fav=st.fav||{};st.note=st.note||{};
-const list=document.getElementById("list");
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+const belt=document.getElementById("belt");
+const strip=songs.map(s=>`<span>${s[0]}</span><span><i>●</i></span>`).join("");
+belt.innerHTML=strip+strip;
+const grid=document.getElementById("grid");
 const q=s=>encodeURIComponent("ONE OK ROCK "+s);
 songs.forEach(([t,a],i)=>{
-  const d=document.createElement("article");d.className="song";
-  d.innerHTML=`<div class="n">${String(i+1).padStart(2,"0")}</div>
-  <div><h3></h3><div class="sub"></div></div>
-  <button class="heart" type="button" aria-label="お気に入り">♥</button>
-  <div class="body">
-    <textarea id="t${i}" placeholder="好きなところ・思い出を自分の言葉で" aria-label="コメント"></textarea>
-    <div class="links">
-      <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${q(t)}+歌詞">歌詞を見る</a>
-      <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${q(t)}">聴く</a>
-    </div></div>`;
-  d.querySelector("h3").textContent=t;
-  d.querySelector(".sub").textContent=a?"アルバム: "+a:"";
+  const d=document.createElement("article");d.className="card";
+  d.innerHTML=`<div class="top"><div><div class="n">${String(i+1).padStart(2,"0")}</div><h4></h4></div>
+   <button class="heart" type="button" aria-label="お気に入り">♥</button></div>
+   <div class="al"></div>
+   <textarea id="t${i}" placeholder="好きなところ・思い出を自分の言葉で" aria-label="コメント"></textarea>
+   <div class="lk"><a target="_blank" rel="noopener" href="https://www.google.com/search?q=${q(t)}+歌詞">歌詞を見る</a>
+   <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${q(t)}">聴く</a></div>`;
+  d.querySelector("h4").textContent=t;
+  d.querySelector(".al").textContent=a?"ALBUM / "+a:"";
   const h=d.querySelector(".heart"),ta=d.querySelector("textarea");
   const paint=()=>{const on=!!st.fav[t];h.setAttribute("aria-pressed",on);d.classList.toggle("fav",on)};
   h.onclick=()=>{st.fav[t]=st.fav[t]?0:1;save();paint()};
   ta.value=st.note[t]||"";
   ta.oninput=()=>{st.note[t]=ta.value;save()};
-  paint();list.appendChild(d);
+  paint();grid.appendChild(d);
 });
 const b=document.getElementById("onlyFav");
-b.onclick=()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);list.classList.toggle("dim",on)};
+b.onclick=()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);grid.classList.toggle("dim",on)};
 </script>
 </body></html>
