@@ -12,5 +12,6 @@
 | reunion-venues（15名の同窓会 店さがし／渋谷・新宿） | https://ko-yamatoya.github.io/Projects/reunion-venues/ |
 | yaritai-list（やりたいことリスト／仕分け・推移・分析） | https://ko-yamatoya.github.io/Projects/yaritai-list/ |
 | kanji-note（幹事ノート／スポーツの集まりの出欠・ご飯の注文・集金） | https://ko-yamatoya.github.io/Projects/kanji-note/ |
+| oneok-songs（私とONE OK ROCK／好きな曲の自己紹介ページ） | https://ko-yamatoya.github.io/Projects/oneok-songs/ |
 
 運用ルールは [CLAUDE.md](CLAUDE.md) を参照（1デモ=1サブフォルダ、独立リポジトリは作らない）。
