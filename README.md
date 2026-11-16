@@ -14,5 +14,6 @@
 | kanji-note（幹事ノート／スポーツの集まりの出欠・ご飯の注文・集金） | https://ko-yamatoya.github.io/Projects/kanji-note/ |
 | oneok-songs（私とONE OK ROCK／好きな曲の自己紹介ページ） | https://ko-yamatoya.github.io/Projects/oneok-songs/ |
 | my-oneokrock（ONE OK ROCK好きの自己紹介／好きな曲の歌詞をやさしく解説） | https://ko-yamatoya.github.io/Projects/my-oneokrock/ |
+| notice（フィッシング訓練ドッキリ／リンクを踏むと「テッテレー」） | https://ko-yamatoya.github.io/Projects/notice/ |
 
 運用ルールは [CLAUDE.md](CLAUDE.md) を参照（1デモ=1サブフォルダ、独立リポジトリは作らない）。
