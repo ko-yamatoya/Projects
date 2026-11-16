@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My ONE OK ROCK</title>
+<meta name="description" content="ONE OK ROCK好きの自己紹介。好きな曲と、その歌詞が何を歌っているかを日本語でざっくり解説します。">
+<meta name="color-scheme" content="dark">
+<style>
+:root{
+  --bg:#09090b;
+  --bg2:#111115;
+  --card:#15151b;
+  --card2:#1b1b23;
+  --line:#2a2a34;
+  --text:#f3f3f5;
+  --muted:#a0a0ad;
+  --faint:#6d6d7a;
+  --accent:#ff2e3f;
+  --accent-soft:rgba(255,46,63,.14);
+  --radius:18px;
+  --gutter:16px;
+  --sans:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",system-ui,sans-serif;
+  --display:"Arial Black","Helvetica Neue",Impact,"Hiragino Sans",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+  line-height:1.75;font-size:16px;overflow-x:hidden;
+  background-image:
+    radial-gradient(900px 500px at 85% -10%, rgba(255,46,63,.22), transparent 60%),
+    radial-gradient(700px 420px at -10% 30%, rgba(255,176,32,.07), transparent 60%);
+  background-repeat:no-repeat;
+}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 var(--gutter)}
+@media (min-width:760px){:root{--gutter:28px}}
+
+/* ---------- Hero ---------- */
+.hero{padding:56px 0 28px}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.18em;
+  color:var(--muted);text-transform:uppercase;border:1px solid var(--line);
+  padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.02)
+}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.hero h1{margin:18px 0 0;font-family:var(--display);font-weight:900;line-height:.92;letter-spacing:-.02em}
+.hero h1 .big{
+  display:block;font-size:clamp(48px,13vw,132px);
+  color:transparent;-webkit-text-stroke:2px var(--text);
+}
+.hero h1 .big b{color:var(--accent);-webkit-text-stroke:0}
+.hero h1 .jp{display:block;font-family:var(--sans);font-size:clamp(26px,6vw,44px);margin-top:14px;letter-spacing:.02em}
+.lead{color:var(--muted);max-width:620px;margin:18px 0 0}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.btn{
+  appearance:none;border:1px solid var(--line);background:var(--card);color:var(--text);
+  font:inherit;font-size:15px;font-weight:700;padding:11px 18px;border-radius:999px;cursor:pointer;
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:transform .15s, background .15s, border-color .15s
+}
+.btn:hover{transform:translateY(-1px);border-color:#3a3a46}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#ff4555}
+.btn:focus-visible,.chip:focus-visible,.tab:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* ---------- Profile ---------- */
+.profile{
+  margin-top:36px;display:grid;gap:14px;
+  grid-template-columns:1fr;
+}
+@media (min-width:760px){.profile{grid-template-columns:1.1fr 1fr}}
+.panel-box{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.panel-box h2{margin:0 0 12px;font-size:13px;letter-spacing:.16em;color:var(--muted);font-weight:700}
+.prof{margin:0;display:grid;grid-template-columns:auto 1fr;gap:10px 18px}
+.prof dt{color:var(--faint);font-size:13px;padding-top:2px;white-space:nowrap}
+.prof dd{margin:0;font-weight:700}
+.prof dd .no1{color:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--card2);padding:2px 10px;border-radius:999px}
+.howto ol{margin:0;padding-left:1.3em;color:var(--muted)}
+.howto li{margin:4px 0}
+.howto b{color:var(--text)}
+
+/* ---------- Section heads ---------- */
+.sec{padding:48px 0 8px}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.sec-head h2{margin:0;font-family:var(--display);font-size:clamp(28px,6vw,44px);line-height:1;letter-spacing:-.01em}
+.sec-head h2 small{display:block;font-family:var(--sans);font-size:14px;color:var(--muted);letter-spacing:.06em;margin-top:8px;font-weight:600}
+
+/* ---------- Mood chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.chip{
+  appearance:none;font:inherit;font-size:14px;font-weight:700;color:var(--muted);
+  background:transparent;border:1px solid var(--line);padding:7px 14px;border-radius:999px;cursor:pointer
+}
+.chip[aria-pressed="true"]{color:#fff;background:var(--accent-soft);border-color:var(--accent)}
+
+/* ---------- Song cards ---------- */
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:860px){.grid{grid-template-columns:1fr 1fr}}
+.song{
+  --c1:#ff2e3f;--c2:#5a0b14;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;display:flex;flex-direction:column;scroll-margin-top:20px;
+  transition:border-color .3s, box-shadow .3s
+}
+.song.flash{border-color:var(--c1);box-shadow:0 0 0 3px color-mix(in srgb, var(--c1) 40%, transparent)}
+.song[hidden]{display:none}
+.jacket{
+  position:relative;min-height:150px;padding:18px 20px;display:flex;flex-direction:column;justify-content:space-between;
+  background:
+    radial-gradient(120% 140% at 100% 0%, var(--c1), transparent 55%),
+    linear-gradient(135deg, var(--c2), #0c0c10 75%);
+  border-bottom:1px solid var(--line);overflow:hidden
+}
+.jacket::after{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(115deg, rgba(255,255,255,.04) 0 2px, transparent 2px 14px);
+  pointer-events:none
+}
+.jacket .row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;position:relative;z-index:1}
+.jacket .num{font-family:var(--display);font-size:13px;letter-spacing:.2em;color:rgba(255,255,255,.75)}
+.jacket .year{font-size:12px;font-weight:700;background:rgba(0,0,0,.35);padding:2px 10px;border-radius:999px;color:#fff}
+.jacket .jt{
+  position:relative;z-index:1;font-family:var(--display);font-weight:900;color:#fff;
+  font-size:clamp(30px,7vw,46px);line-height:1;letter-spacing:-.01em;margin-top:22px;
+  text-shadow:0 2px 24px rgba(0,0,0,.35);overflow-wrap:anywhere
+}
+.jacket .tr{position:relative;z-index:1;margin-top:8px;font-size:13px;color:rgba(255,255,255,.82);font-weight:600}
+.body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px;flex:1}
+.meta{margin:0;font-size:13px;color:var(--muted)}
+.meta b{color:var(--text);font-weight:700}
+.one{
+  margin:0;font-size:17px;font-weight:800;line-height:1.6;
+  padding-left:14px;border-left:3px solid var(--c1)
+}
+.tabs{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--line);padding:4px;border-radius:12px}
+.tab{
+  flex:1;appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:14px;font-weight:700;
+  padding:8px 6px;border-radius:9px;cursor:pointer
+}
+.tab[aria-selected="true"]{background:var(--card2);color:#fff;box-shadow:inset 0 0 0 1px var(--line)}
+.tabpanel[hidden]{display:none}
+.flow{list-style:none;margin:0;padding:0;position:relative}
+.flow li{position:relative;padding:0 0 14px 26px}
+.flow li:last-child{padding-bottom:0}
+.flow li::before{
+  content:"";position:absolute;left:4px;top:8px;width:10px;height:10px;border-radius:50%;
+  background:var(--card);border:2px solid var(--c1)
+}
+.flow li:not(:last-child)::after{content:"";position:absolute;left:8px;top:22px;bottom:2px;width:2px;background:var(--line)}
+.flow li.chorus::before{background:var(--c1)}
+.flow .lab{display:block;font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--c1)}
+.flow .txt{display:block;font-size:15px}
+.points{margin:0;padding-left:1.15em}
+.points li{margin:6px 0;font-size:15px}
+.points li::marker{color:var(--c1)}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:4px}
+.links a{
+  font-size:13px;font-weight:700;text-decoration:none;padding:7px 12px;border-radius:10px;
+  border:1px solid var(--line);background:var(--card2);display:inline-flex;align-items:center;gap:6px
+}
+.links a:hover{border-color:var(--c1)}
+.links a.lyr{background:var(--c1);border-color:var(--c1);color:#0a0a0c}
+.links svg{width:14px;height:14px;flex:none}
+
+/* Featured (No.1) */
+.featured .song{display:grid;grid-template-columns:1fr}
+@media (min-width:860px){
+  .featured .song{grid-template-columns:minmax(300px,.9fr) 1.1fr}
+  .featured .jacket{min-height:100%;border-bottom:0;border-right:1px solid var(--line);padding:28px}
+  .featured .jacket .jt{font-size:clamp(56px,7vw,92px)}
+  .featured .body{padding:26px 28px}
+}
+.featured .badge{
+  position:relative;z-index:1;align-self:flex-start;margin-top:auto;padding-top:20px;
+  font-size:12px;font-weight:800;letter-spacing:.14em;color:#fff
+}
+.featured .badge span{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.25);padding:4px 12px;border-radius:999px}
+.featured .one{font-size:19px}
+
+.empty{color:var(--muted);text-align:center;padding:30px 0}
+
+/* ---------- Footer ---------- */
+footer{margin-top:64px;border-top:1px solid var(--line);padding:28px 0 48px;color:var(--faint);font-size:13px}
+footer p{margin:6px 0}
+footer a{color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.song{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="wrap hero">
+  <span class="eyebrow"><i></i>Self introduction</span>
+  <h1>
+    <span class="big">ONE OK <b>ROCK</b></span>
+    <span class="jp">が、好きです。</span>
+  </h1>
+  <p class="lead">はじめまして、Kohei です。いちばん好きなバンドは ONE OK ROCK。英語の歌詞が多いので、「この曲って何を歌ってるの？」が日本語でパッとわかるように、好きな曲をまとめました。</p>
+  <div class="hero-actions">
+    <a class="btn primary" href="#no1">いちばん好きな曲を見る</a>
+    <button class="btn" id="shuffle" type="button">今日の1曲を引く</button>
+  </div>
+
+  <section class="profile" aria-label="プロフィール">
+    <div class="panel-box">
+      <h2>PROFILE</h2>
+      <dl class="prof">
+        <dt>名前</dt><dd>Kohei</dd>
+        <dt>好きなバンド</dt><dd>ONE OK ROCK</dd>
+        <dt>いちばんの曲</dt><dd><span class="no1">Change</span></dd>
+        <dt>ほかに聴く</dt>
+        <dd><div class="tags"><span>Kroi</span><span>XG</span><span>山下達郎</span><span>SUPER BEAVER</span><span>Oasis</span><span>iri</span><span>Tempalay</span></div></dd>
+      </dl>
+    </div>
+    <div class="panel-box howto">
+      <h2>このページの見かた</h2>
+      <ol>
+        <li><b>ひとことで</b>…その曲が何を言いたいかを1行で</li>
+        <li><b>歌詞の流れ</b>…はじまり → まんなか → サビ の順に、歌詞が言っていることを日本語で要約</li>
+        <li><b>聴きどころ</b>…タイアップや背景、知ってると楽しいこと</li>
+        <li>歌詞の全文は、各曲の <b>「歌詞を全部読む」</b> から歌詞サイトへ</li>
+      </ol>
+    </div>
+  </section>
+</header>
+
+<main>
+  <section class="wrap sec featured" id="no1" aria-labelledby="no1-title">
+    <div class="sec-head">
+      <h2 id="no1-title">No.1<small>いちばん好きな曲</small></h2>
+    </div>
+    <div id="featured"></div>
+  </section>
+
+  <section class="wrap sec" id="songs" aria-labelledby="songs-title">
+    <div class="sec-head">
+      <h2 id="songs-title">Favorites<small>よく聴く曲 ── 気分で選べます</small></h2>
+    </div>
+    <div class="chips" role="group" aria-label="気分で絞り込む" id="chips"></div>
+    <div class="grid" id="grid"></div>
+    <p class="empty" id="empty" hidden>この気分の曲はまだありません。</p>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>歌詞の全文は著作権のため載せていません。「歌詞の流れ」は歌詞を読んだうえでの要約・解釈です。全文は各曲のリンク先（J-Lyric.net）で読めます。</p>
+  <p>曲の情報は Wikipedia などの公開情報をもとにしています。ONE OK ROCK・所属レーベルとは関係のない、個人のファンページです。</p>
+</footer>
+
+<script>
+// 曲データ（曲を足す・差し替えるときはここだけ編集）
+const MOODS = {
+  forward: "前を向きたい",
+  fire:    "燃えたい",
+  self:    "自分らしくいたい",
+  love:    "大切な人に"
+};
+
+const SONGS = [
+  {
+    id: "change", title: "Change", tr: "＝ 変わる／変化", year: 2018, featured: true,
+    c1: "#ff2e3f", c2: "#5a0b14",
+    meta: "2018年2月 配信シングル → アルバム『<b>Eye of the Storm</b>』（2019）収録",
+    one: "先が見えなくても、変わるのに遅すぎることはない。そう自分を奮い立たせる曲。",
+    flow: [
+      ["はじまり", "前には進んでいる。なのに行き先が見えなくて、負けていくような不安がある。"],
+      ["まんなか", "一人じゃ越えられないとわかっていても、立ち止まらない。自分の心の声に耳をすませば、今からでも変われる。仲間と信じ合えば人は強くなれる。"],
+      ["サビ", "何度曲がっても、簡単には折れない。変わるには覚悟がいる。だから迷っている今、そばにいてほしい。"]
+    ],
+    points: [
+      "2分54秒で一気に駆け抜ける、短くて強い一曲。",
+      "Honda「Go, Vantage Point.」のCM（2018年・HondaJet篇）のために書き下ろされた曲。",
+      "MVは英語の公式版のほかに、日本語のフレーズが入った「Japanese ver.」もある。",
+      "不安 → 決意 → 「そばにいて」で終わる流れ。強がるだけで終わらないところが好き。"
+    ],
+    moods: ["forward"],
+    lyrics: "https://j-lyric.net/artist/a04cc4b/l0450ae.html"
+  },
+  {
+    id: "the-beginning", title: "The Beginning", tr: "＝ 始まり", year: 2012,
+    c1: "#ff7a1a", c2: "#4a1d05",
+    meta: "2012年8月 シングル → アルバム『<b>人生×僕=</b>』（2013）収録",
+    one: "何度倒れても立ち上がる。苦しみを抜けた先に“新しい始まり”がある、と叫ぶ曲。",
+    flow: [
+      ["はじまり", "絶望的な状況の中で、それでも生きる理由を探している。"],
+      ["まんなか", "誰かに手を取って引き戻してほしい。そんな弱さも隠さず見せたうえで、大切な人を守る覚悟を決める。"],
+      ["サビ", "倒れそうになっても諦めない、立ち上がり続ける。苦しみの先で、ようやく新しい始まりへ向かっていく。"]
+    ],
+    points: [
+      "映画『るろうに剣心』（2012）の主題歌。主演の佐藤健さんとTakaは普段から語り合う仲。",
+      "もとはピアノで作った曲で、アルバム『残響リファレンス』（2011）のころからあった。",
+      "横浜アリーナや武道館を経て「ここで一度リセットして続けていきたい」という思いがタイトルに込められている。"
+    ],
+    moods: ["fire", "forward"],
+    lyrics: "https://j-lyric.net/artist/a04cc4b/l029c0b.html"
+  },
+  {
+    id: "kanzen-kankaku-dreamer", title: "完全感覚Dreamer", tr: "＝ 理屈より感覚で未来を切り開く夢追い人", year: 2010,
+    c1: "#ffb020", c2: "#4a3205",
+    meta: "2010年2月 シングル → アルバム『<b>Nicheシンドローム</b>』（2010）収録",
+    one: "根拠のない自信を武器に、「まだ足りない」と一番を目指し続ける曲。",
+    flow: [
+      ["はじまり", "弱いようで強い。不安と、根拠のない自信が自分の中で混ざり合っている。"],
+      ["まんなか", "人の評価には振り回されない。言い訳もしないし、後ろにも下がらない。一番になるのは自分だ。"],
+      ["サビ", "どんなに苦しくても高く昇っていく。次のチャンスは絶対に逃さない。まだまだ足りない。"]
+    ],
+    points: [
+      "バンド初のオリコン週間TOP10入り（9位）を果たした、ワンオクの代名詞的な一曲。",
+      "TBS『あらびき団』のエンディングテーマ（2010年2〜3月）。",
+      "2020年には、メンバーそれぞれが自宅で撮った「完全在宅Dreamer」も公開された。"
+    ],
+    moods: ["fire"],
+    lyrics: "https://j-lyric.net/artist/a04cc4b/l01eb43.html"
+  },
+  {
+    id: "wherever-you-are", title: "Wherever you are", tr: "＝ 君がどこにいても", year: 2010,
+    c1: "#2fb8ff", c2: "#06304a",
+    meta: "アルバム『<b>Nicheシンドローム</b>』（2010）収録",
+    one: "激しさを置いて、大切な人にまっすぐ愛を誓うバラード。",
+    flow: [
+      ["はじまり", "飾った言葉は使わない。相手への想いを、そのまままっすぐ伝える。"],
+      ["まんなか", "二人の記念日を大切にしながら、これからも一緒に歩いていきたいと願う。"],
+      ["サビ", "君がどこにいても笑顔にする、ずっとそばにいる。今この瞬間の誓いとして“永遠”を約束する。"]
+    ],
+    points: [
+      "シングルではなくアルバムの1曲なのに、チャートにも入った人気曲。",
+      "ワンオクの「激しい」じゃない、やさしい顔がわかる一曲。"
+    ],
+    moods: ["love"],
+    lyrics: "https://j-lyric.net/artist/a04cc4b/l020e9b.html"
+  },
+  {
+    id: "we-are", title: "We are", tr: "＝ ぼくらは", year: 2017,
+    c1: "#a36bff", c2: "#2a1350",
+    meta: "アルバム『<b>Ambitions</b>』（2017）収録のシングル曲",
+    one: "迷っている人に「そのままでいい。ぼくらはお互いの光だ」と寄り添う応援歌。",
+    flow: [
+      ["はじまり", "夢から覚めたときの痛み。鏡の中の自分に「自分を偽って生きる意味はある？」と問いかける。"],
+      ["まんなか", "心ない言葉に傷ついても、その心の価値は壊れない。他人の期待に合わせて自分を変えなくていい。"],
+      ["サビ", "暗闇の中で、ぼくらはお互いの光になる。それを力強く繰り返す。"]
+    ],
+    points: [
+      "弱さを否定せずに「それでも前へ」と背中を押してくれる温度感。",
+      "ライブで会場みんなで歌いたくなるタイプのサビ。"
+    ],
+    moods: ["forward", "self"],
+    lyrics: "https://j-lyric.net/artist/a04cc4b/l03dc22.html"
+  },
+  {
+    id: "stand-out-fit-in", title: "Stand Out Fit In", tr: "＝ 目立て、でも馴染め", year: 2018,
+    c1: "#2ee6a0", c2: "#053d2a",
+    meta: "2018年11月 シングル → アルバム『<b>Eye of the Storm</b>』（2019）収録",
+    one: "「目立て、でも周りに合わせろ」という矛盾した要求を笑い飛ばして、自分を貫く曲。",
+    flow: [
+      ["はじまり", "他人の好みや「こうあるべき」という決めつけに、ずっと息苦しさを感じている。"],
+      ["まんなか", "何度も聞かされてきた価値観にはうんざり。それでも、どんな状況でも自分は変えない。"],
+      ["サビ", "目立つことと周りに溶け込むことを同時に求める社会の矛盾を、皮肉まじりに突きつける。"]
+    ],
+    points: [
+      "テーマは「同調圧力に負けない」。タイトル自体がその矛盾を表している。",
+      "MV（監督：Peter Huang）はアメリカで育つアジア系の若者を描き、海外で高く評価された。"
+    ],
+    moods: ["self"],
+    lyrics: "https://j-lyric.net/artist/a04cc4b/l049cc8.html"
+  }
+];
+
+const ICON_LYR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>';
+const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+const ICON_NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+
+function q(s){ return encodeURIComponent("ONE OK ROCK " + s); }
+
+function card(song, index){
+  const el = document.createElement("article");
+  el.className = "song";
+  el.id = "song-" + song.id;
+  el.style.setProperty("--c1", song.c1);
+  el.style.setProperty("--c2", song.c2);
+  el.dataset.moods = song.moods.join(" ");
+  const pid = "p-" + song.id;
+  el.innerHTML = `
+    <div class="jacket">
+      <div class="row">
+        <span class="num">${song.featured ? "No.1" : String(index).padStart(2, "0")}</span>
+        <span class="year">${song.year}</span>
+      </div>
+      <div>
+        <div class="jt">${song.title}</div>
+        <div class="tr">${song.tr}</div>
+      </div>
+      ${song.featured ? '<div class="badge"><span>MY FAVORITE</span></div>' : ""}
+    </div>
+    <div class="body">
+      <p class="meta">${song.meta}</p>
+      <p class="one">${song.one}</p>
+      <div class="tabs" role="tablist" aria-label="${song.title} の解説">
+        <button class="tab" role="tab" type="button" id="${pid}-t1" aria-controls="${pid}-1" aria-selected="true">歌詞の流れ</button>
+        <button class="tab" role="tab" type="button" id="${pid}-t2" aria-controls="${pid}-2" aria-selected="false" tabindex="-1">聴きどころ</button>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="${pid}-1" aria-labelledby="${pid}-t1">
+        <ol class="flow">
+          ${song.flow.map(([lab, txt]) => `<li class="${lab === "サビ" ? "chorus" : ""}"><span class="lab">${lab}</span><span class="txt">${txt}</span></li>`).join("")}
+        </ol>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="${pid}-2" aria-labelledby="${pid}-t2" hidden>
+        <ul class="points">${song.points.map(p => `<li>${p}</li>`).join("")}</ul>
+      </div>
+      <div class="links">
+        <a class="lyr" href="${song.lyrics}" target="_blank" rel="noopener">${ICON_LYR}歌詞を全部読む</a>
+        <a href="https://www.youtube.com/results?search_query=${q(song.title + " MV")}" target="_blank" rel="noopener">${ICON_PLAY}YouTube</a>
+        <a href="https://open.spotify.com/search/${q(song.title)}" target="_blank" rel="noopener">${ICON_NOTE}Spotify</a>
+      </div>
+    </div>`;
+
+  const tabs = el.querySelectorAll(".tab");
+  const select = (i) => tabs.forEach((t, j) => {
+    const on = i === j;
+    t.setAttribute("aria-selected", on);
+    t.tabIndex = on ? 0 : -1;
+    el.querySelector("#" + t.getAttribute("aria-controls")).hidden = !on;
+  });
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(i));
+    t.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      const n = (i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length;
+      select(n); tabs[n].focus();
+    });
+  });
+  return el;
+}
+
+const featuredBox = document.getElementById("featured");
+const grid = document.getElementById("grid");
+const empty = document.getElementById("empty");
+
+let n = 0;
+SONGS.forEach(s => {
+  if (s.featured) featuredBox.appendChild(card(s, 0));
+  else grid.appendChild(card(s, ++n));
+});
+
+// 気分チップ
+const chips = document.getElementById("chips");
+const entries = [["all", "すべて"], ...Object.entries(MOODS)];
+entries.forEach(([key, label]) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = label;
+  b.setAttribute("aria-pressed", key === "all");
+  b.addEventListener("click", () => {
+    chips.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === b));
+    let shown = 0;
+    grid.querySelectorAll(".song").forEach(card => {
+      const ok = key === "all" || card.dataset.moods.split(" ").includes(key);
+      card.hidden = !ok; if (ok) shown++;
+    });
+    empty.hidden = shown > 0;
+  });
+  chips.appendChild(b);
+});
+
+// 今日の1曲
+document.getElementById("shuffle").addEventListener("click", () => {
+  chips.querySelector(".chip").click();
+  const s = SONGS[Math.floor(Math.random() * SONGS.length)];
+  const el = document.getElementById("song-" + s.id);
+  el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+  setTimeout(() => el.classList.remove("flash"), 2200);
+});
+</script>
+</body>
+</html>
